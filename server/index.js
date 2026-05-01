@@ -1140,29 +1140,30 @@ app.post('/api/auth/github', async (req, res) => {
 });
 
 
-// Helper: Download Audio using yt-dlp
+// Helper: Download Audio using pure Node streams (Resilient on Render)
 async function downloadAudio(videoId) {
-    const ytDlp = require('yt-dlp-exec');
-    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    const outputTemplate = path.join(os.tmpdir(), `${videoId}.%(ext)s`);
+    const ytdl = require('@distube/ytdl-core');
+    const outputTemplate = path.join(os.tmpdir(), `${videoId}.mp3`);
     
-    console.log(`[Audio] Attempting audio download for ${videoId}...`);
+    console.log(`[Audio] Downloading stream for ${videoId}...`);
     
     try {
-        await ytDlp(videoUrl, {
-            format: 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio',
-            output: outputTemplate,
-            noCheckCertificates: true,
-            preferFreeFormats: true
+        const stream = ytdl(videoId, { 
+            quality: 'highestaudio',
+            filter: 'audioonly' 
+        });
+        const fileStream = fs.createWriteStream(outputTemplate);
+        
+        await new Promise((resolve, reject) => {
+            stream.pipe(fileStream);
+            fileStream.on('finish', resolve);
+            fileStream.on('error', reject);
         });
         
-        const downloadedFile = fs.readdirSync(os.tmpdir()).find(file => file.startsWith(videoId));
-        if (!downloadedFile) throw new Error("File not found after download");
-        
-        console.log(`[Audio] Successfully downloaded: ${downloadedFile}`);
-        return path.join(os.tmpdir(), downloadedFile);
+        console.log(`[Audio] Pure Node download success: ${outputTemplate}`);
+        return outputTemplate;
     } catch (err) {
-        console.error(`[Audio] Download failed: ${err.message}`);
+        console.error(`[Audio] Pure Node download failed: ${err.message}`);
         throw err;
     }
 }
