@@ -47,30 +47,30 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
       <form onSubmit={handleSubmit} className="w-full">
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
-            <Link2 className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Link2 className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/70" />
             <Input
               type="url"
               placeholder="Paste YouTube video URL here..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="h-14 pl-12 pr-4 text-base"
+              className="h-14 pl-12 pr-4 text-base rounded-xl border border-white/5 bg-black/40 text-white placeholder:text-slate-500 focus:bg-black/60 focus-visible:ring-1 focus-visible:ring-primary/50 transition-all shadow-inner"
               disabled={isLoading}
             />
           </div>
           <Button
             type="submit"
             size="lg"
-            className="h-14 px-8 text-base font-medium"
+            className="h-14 px-8 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-indigo-500 text-white shadow-[0_0_20px_rgba(var(--primary),0.3)] hover:shadow-[0_0_30px_rgba(var(--primary),0.5)] transition-all hover:scale-[1.02] active:scale-[0.98] border border-white/10"
             disabled={isLoading || !url.trim() || !isValidYoutubeUrl(url)}
           >
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Generating...
+                Processing
               </>
             ) : (
               <>
-                Generate Notes
+                Generate
                 <ArrowRight className="ml-2 h-5 w-5" />
               </>
             )}

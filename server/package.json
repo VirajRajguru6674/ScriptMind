@@ -1,0 +1,29 @@
+{
+    "name": "scriptmind-server",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "dev": "nodemon index.js"
+    },
+    "dependencies": {
+        "@distube/ytdl-core": "^4.16.12",
+        "@google/generative-ai": "^0.24.1",
+        "axios": "^1.6.2",
+        "bcrypt": "^6.0.0",
+        "bcryptjs": "^3.0.3",
+        "cors": "^2.8.5",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "form-data": "^4.0.5",
+        "google-auth-library": "^10.5.0",
+        "jsonwebtoken": "^9.0.3",
+        "mysql2": "^3.6.5",
+        "nodemailer": "^8.0.1",
+        "youtube-transcript": "^1.2.1",
+        "yt-dlp-exec": "^1.0.2"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.2"
+    }
+}
