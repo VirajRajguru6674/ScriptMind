@@ -83,7 +83,7 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
                 body: JSON.stringify({ videoId })
             }).catch((fetchError) => {
                 console.error('Fetch error:', fetchError);
-                throw new Error(`Network error: ${fetchError.message}. Please check if the server is running on port 3001.`);
+                throw new Error(`Network error: ${fetchError.message}. Please check your connection or if the server is offline.`);
             });
 
             if (!response.ok) {

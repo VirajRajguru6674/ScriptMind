@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import API_BASE_URL from "@/lib/api";
 import { Helmet } from "react-helmet-async";
 import { Sidebar } from "@/components/Sidebar";
 import { 
@@ -56,7 +57,7 @@ const Notifications = () => {
     const fetchNotifications = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:3001/api/notifications');
+            const response = await fetch(`${API_BASE_URL}/notifications`);
             const data = await response.json();
             if (Array.isArray(data)) {
                 setNotifications(data);
@@ -77,7 +78,7 @@ const Notifications = () => {
             if (id) {
                 // Individual mark as read logic if backend supports it
                 // For now we use the global endpoint
-                await fetch('http://localhost:3001/api/notifications/read', { method: 'POST' });
+                await fetch(`${API_BASE_URL}/notifications/read`, { method: 'POST' });
             } else {
                 await fetch('http://localhost:3001/api/notifications/read', { method: 'POST' });
             }
