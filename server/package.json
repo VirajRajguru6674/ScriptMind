@@ -4,8 +4,7 @@
     "main": "index.js",
     "scripts": {
         "start": "node index.js",
-        "dev": "nodemon index.js",
-        "postinstall": "node -e \"try { require('yt-dlp-exec').download().then(() => console.log('yt-dlp downloaded')).catch(err => console.error('yt-dlp download failed:', err)) } catch(e) {}\""
+        "dev": "nodemon index.js"
     },
     "dependencies": {
         "@distube/ytdl-core": "^4.16.12",
