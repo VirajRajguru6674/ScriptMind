@@ -247,7 +247,7 @@ const checkPlanLimits = async (req, res, next) => {
 (async () => {
     try {
         // 0. Create Users Table if it doesn't exist
-        await pool.execute(`
+        await pool.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(100),
@@ -273,17 +273,17 @@ const checkPlanLimits = async (req, res, next) => {
 
         // Ensure ENUM includes 'organization' if it already exists
         try {
-            await pool.execute("ALTER TABLE users MODIFY COLUMN plan ENUM('free', 'pro', 'expert', 'organization') DEFAULT 'free'");
+            await pool.query("ALTER TABLE users MODIFY COLUMN plan ENUM('free', 'pro', 'expert', 'organization') DEFAULT 'free'");
         } catch (e) {
             console.log("Plan enum already updated or failed:", e.message);
         }
 
         for (const col of usersColumns) {
             try {
-                const [cols] = await pool.execute(`SHOW COLUMNS FROM users LIKE '${col.name}'`);
+                const [cols] = await pool.query(`SHOW COLUMNS FROM users LIKE '${col.name}'`);
                 if (cols.length === 0) {
                     console.log(`Migrating DB: Adding ${col.name} column...`);
-                    await pool.execute(col.sql);
+                    await pool.query(col.sql);
                 }
             } catch (e) {
                 if (e.code !== 'ER_DUP_FIELDNAME') console.error(`Migration error (${col.name}):`, e.message);
@@ -292,7 +292,7 @@ const checkPlanLimits = async (req, res, next) => {
 
         // Create Organizations Table
         try {
-            await pool.execute(`
+            await pool.query(`
                 CREATE TABLE IF NOT EXISTS organizations (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     owner_id INT NOT NULL,
@@ -311,17 +311,17 @@ const checkPlanLimits = async (req, res, next) => {
         const personalInfoColumns = ['full_name', 'bio', 'phone', 'location', 'date_of_birth'];
         for (const col of personalInfoColumns) {
             try {
-                const [cols] = await pool.execute(`SHOW COLUMNS FROM users LIKE '${col}'`);
+                const [cols] = await pool.query(`SHOW COLUMNS FROM users LIKE '${col}'`);
                 if (cols.length === 0) {
                     console.log(`Migrating DB: Adding ${col} column...`);
                     if (col === 'bio') {
-                        await pool.execute(`ALTER TABLE users ADD COLUMN ${col} TEXT DEFAULT NULL`);
+                        await pool.query(`ALTER TABLE users ADD COLUMN ${col} TEXT DEFAULT NULL`);
                     } else if (col === 'date_of_birth') {
-                        await pool.execute(`ALTER TABLE users ADD COLUMN ${col} DATE DEFAULT NULL`);
+                        await pool.query(`ALTER TABLE users ADD COLUMN ${col} DATE DEFAULT NULL`);
                     } else if (col === 'phone') {
-                        await pool.execute(`ALTER TABLE users ADD COLUMN ${col} VARCHAR(20) DEFAULT NULL`);
+                        await pool.query(`ALTER TABLE users ADD COLUMN ${col} VARCHAR(20) DEFAULT NULL`);
                     } else {
-                        await pool.execute(`ALTER TABLE users ADD COLUMN ${col} VARCHAR(100) DEFAULT NULL`);
+                        await pool.query(`ALTER TABLE users ADD COLUMN ${col} VARCHAR(100) DEFAULT NULL`);
                     }
                 }
             } catch (e) {
@@ -333,10 +333,10 @@ const checkPlanLimits = async (req, res, next) => {
 
         // 2d. Add video_url column to notes_history
         try {
-            const [colsVideoUrl] = await pool.execute("SHOW COLUMNS FROM notes_history LIKE 'video_url'");
+            const [colsVideoUrl] = await pool.query("SHOW COLUMNS FROM notes_history LIKE 'video_url'");
             if (colsVideoUrl.length === 0) {
                 console.log("Migrating DB: Adding video_url column to notes_history...");
-                await pool.execute("ALTER TABLE notes_history ADD COLUMN video_url VARCHAR(500) DEFAULT NULL");
+                await pool.query("ALTER TABLE notes_history ADD COLUMN video_url VARCHAR(500) DEFAULT NULL");
             }
         } catch (e) {
             if (e.code !== 'ER_DUP_FIELDNAME') {
@@ -345,7 +345,7 @@ const checkPlanLimits = async (req, res, next) => {
         }
 
         // 3. Create Audit Logs Table
-        await pool.execute(`
+        await pool.query(`
             CREATE TABLE IF NOT EXISTS audit_logs (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 user_id INT,
@@ -356,18 +356,18 @@ const checkPlanLimits = async (req, res, next) => {
         `);
 
         // 4. Seed Admin User
-        const [admins] = await pool.execute("SELECT * FROM users WHERE email = 'admin@scriptmind.com'");
+        const [admins] = await pool.query("SELECT * FROM users WHERE email = 'admin@scriptmind.com'");
         if (admins.length === 0) {
             console.log("Seeding Admin User...");
             const hashed = await bcrypt.hash('admin123', 10);
-            await pool.execute(
+            await pool.query(
                 "INSERT IGNORE INTO users (username, email, password, role, plan, created_at) VALUES (?, ?, ?, 'admin', 'expert', NOW())",
                 ['System Admin', 'admin@scriptmind.com', hashed]
             );
         }
 
         // 5. Create System Settings Table & Seed Defaults
-        await pool.execute(`
+        await pool.query(`
             CREATE TABLE IF NOT EXISTS system_settings (
                 setting_key VARCHAR(50) PRIMARY KEY,
                 setting_value JSON,
@@ -376,7 +376,7 @@ const checkPlanLimits = async (req, res, next) => {
         `);
 
         // Seed Default Pricing if not exists
-        const [settings] = await pool.execute("SELECT * FROM system_settings WHERE setting_key = 'pricing_config'");
+        const [settings] = await pool.query("SELECT * FROM system_settings WHERE setting_key = 'pricing_config'");
         if (settings.length === 0) {
             console.log("Seeding Default Pricing...");
             const defaultPricing = {
@@ -389,7 +389,7 @@ const checkPlanLimits = async (req, res, next) => {
                 org_monthly: 14999,
                 org_yearly: 149999
             };
-            await pool.execute("INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?)", ['pricing_config', JSON.stringify(defaultPricing)]);
+            await pool.query("INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?)", ['pricing_config', JSON.stringify(defaultPricing)]);
         }
 
     } catch (e) {
