@@ -392,13 +392,14 @@ app.get('/api/settings/pricing', async (req, res) => {
 app.post('/api/auth/register', async (req, res) => {
     const { username, email, password } = req.body;
     try {
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const trimmedEmail = email.trim().toLowerCase();
+        const hashedPassword = await bcrypt.hash(password.trim(), 10);
         const [result] = await pool.execute(
             'INSERT INTO users (username, email, password, created_at) VALUES (?, ?, ?, NOW())',
-            [username, email, hashedPassword]
+            [username.trim(), trimmedEmail, hashedPassword]
         );
-        const token = jwt.sign({ id: result.insertId, email, username, role: 'user' }, JWT_SECRET, { expiresIn: '7d' });
-        res.json({ token, user: { id: result.insertId, username, email, role: 'user', plan: 'free' } });
+        const token = jwt.sign({ id: result.insertId, email: trimmedEmail, username, role: 'user' }, JWT_SECRET, { expiresIn: '7d' });
+        res.json({ token, user: { id: result.insertId, username, email: trimmedEmail, role: 'user', plan: 'free' } });
     } catch (error) {
         res.status(500).json({ error: 'Registration failed' });
     }
@@ -407,7 +408,12 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
     try {
-        const [users] = await pool.execute('SELECT * FROM users WHERE email = ?', [email]);
+        const trimmedEmail = email?.trim().toLowerCase();
+        const trimmedPassword = password?.trim();
+        
+        const [users] = await pool.execute('SELECT * FROM users WHERE LOWER(email) = ?', [trimmedEmail]);
+        console.log(`🔑 Login Attempt: email=${trimmedEmail}, usersFound=${users.length}`);
+        
         if (users.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
         const user = users[0];
 
