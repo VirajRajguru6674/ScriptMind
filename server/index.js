@@ -1205,23 +1205,17 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
         } catch (ytError) {
             console.warn("YouTube API failed, triggering fallback to yt-dlp:", ytError.message);
             try {
-                const ytDlp = require('yt-dlp-exec');
-                const output = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, {
-                    dumpSingleJson: true,
-                    noWarnings: true,
-                    noCallHome: true,
-                    noCheckCertificates: true
-                });
+                const info = await ytdl.getInfo(videoId);
                 videoInfo = {
                     id: videoId,
-                    title: output.title,
-                    channelTitle: output.uploader,
-                    thumbnail: output.thumbnail,
-                    description: output.description,
+                    title: info.videoDetails.title,
+                    channelTitle: info.videoDetails.author.name,
+                    thumbnail: info.videoDetails.thumbnails[info.videoDetails.thumbnails.length - 1].url,
+                    description: info.videoDetails.description,
                     hasCaptions: true
                 };
             } catch (dlpError) {
-                console.error("Critical: Both API and yt-dlp failed to fetch video metadata:", dlpError.message);
+                console.error("Critical: Both API and ytdl failed to fetch video metadata:", dlpError.message);
                 return res.status(500).json({ error: "Failed to fetch video details. Please check the URL or try again later." });
             }
         }
@@ -1573,15 +1567,9 @@ app.get('/api/video-formats', async (req, res) => {
     const { videoId } = req.query;
     if (!videoId) return res.status(400).json({ error: 'videoId required' });
     try {
-        const ytDlp = require('yt-dlp-exec');
-        const info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, {
-            dumpSingleJson: true,
-            noWarnings: true,
-            noCheckCertificates: true,
-            noPlaylist: true
-        });
-        const heights = new Set();
+        const info = await ytdl.getInfo(videoId);
         const allFormats = info.formats || [];
+        const heights = new Set();
 
         const addHeight = (h) => { if (h && h > 0) heights.add(parseInt(h, 10)); };
 
@@ -1666,7 +1654,6 @@ app.post('/api/download', authenticateToken, async (req, res) => {
     const { videoId, quality, title } = req.body;
     const userId = req.user.id;
 
-    // Check Plan for Quality
     try {
         const [rows] = await pool.execute('SELECT plan FROM users WHERE id = ?', [userId]);
         const plan = rows[0]?.plan || 'free';
@@ -1678,77 +1665,28 @@ app.post('/api/download', authenticateToken, async (req, res) => {
         };
 
         if (!allowedQualities[plan].includes(quality) && quality !== 'mp3') {
-            // Allow mp3 for all, but strict on video
             return res.status(403).json({ error: `Your ${plan} plan does not support ${quality} downloads. Upgrade to unlock.` });
         }
-    } catch (e) {
-        return res.status(500).json({ error: "Failed to verify plan limits" });
-    }
 
-    const ytDlp = require('yt-dlp-exec');
+        console.log(`Downloading ${videoId} with quality ${quality}...`);
 
-    // Check for ffmpeg
-    let hasFfmpeg = false;
-    try {
-        const { execSync } = require('child_process');
-        execSync('ffmpeg -version', { stdio: 'ignore' });
-        hasFfmpeg = true;
-    } catch (e) {
-        console.warn("ffmpeg not found, high-quality downloads might lack audio or fail to merge.");
-    }
+        const outputName = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${quality}.mp4`;
+        const fullPath = path.join(os.tmpdir(), outputName);
 
-    try {
-        console.log(`Downloading ${videoId} with quality ${quality}... (ffmpeg: ${hasFfmpeg})`);
+        const options = quality === 'mp3' ? { quality: 'highestaudio' } : { quality: 'highest' };
+        const stream = ytdl(videoId, options);
+        const fileStream = fs.createWriteStream(fullPath);
 
-        // Define format based on quality
-        const heightMap = { '144p': 144, '240p': 240, '360p': 360, '480p': 480, '720p': 720, '1080p': 1080, '1440p': 1440, '4k': 2160, '8k': 4320 };
-        const maxHeight = heightMap[quality];
+        await new Promise((resolve, reject) => {
+            stream.pipe(fileStream);
+            fileStream.on('finish', resolve);
+            fileStream.on('error', reject);
+        });
 
-        let format = 'best'; // Default safe fallback
-        
-        if (quality === 'mp3') {
-            format = 'bestaudio/best';
-        } else if (maxHeight) {
-            if (hasFfmpeg) {
-                // If we have ffmpeg, we can merge best video and best audio
-                format = `bestvideo[height<=${maxHeight}][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best`;
-            } else {
-                // Without ffmpeg, we MUST pick a single file that contains both
-                format = `best[height<=${maxHeight}][ext=mp4]/best[height<=${maxHeight}]/best`;
-            }
-        }
-
-        const outputName = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${quality}`;
-        const outputPath = path.join(os.tmpdir(), `${outputName}.%(ext)s`);
-
-        const options = {
-            format: format,
-            formatSort: 'res', // prefer highest resolution when multiple formats match
-            output: outputPath,
-            noCheckCertificates: true,
-        };
-
-        if (quality === 'mp3') {
-            options.extractAudio = true;
-            options.audioFormat = 'mp3';
-        } else {
-            options.mergeOutputFormat = 'mp4';
-        }
-
-        await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, options);
-
-        // Log & Count Download
         await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
         logAction(userId, 'DOWNLOAD_VIDEO', { videoId, quality, title });
 
-        // Find the actual file (since ext might vary)
-        const files = fs.readdirSync(os.tmpdir());
-        const downloadedFile = files.find(f => f.startsWith(outputName));
-
-        if (!downloadedFile) throw new Error("Download file not found");
-
-        const fullPath = path.join(os.tmpdir(), downloadedFile);
-        res.download(fullPath, downloadedFile, (err) => {
+        res.download(fullPath, outputName, (err) => {
             if (err) console.error("Send file error:", err);
             try { fs.unlinkSync(fullPath); } catch (e) { }
         });
