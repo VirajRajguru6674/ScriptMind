@@ -345,7 +345,7 @@ async function initializeDatabase() {
 
         // 3. Seed/Update Admin User (Clean Slate Approach)
         console.log("👤 DB Initialization: Resetting admin account...");
-        await conn.query("DELETE FROM users WHERE email = ?", ['admin@scriptmind.com']);
+        await conn.query("DELETE FROM users WHERE email = ? OR username = ?", ['admin@scriptmind.com', 'System Admin']);
         const hashed = await bcrypt.hash('admin123', 10);
         await conn.query(
             "INSERT INTO users (username, email, password, role, plan, created_at) VALUES (?, ?, ?, 'admin', 'expert', NOW())",
