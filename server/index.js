@@ -13,20 +13,36 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const pool = mysql.createPool(process.env.DB_URI || {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: parseInt(process.env.DB_PORT) || 3306,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-    ssl: {
-        rejectUnauthorized: false,
-        minVersion: 'TLSv1.2'
+// Helper: Parse DB URI and merge with SSL config
+const getDbConfig = () => {
+    const uri = process.env.DB_URI;
+    if (uri) {
+        // Simple URI handling to avoid invalid options like ssl-mode
+        return {
+            uri: uri.split('?')[0], // Strip query params
+            ssl: {
+                rejectUnauthorized: false,
+                minVersion: 'TLSv1.2'
+            }
+        };
     }
-});
+    return {
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
+        port: parseInt(process.env.DB_PORT) || 3306,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+        ssl: {
+            rejectUnauthorized: false,
+            minVersion: 'TLSv1.2'
+        }
+    };
+};
+
+const pool = mysql.createPool(getDbConfig());
 
 const { YoutubeTranscript } = require('youtube-transcript');
 const ytdl = require('@distube/ytdl-core');
