@@ -1571,44 +1571,27 @@ app.post('/api/recommendations', async (req, res) => {
     }
 });
 
-// YouTube format_id -> height (for when height/format_note missing)
-const FORMAT_ID_TO_HEIGHT = { 160: 144, 133: 240, 134: 360, 135: 480, 136: 720, 137: 1080, 248: 1080, 271: 1440, 272: 1440, 313: 2160, 315: 2160, 401: 2160, 402: 2160, 571: 4320, 694: 4320 };
-
 app.get('/api/video-formats', async (req, res) => {
     const { videoId } = req.query;
     if (!videoId) return res.status(400).json({ error: 'videoId required' });
     try {
-        const info = await ytdl.getInfo(videoId);
-        const allFormats = info.formats || [];
-        const heights = new Set();
+        const ytDlp = require('yt-dlp-exec');
+        const info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, {
+            dumpSingleJson: true,
+            noCheckCertificates: true,
+            preferFreeFormats: true
+        });
 
+        const formats = info.formats || [];
+        const heights = new Set();
         const addHeight = (h) => { if (h && h > 0) heights.add(parseInt(h, 10)); };
 
-        allFormats.forEach(f => {
-            // 1. Direct height field
+        formats.forEach(f => {
             if (f.height) addHeight(f.height);
-            // 2. Derive from width (3840=4K, 7680=8K)
-            if (!f.height && f.width) {
-                const w = parseInt(f.width, 10);
-                if (w >= 7680) heights.add(4320);
-                else if (w >= 3840) heights.add(2160);
-                else if (w >= 2560) heights.add(1440);
-                else if (w >= 1920) heights.add(1080);
-                else if (w >= 1280) heights.add(720);
-                else if (w >= 854) heights.add(480);
-                else if (w >= 640) heights.add(360);
-                else if (w >= 426) heights.add(240);
-                else if (w >= 256) heights.add(144);
+            else if (f.format_note && f.format_note.includes('p')) {
+                const h = parseInt(f.format_note, 10);
+                if (h) addHeight(h);
             }
-            // 3. format_note: "2160p60", "4K", "1440p"
-            const note = (f.format_note || f.format || '').toLowerCase();
-            const pMatch = note.match(/(\d{3,4})p/);
-            if (pMatch) addHeight(pMatch[1]);
-            else if (note.includes('8k')) heights.add(4320);
-            else if (note.includes('4k')) heights.add(2160);
-            // 4. YouTube format_id fallback
-            const fid = parseInt(f.format_id, 10);
-            if (FORMAT_ID_TO_HEIGHT[fid]) heights.add(FORMAT_ID_TO_HEIGHT[fid]);
         });
 
         const heightToLabel = { 144: '144p', 240: '240p', 360: '360p', 480: '480p', 720: '720p', 1080: '1080p', 1440: '1440p', 2160: '4K (Ultra HD)', 4320: '8K' };
@@ -1620,8 +1603,8 @@ app.get('/api/video-formats', async (req, res) => {
         qualities.push({ value: 'mp3', label: 'Audio Only (MP3)' });
         res.json({ qualities });
     } catch (error) {
-        console.error('Video formats error:', error.message);
-        res.status(500).json({ error: 'Failed to fetch video formats' });
+        console.error('Video formats error (yt-dlp):', error.message);
+        res.status(500).json({ error: 'YouTube is temporarily unavailable. Please try again later.' });
     }
 });
 
@@ -1676,23 +1659,27 @@ app.post('/api/download', authenticateToken, async (req, res) => {
         };
 
         if (!allowedQualities[plan].includes(quality) && quality !== 'mp3') {
-            return res.status(403).json({ error: `Your ${plan} plan does not support ${quality} downloads. Upgrade to unlock.` });
+            return res.status(403).json({ error: `Your ${plan} plan does not support ${quality} downloads.` });
         }
 
-        console.log(`Downloading ${videoId} with quality ${quality}...`);
-
-        const outputName = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${quality}.mp4`;
+        const outputName = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${quality}.${quality === 'mp3' ? 'mp3' : 'mp4'}`;
         const fullPath = path.join(os.tmpdir(), outputName);
+        const ytDlp = require('yt-dlp-exec');
 
-        const options = quality === 'mp3' ? { quality: 'highestaudio' } : { quality: 'highest' };
-        const stream = ytdl(videoId, options);
-        const fileStream = fs.createWriteStream(fullPath);
+        console.log(`🎬 Downloading with yt-dlp: ${videoId} (${quality})`);
 
-        await new Promise((resolve, reject) => {
-            stream.pipe(fileStream);
-            fileStream.on('finish', resolve);
-            fileStream.on('error', reject);
-        });
+        const dlpOptions = {
+            output: fullPath,
+            noCheckCertificates: true,
+            format: quality === 'mp3' ? 'bestaudio/best' : `bestvideo[height<=${quality.replace('p', '')}]+bestaudio/best`,
+        };
+
+        if (quality === 'mp3') {
+            dlpOptions.extractAudio = true;
+            dlpOptions.audioFormat = 'mp3';
+        }
+
+        await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpOptions);
 
         await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
         logAction(userId, 'DOWNLOAD_VIDEO', { videoId, quality, title });
@@ -1703,8 +1690,8 @@ app.post('/api/download', authenticateToken, async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Download Error:", error);
-        res.status(500).json({ error: "Download failed: " + error.message });
+        console.error("Download Error (yt-dlp):", error.message);
+        res.status(500).json({ error: "Download failed. YouTube is currently restricted. Please try again later." });
     }
 });
 
