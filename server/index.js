@@ -246,7 +246,10 @@ const checkPlanLimits = async (req, res, next) => {
 // Ensure DB columns exist (Migration) & Seed Admin
 (async () => {
     try {
-        // 0. Create Users Table if it doesn't exist
+        console.log("DB Migration: Starting setup...");
+        
+        // 0. Create Users Table
+        console.log("DB Migration: Step 0 - Verifying 'users' table...");
         await pool.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -258,7 +261,8 @@ const checkPlanLimits = async (req, res, next) => {
             )
         `);
 
-        // 1. Add Missing Columns to users table
+        // 1. Add Missing Columns
+        console.log("DB Migration: Step 1 - Adding columns to 'users'...");
         const usersColumns = [
             { name: 'plan', sql: "ALTER TABLE users ADD COLUMN plan ENUM('free', 'pro', 'expert', 'organization') DEFAULT 'free'" },
             { name: 'org_id', sql: "ALTER TABLE users ADD COLUMN org_id INT DEFAULT NULL" },
@@ -271,26 +275,20 @@ const checkPlanLimits = async (req, res, next) => {
             { name: 'billing_cycle', sql: "ALTER TABLE users ADD COLUMN billing_cycle ENUM('monthly', 'quarterly', 'yearly') DEFAULT 'monthly'" }
         ];
 
-        // Ensure ENUM includes 'organization' if it already exists
-        try {
-            await pool.query("ALTER TABLE users MODIFY COLUMN plan ENUM('free', 'pro', 'expert', 'organization') DEFAULT 'free'");
-        } catch (e) {
-            console.log("Plan enum already updated or failed:", e.message);
-        }
-
         for (const col of usersColumns) {
             try {
-                const [cols] = await pool.query(`SHOW COLUMNS FROM users LIKE '${col.name}'`);
+                const [cols] = await pool.query(`SHOW COLUMNS FROM users LIKE ?`, [col.name]);
                 if (cols.length === 0) {
-                    console.log(`Migrating DB: Adding ${col.name} column...`);
+                    console.log(`DB Migration: Adding column ${col.name}...`);
                     await pool.query(col.sql);
                 }
             } catch (e) {
-                if (e.code !== 'ER_DUP_FIELDNAME') console.error(`Migration error (${col.name}):`, e.message);
+                if (e.code !== 'ER_DUP_FIELDNAME') console.error(`DB Migration Warning (${col.name}):`, e.message);
             }
         }
 
-        // Create Organizations Table
+        // 2. Create Organizations Table
+        console.log("DB Migration: Step 2 - Verifying 'organizations' table...");
         try {
             await pool.query(`
                 CREATE TABLE IF NOT EXISTS organizations (
@@ -302,49 +300,12 @@ const checkPlanLimits = async (req, res, next) => {
                     FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
                 )
             `);
-            console.log("Organizations table verified.");
         } catch (e) {
-            console.error("Error creating organizations table:", e.message);
-        }
-
-        // 2c. Add Personal Information Columns
-        const personalInfoColumns = ['full_name', 'bio', 'phone', 'location', 'date_of_birth'];
-        for (const col of personalInfoColumns) {
-            try {
-                const [cols] = await pool.query(`SHOW COLUMNS FROM users LIKE '${col}'`);
-                if (cols.length === 0) {
-                    console.log(`Migrating DB: Adding ${col} column...`);
-                    if (col === 'bio') {
-                        await pool.query(`ALTER TABLE users ADD COLUMN ${col} TEXT DEFAULT NULL`);
-                    } else if (col === 'date_of_birth') {
-                        await pool.query(`ALTER TABLE users ADD COLUMN ${col} DATE DEFAULT NULL`);
-                    } else if (col === 'phone') {
-                        await pool.query(`ALTER TABLE users ADD COLUMN ${col} VARCHAR(20) DEFAULT NULL`);
-                    } else {
-                        await pool.query(`ALTER TABLE users ADD COLUMN ${col} VARCHAR(100) DEFAULT NULL`);
-                    }
-                }
-            } catch (e) {
-                if (e.code !== 'ER_DUP_FIELDNAME') {
-                    console.error(`Error adding ${col}:`, e.message);
-                }
-            }
-        }
-
-        // 2d. Add video_url column to notes_history
-        try {
-            const [colsVideoUrl] = await pool.query("SHOW COLUMNS FROM notes_history LIKE 'video_url'");
-            if (colsVideoUrl.length === 0) {
-                console.log("Migrating DB: Adding video_url column to notes_history...");
-                await pool.query("ALTER TABLE notes_history ADD COLUMN video_url VARCHAR(500) DEFAULT NULL");
-            }
-        } catch (e) {
-            if (e.code !== 'ER_DUP_FIELDNAME') {
-                console.error("Error adding video_url to notes_history:", e.message);
-            }
+            console.error("DB Migration Error (organizations):", e.message);
         }
 
         // 3. Create Audit Logs Table
+        console.log("DB Migration: Step 3 - Verifying 'audit_logs' table...");
         await pool.query(`
             CREATE TABLE IF NOT EXISTS audit_logs (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -356,44 +317,22 @@ const checkPlanLimits = async (req, res, next) => {
         `);
 
         // 4. Seed Admin User
-        const [admins] = await pool.query("SELECT * FROM users WHERE email = 'admin@scriptmind.com'");
+        console.log("DB Migration: Step 4 - Verifying Admin user...");
+        const [admins] = await pool.query("SELECT * FROM users WHERE email = ?", ['admin@scriptmind.com']);
         if (admins.length === 0) {
-            console.log("Seeding Admin User...");
+            console.log("DB Migration: Seeding Admin User...");
             const hashed = await bcrypt.hash('admin123', 10);
             await pool.query(
                 "INSERT IGNORE INTO users (username, email, password, role, plan, created_at) VALUES (?, ?, ?, 'admin', 'expert', NOW())",
                 ['System Admin', 'admin@scriptmind.com', hashed]
             );
+            console.log("DB Migration: Admin user seeded successfully.");
         }
 
-        // 5. Create System Settings Table & Seed Defaults
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS system_settings (
-                setting_key VARCHAR(50) PRIMARY KEY,
-                setting_value JSON,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            )
-        `);
-
-        // Seed Default Pricing if not exists
-        const [settings] = await pool.query("SELECT * FROM system_settings WHERE setting_key = 'pricing_config'");
-        if (settings.length === 0) {
-            console.log("Seeding Default Pricing...");
-            const defaultPricing = {
-                pro_monthly: 999,
-                pro_quarterly: 2799,
-                pro_yearly: 9999,
-                expert_monthly: 2499,
-                expert_quarterly: 6999,
-                expert_yearly: 24999,
-                org_monthly: 14999,
-                org_yearly: 149999
-            };
-            await pool.query("INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?)", ['pricing_config', JSON.stringify(defaultPricing)]);
-        }
+        console.log("DB Migration: Completed successfully!");
 
     } catch (e) {
-        console.error("Migration Error:", e);
+        console.error("DB Migration CRITICAL ERROR:", e);
     }
 })();
 
