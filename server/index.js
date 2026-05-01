@@ -1128,30 +1128,65 @@ app.post('/api/auth/github', async (req, res) => {
 });
 
 
+// Disable ytdl-core update check to avoid 403 errors on startup
+process.env.YTDL_NO_UPDATE = '1';
+
+// Helper: Load Cookies for YouTube (Bypass 429)
+function getYoutubeOptions() {
+    const options = {
+        requestOptions: {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            }
+        }
+    };
+
+    try {
+        const cookiePath = path.join(__dirname, 'cookies.json');
+        if (fs.existsSync(cookiePath)) {
+            console.log('🍪 [Auth] Loading YouTube cookies from cookies.json...');
+            options.requestOptions.headers.Cookie = fs.readFileSync(cookiePath, 'utf8');
+        }
+    } catch (e) {
+        console.warn('⚠️ [Auth] Failed to load cookies.json:', e.message);
+    }
+    return options;
+}
+
 // Helper: Download Audio using pure Node streams (Resilient on Render)
 async function downloadAudio(videoId) {
-    const ytdl = require('@distube/ytdl-core');
     const outputTemplate = path.join(os.tmpdir(), `${videoId}.mp3`);
-    
     console.log(`[Audio] Downloading stream for ${videoId}...`);
     
     try {
+        const options = getYoutubeOptions();
         const stream = ytdl(videoId, { 
             quality: 'highestaudio',
-            filter: 'audioonly' 
+            filter: 'audioonly',
+            ...options
         });
+
         const fileStream = fs.createWriteStream(outputTemplate);
         
-        await new Promise((resolve, reject) => {
+        return await new Promise((resolve, reject) => {
+            // CRITICAL: Catch errors on the stream itself to prevent app crash
+            stream.on('error', (err) => {
+                console.error(`[Audio] Stream error: ${err.message}`);
+                reject(err);
+            });
+
             stream.pipe(fileStream);
-            fileStream.on('finish', resolve);
-            fileStream.on('error', reject);
+            fileStream.on('finish', () => {
+                console.log(`[Audio] download success: ${outputTemplate}`);
+                resolve(outputTemplate);
+            });
+            fileStream.on('error', (err) => {
+                console.error(`[Audio] File stream error: ${err.message}`);
+                reject(err);
+            });
         });
-        
-        console.log(`[Audio] Pure Node download success: ${outputTemplate}`);
-        return outputTemplate;
     } catch (err) {
-        console.error(`[Audio] Pure Node download failed: ${err.message}`);
+        console.error(`[Audio] Final download failure: ${err.message}`);
         throw err;
     }
 }
