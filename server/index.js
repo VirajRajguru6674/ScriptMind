@@ -1145,34 +1145,54 @@ async function downloadAudio(videoId) {
     const ytDlp = require('yt-dlp-exec');
     const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
     const outputTemplate = path.join(os.tmpdir(), `${videoId}.%(ext)s`);
-    await ytDlp(videoUrl, {
-        format: 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio',
-        output: outputTemplate,
-        noCheckCertificates: true
-    });
-    const downloadedFile = fs.readdirSync(os.tmpdir()).find(file => file.startsWith(videoId));
-    return path.join(os.tmpdir(), downloadedFile);
+    
+    console.log(`[Audio] Attempting audio download for ${videoId}...`);
+    
+    try {
+        await ytDlp(videoUrl, {
+            format: 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio',
+            output: outputTemplate,
+            noCheckCertificates: true,
+            preferFreeFormats: true
+        });
+        
+        const downloadedFile = fs.readdirSync(os.tmpdir()).find(file => file.startsWith(videoId));
+        if (!downloadedFile) throw new Error("File not found after download");
+        
+        console.log(`[Audio] Successfully downloaded: ${downloadedFile}`);
+        return path.join(os.tmpdir(), downloadedFile);
+    } catch (err) {
+        console.error(`[Audio] Download failed: ${err.message}`);
+        throw err;
+    }
 }
 
-// Helper: Transcribe Audio with Groq Whisper
 // Helper: Transcribe Audio with Groq Whisper
 async function transcribeWithWhisper(filePath, apiKey) {
     const formData = new FormData();
     formData.append('file', fs.createReadStream(filePath));
     formData.append('model', 'whisper-large-v3');
     formData.append('response_format', 'text');
+    
+    console.log(`[Whisper] Transcribing ${path.basename(filePath)}...`);
+    
     const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
         headers: { 'Authorization': `Bearer ${apiKey}`, ...formData.getHeaders() }
     });
-    fs.unlinkSync(filePath);
+    
+    try { fs.unlinkSync(filePath); } catch (e) {}
     return response.data;
 }
 
 async function fetchTranscript(videoId) {
     try {
+        console.log(`[Transcript] Trying official captions for ${videoId}...`);
         const items = await YoutubeTranscript.fetchTranscript(videoId);
-        return items.map(i => i.text).join(' ').replace(/\s+/g, ' ').trim();
+        const transcript = items.map(i => i.text).join(' ').replace(/\s+/g, ' ').trim();
+        console.log(`[Transcript] Found official captions (${transcript.length} chars)`);
+        return transcript;
     } catch (e) {
+        console.warn(`[Transcript] Official captions unavailable, falling back to Whisper: ${e.message}`);
         const audioPath = await downloadAudio(videoId);
         return await executeWithRotation('GROQ_API_KEY', async (key) => {
             return await transcribeWithWhisper(audioPath, key);
