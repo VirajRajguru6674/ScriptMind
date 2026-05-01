@@ -1,7 +1,6 @@
--- Drop existing database and recreate
-DROP DATABASE IF EXISTS youtube_notes;
-CREATE DATABASE youtube_notes;
-USE youtube_notes;
+-- DROP DATABASE IF EXISTS youtube_notes;
+-- CREATE DATABASE youtube_notes;
+-- USE youtube_notes;
 
 -- Users table
 CREATE TABLE users (
