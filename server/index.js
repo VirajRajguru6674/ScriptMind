@@ -66,6 +66,11 @@ const getDbConfig = () => {
 
 const pool = mysql.createPool(getDbConfig());
 
+// Root Health Check
+app.get('/', (req, res) => {
+    res.json({ status: 'alive', message: 'ScriptMind API is running' });
+});
+
 const { YoutubeTranscript } = require('youtube-transcript');
 const ytdl = require('@distube/ytdl-core');
 const fs = require('fs');
