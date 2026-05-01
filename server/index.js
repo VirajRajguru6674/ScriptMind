@@ -15,16 +15,17 @@ app.use(express.json());
 
 // Helper: Parse DB URI and merge with SSL config
 const getDbConfig = () => {
-    const uriString = process.env.DB_URI;
+    const uriString = process.env.DB_URI?.trim();
     
     if (uriString) {
         try {
             const url = new URL(uriString);
+            console.log(`📡 DB Config: Using URI for host ${url.hostname}, DB: ${url.pathname.substring(1)}`);
             return {
-                host: url.hostname,
-                user: url.username,
-                password: decodeURIComponent(url.password),
-                database: url.pathname.substring(1) || process.env.DB_NAME,
+                host: url.hostname.trim(),
+                user: url.username.trim(),
+                password: decodeURIComponent(url.password).trim(),
+                database: (url.pathname.substring(1) || process.env.DB_NAME || "defaultdb").trim(),
                 port: parseInt(url.port) || 3306,
                 waitForConnections: true,
                 connectionLimit: 10,
@@ -40,11 +41,12 @@ const getDbConfig = () => {
         }
     }
     
+    console.log(`📡 DB Config: Using individual params for host ${process.env.DB_HOST}, DB: ${process.env.DB_NAME}`);
     return {
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME,
+        host: (process.env.DB_HOST || "").trim(),
+        user: (process.env.DB_USER || "").trim(),
+        password: (process.env.DB_PASSWORD || "").trim(),
+        database: (process.env.DB_NAME || "defaultdb").trim(),
         port: parseInt(process.env.DB_PORT) || 3306,
         waitForConnections: true,
         connectionLimit: 10,
