@@ -246,6 +246,18 @@ const checkPlanLimits = async (req, res, next) => {
 // Ensure DB columns exist (Migration) & Seed Admin
 (async () => {
     try {
+        // 0. Create Users Table if it doesn't exist
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(100),
+                email VARCHAR(100) UNIQUE,
+                password VARCHAR(255),
+                role ENUM('user', 'admin') DEFAULT 'user',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
         // 1. Add Missing Columns to users table
         const usersColumns = [
             { name: 'plan', sql: "ALTER TABLE users ADD COLUMN plan ENUM('free', 'pro', 'expert', 'organization') DEFAULT 'free'" },
