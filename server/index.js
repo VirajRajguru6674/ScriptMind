@@ -1308,95 +1308,13 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
             }
         }
 
-        let transcript = manualTranscript;
+        // Step 2: Fetch Transcript with extreme resilience
+        let transcript = manualTranscript || "";
         if (!transcript) {
             try {
-                console.log("Fetching transcript...");
+                console.log(`[Transcript] Fetching for ${videoId}...`);
                 transcript = await fetchTranscript(videoId);
             } catch (transError) {
-                console.error("Transcript Error:", transError.message);
-                return res.status(500).json({ error: "Failed to fetch transcript. The video might not have captions enabled." });
-            }
-        }
-
-        console.log("Generating notes with Groq...");
-        // Fetch user AI preferences
-        let userPrefs = { ai_tone: 'educational', ai_detail_level: 'detailed', ai_language: 'en' };
-        try {
-            const [prefRows] = await pool.execute(
-                'SELECT ai_tone, ai_detail_level, ai_language FROM users WHERE id = ?',
-                [userId]
-            );
-            if (prefRows.length > 0) {
-                userPrefs = {
-                    ai_tone: prefRows[0].ai_tone || 'educational',
-                    ai_detail_level: prefRows[0].ai_detail_level || 'detailed',
-                    ai_language: prefRows[0].ai_language || 'en'
-                };
-            }
-        } catch (prefError) {
-            console.warn("Could not fetch user preferences, using defaults:", prefError.message);
-        }
-
-        let notes;
-        try {
-            notes = await executeWithRotation('GROQ_API_KEY', async (key) => {
-                // ---------------------------------------------------------------
-                // TOKEN BUDGET MANAGEMENT (Groq free tier: 12k TPM on 70b model)
-                // llama-3.1-8b-instant has 20k TPM — better headroom on free tier.
-                // System prompt + user instructions ≈ 3,000–4,000 tokens overhead.
-                // Reserve 6,000 tokens for the output → ~6,000 left for transcript.
-                // 1 token ≈ 4 chars → 6,000 tokens ≈ 24,000 chars of transcript max.
-                // ---------------------------------------------------------------
-                const MODEL = 'llama-3.1-8b-instant'; // 20k TPM free-tier; switch to llama-3.3-70b-versatile if on paid tier
-                const TPM_LIMIT = 20000;               // tokens per minute for the chosen model
-                const PROMPT_OVERHEAD_TOKENS = 3500;   // estimated system + user instruction tokens
-                const MAX_OUTPUT_TOKENS = 4000;        // target output tokens
-                const MAX_INPUT_TOKENS = TPM_LIMIT - PROMPT_OVERHEAD_TOKENS - MAX_OUTPUT_TOKENS; // ~12,500
-                const MAX_TRANSCRIPT_CHARS = MAX_INPUT_TOKENS * 4; // ~50,000 chars (conservative)
-
-                let transcriptToUse = transcript;
-                let isTruncated = false;
-
-                if (transcript.length > MAX_TRANSCRIPT_CHARS) {
-                    transcriptToUse = transcript.substring(0, MAX_TRANSCRIPT_CHARS);
-                    isTruncated = true;
-                    console.log(`Transcript truncated: ${transcript.length} → ${MAX_TRANSCRIPT_CHARS} chars`);
-                } else {
-                    console.log(`Using full transcript: ${transcript.length} chars`);
-                }
-
-                // Language reminder (kept short to save tokens)
-                const languageReminder = userPrefs.ai_language === 'hi'
-                    ? '\nWrite ALL notes EXCLUSIVELY in Hindi Devanagari script (हिन्दी). No English, no Chinese.'
-                    : userPrefs.ai_language !== 'en'
-                    ? `\nWrite ALL notes EXCLUSIVELY in ${userPrefs.ai_language === 'mr' ? 'Marathi (Devanagari)' : userPrefs.ai_language === 'es' ? 'Spanish' : userPrefs.ai_language === 'fr' ? 'French' : 'German'}.`
-                    : '';
-
-                // Estimated video length for context
-                const estimatedMinutes = Math.ceil(transcriptToUse.length / 750);
-                const estimatedHours = Math.floor(estimatedMinutes / 60);
-                const remainingMinutes = estimatedMinutes % 60;
-
-                // Target pages: 3–8 pages (scaled to fit within token budget)
-                const targetPages = Math.min(8, Math.max(3, Math.ceil(3 + (estimatedMinutes / 15))));
-
-                const transcriptNote = isTruncated
-                    ? `\nNote: Long video (~${estimatedHours > 0 ? estimatedHours + 'h ' : ''}${remainingMinutes}m). Transcript truncated. Cover the available portion.`
-                    : `\nComplete transcript (~${estimatedHours > 0 ? estimatedHours + 'h ' : ''}${remainingMinutes}m).`;
-
-                console.log(`Generating notes with preferences - Tone: ${userPrefs.ai_tone}, Detail: ${userPrefs.ai_detail_level}, Language: ${userPrefs.ai_language}`);
-                console.log(`Video estimated length: ${estimatedHours > 0 ? estimatedHours + 'h ' : ''}${remainingMinutes}m (${estimatedMinutes} total minutes)`);
-                console.log(`Transcript length: ${transcript.length} chars, Using: ${transcriptToUse.length} chars`);
-                console.log(`Target note length: ${targetPages} pages | Model: ${MODEL} | Max output tokens: ${MAX_OUTPUT_TOKENS}`);
-
-                // Compact system prompt to reduce token overhead
-                const systemPrompt = `You are an expert note-taker. Extract and organize information ONLY from the provided transcript into clear, structured Markdown notes. Do NOT add any information not in the transcript. Use headings (#, ##, ###), bullet points, and **bold** for key terms. ${buildAISystemPrompt(userPrefs.ai_tone, userPrefs.ai_detail_level, userPrefs.ai_language)}`;
-
-                const userPrompt = `Video: "${videoInfo.title}"${languageReminder}${transcriptNote}
-
-Generate ${targetPages} pages of structured study notes from this transcript. Only use what is explicitly stated. Do not speculate or add external knowledge.
-
 Transcript:
 ${transcriptToUse}`;
 
