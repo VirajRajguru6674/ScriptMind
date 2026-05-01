@@ -338,21 +338,15 @@ async function initializeDatabase() {
             )
         `);
 
-        // 3. Seed/Update Admin User
-        const [admins] = await conn.query("SELECT * FROM users WHERE email = ?", ['admin@scriptmind.com']);
+        // 3. Seed/Update Admin User (Clean Slate Approach)
+        console.log("👤 DB Initialization: Resetting admin account...");
+        await conn.query("DELETE FROM users WHERE email = ?", ['admin@scriptmind.com']);
         const hashed = await bcrypt.hash('admin123', 10);
-        
-        if (admins.length === 0) {
-            await conn.query(
-                "INSERT INTO users (username, email, password, role, plan, created_at) VALUES (?, ?, ?, 'admin', 'expert', NOW())",
-                ['System Admin', 'admin@scriptmind.com', hashed]
-            );
-            console.log("👤 DB Initialization: Admin user created.");
-        } else {
-            // Force reset password to ensure accessibility during setup
-            await conn.query("UPDATE users SET password = ?, role = 'admin' WHERE email = ?", [hashed, 'admin@scriptmind.com']);
-            console.log("👤 DB Initialization: Admin password reset to 'admin123'.");
-        }
+        await conn.query(
+            "INSERT INTO users (username, email, password, role, plan, created_at) VALUES (?, ?, ?, 'admin', 'expert', NOW())",
+            ['System Admin', 'admin@scriptmind.com', hashed]
+        );
+        console.log("👤 DB Initialization: Admin user recreated successfully.");
 
         console.log("🚀 DB Initialization: Success!");
 
