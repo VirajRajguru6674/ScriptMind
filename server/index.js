@@ -245,12 +245,14 @@ const checkPlanLimits = async (req, res, next) => {
 
 // Ensure DB columns exist (Migration) & Seed Admin
 (async () => {
+    let conn;
     try {
-        console.log("DB Migration: Starting setup...");
+        console.log("DB Migration: Starting setup with dedicated connection...");
+        conn = await pool.getConnection();
         
         // 0. Create Users Table
         console.log("DB Migration: Step 0 - Verifying 'users' table...");
-        await pool.query(`
+        await conn.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(100),
@@ -262,7 +264,7 @@ const checkPlanLimits = async (req, res, next) => {
         `);
 
         // 1. Add Missing Columns
-        console.log("DB Migration: Step 1 - Adding columns to 'users'...");
+        console.log("DB Migration: Step 1 - Adding columns...");
         const usersColumns = [
             { name: 'plan', sql: "ALTER TABLE users ADD COLUMN plan ENUM('free', 'pro', 'expert', 'organization') DEFAULT 'free'" },
             { name: 'org_id', sql: "ALTER TABLE users ADD COLUMN org_id INT DEFAULT NULL" },
@@ -277,62 +279,46 @@ const checkPlanLimits = async (req, res, next) => {
 
         for (const col of usersColumns) {
             try {
-                const [cols] = await pool.query(`SHOW COLUMNS FROM users LIKE ?`, [col.name]);
+                const [cols] = await conn.query(`SHOW COLUMNS FROM users LIKE ?`, [col.name]);
                 if (cols.length === 0) {
-                    console.log(`DB Migration: Adding column ${col.name}...`);
-                    await pool.query(col.sql);
+                    await conn.query(col.sql);
                 }
             } catch (e) {
-                if (e.code !== 'ER_DUP_FIELDNAME') console.error(`DB Migration Warning (${col.name}):`, e.message);
+                // Ignore duplicate errors
             }
         }
 
         // 2. Create Organizations Table
         console.log("DB Migration: Step 2 - Verifying 'organizations' table...");
-        try {
-            await pool.query(`
-                CREATE TABLE IF NOT EXISTS organizations (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    owner_id INT NOT NULL,
-                    name VARCHAR(100) NOT NULL,
-                    max_members INT DEFAULT 50,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
-                )
-            `);
-        } catch (e) {
-            console.error("DB Migration Error (organizations):", e.message);
-        }
-
-        // 3. Create Audit Logs Table
-        console.log("DB Migration: Step 3 - Verifying 'audit_logs' table...");
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS audit_logs (
+        await conn.query(`
+            CREATE TABLE IF NOT EXISTS organizations (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT,
-                action VARCHAR(50),
-                details JSON,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                owner_id INT NOT NULL,
+                name VARCHAR(100) NOT NULL,
+                max_members INT DEFAULT 50,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
             )
         `);
 
         // 4. Seed Admin User
-        console.log("DB Migration: Step 4 - Verifying Admin user...");
-        const [admins] = await pool.query("SELECT * FROM users WHERE email = ?", ['admin@scriptmind.com']);
+        console.log("DB Migration: Step 3 - Verifying Admin user...");
+        const [admins] = await conn.query("SELECT * FROM users WHERE email = ?", ['admin@scriptmind.com']);
         if (admins.length === 0) {
-            console.log("DB Migration: Seeding Admin User...");
             const hashed = await bcrypt.hash('admin123', 10);
-            await pool.query(
+            await conn.query(
                 "INSERT IGNORE INTO users (username, email, password, role, plan, created_at) VALUES (?, ?, ?, 'admin', 'expert', NOW())",
                 ['System Admin', 'admin@scriptmind.com', hashed]
             );
-            console.log("DB Migration: Admin user seeded successfully.");
+            console.log("DB Migration: Admin user seeded.");
         }
 
-        console.log("DB Migration: Completed successfully!");
+        console.log("DB Migration: Success!");
 
     } catch (e) {
-        console.error("DB Migration CRITICAL ERROR:", e);
+        console.error("DB Migration Error:", e);
+    } finally {
+        if (conn) conn.release();
     }
 })();
 
