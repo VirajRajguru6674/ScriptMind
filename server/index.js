@@ -1182,9 +1182,7 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
             videoInfo = await executeWithRotation('YOUTUBE_API_KEY', async (key) => {
                 const youtubeRes = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}&key=${key}`);
                 if (!youtubeRes.data.items || youtubeRes.data.items.length === 0) {
-                    const err = new Error("Video not found");
-                    err.response = { status: 404 };
-                    throw err;
+                    throw new Error("Video not found or is private");
                 }
                 const video = youtubeRes.data.items[0];
                 return {
@@ -1197,9 +1195,16 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
                 };
             });
         } catch (ytError) {
-            console.warn("YouTube API failed, triggering fallback to yt-dlp:", ytError.message);
+            console.warn("YouTube API failed, using ytdl fallback:", ytError.message);
             try {
-                const info = await ytdl.getInfo(videoId);
+                // Using @distube/ytdl-core with stable options
+                const info = await ytdl.getInfo(videoId, {
+                    requestOptions: {
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        }
+                    }
+                });
                 videoInfo = {
                     id: videoId,
                     title: info.videoDetails.title,
@@ -1209,8 +1214,8 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
                     hasCaptions: true
                 };
             } catch (dlpError) {
-                console.error("Critical: Both API and ytdl failed to fetch video metadata:", dlpError.message);
-                return res.status(500).json({ error: "Failed to fetch video details. Please check the URL or try again later." });
+                console.error("Critical: All YouTube methods failed:", dlpError.message);
+                return res.status(500).json({ error: "YouTube is blocking the request. Please try a different video or try again later." });
             }
         }
 
