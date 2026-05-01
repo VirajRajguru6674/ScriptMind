@@ -1315,8 +1315,38 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
                 console.log(`[Transcript] Fetching for ${videoId}...`);
                 transcript = await fetchTranscript(videoId);
             } catch (transError) {
-Transcript:
-${transcriptToUse}`;
+                console.warn(`[Transcript] All transcription methods failed: ${transError.message}`);
+                console.log(`[Transcript] Falling back to Metadata-only generation...`);
+            }
+        }
+
+        // Step 3: Generate Notes
+        let generatedNotes = "";
+        try {
+            generatedNotes = await executeWithRotation('GROQ_API_KEY', async (key) => {
+                console.log("Generating notes with Groq...");
+                
+                // Fetch user AI preferences
+                let userPrefs = { ai_tone: 'educational', ai_detail_level: 'detailed', ai_language: 'en' };
+                try {
+                    const [prefRows] = await pool.execute('SELECT ai_tone, ai_detail_level, ai_language FROM users WHERE id = ?', [userId]);
+                    if (prefRows.length > 0) userPrefs = prefRows[0];
+                } catch (prefErr) { console.warn("Could not fetch user prefs, using defaults"); }
+
+                const MODEL = 'llama-3.1-8b-instant';
+                const MAX_OUTPUT_TOKENS = 4000;
+                
+                // Truncate transcript if too long
+                const MAX_CHARS = 50000;
+                let transcriptToUse = transcript.length > MAX_CHARS ? transcript.substring(0, MAX_CHARS) : transcript;
+
+                const systemPrompt = transcriptToUse
+                    ? `You are an expert note-taker. Extract and organize information ONLY from the provided transcript into clear, structured Markdown notes. ${buildAISystemPrompt(userPrefs.ai_tone, userPrefs.ai_detail_level, userPrefs.ai_language)}`
+                    : `The transcript is unavailable due to YouTube restrictions. You are an expert analyst. Generate the best possible study notes and summary based ONLY on the video metadata provided (Title and Description). ${buildAISystemPrompt(userPrefs.ai_tone, userPrefs.ai_detail_level, userPrefs.ai_language)}`;
+
+                const userPrompt = transcriptToUse
+                    ? `Video: "${videoInfo.title}"\n\nTranscript:\n${transcriptToUse}`
+                    : `Video: "${videoInfo.title}"\n\nMetadata:\nTitle: ${videoInfo.title}\nDescription: ${videoInfo.description}`;
 
                 const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                     model: MODEL,
@@ -1328,59 +1358,39 @@ ${transcriptToUse}`;
                     temperature: 0.3
                 }, { headers: { 'Authorization': `Bearer ${key}` } });
 
-                let generatedNotes = groqRes.data.choices[0].message.content;
-
-                // Clean mixed scripts if Hindi is selected
-                if (userPrefs.ai_language === 'hi') {
-                    generatedNotes = cleanHindiText(generatedNotes, 'hi');
-                    console.log('Cleaned Hindi text to remove mixed scripts');
-                }
-
-                return generatedNotes;
+                let result = groqRes.data.choices[0].message.content;
+                if (userPrefs.ai_language === 'hi') result = cleanHindiText(result, 'hi');
+                return result;
             });
         } catch (groqError) {
-            console.error("Groq API Error:", groqError.response?.data || groqError.message);
-            return res.status(groqError.response?.status || 500).json({ error: `Groq AI failed: ${groqError.message}` });
+            console.error("Groq AI Error:", groqError.message);
+            return res.status(500).json({ error: "Failed to generate AI notes. Please try again later." });
         }
 
+        // Step 4: Save and Notify
         try {
-            const videoUrl = `https://www.youtube.com/watch?v=${videoInfo.id}`;
-            await pool.execute('INSERT INTO notes_history (user_id, video_id, title, thumbnail, notes, video_url) VALUES (?, ?, ?, ?, ?, ?)',
-                [userId, videoInfo.id, videoInfo.title, videoInfo.thumbnail, notes, videoUrl]);
-
-            // Log Action
-            logAction(userId, 'GENERATE_NOTES', { videoId: videoInfo.id, title: videoInfo.title });
-
-            // Trigger Multi-Platform Notifications
-            const summary = `Study notes for "${videoInfo.title}" have been generated successfully.`;
-            
-            // Add video URL to videoInfo for frontend
-            videoInfo.url = videoUrl;
-
-            // Send to external platforms
-            const notifyResults = await sendNotifications(videoInfo.title, summary, videoUrl);
-
-            // Save to internal notifications table
-            const platforms = [];
-            if (notifyResults.teams) platforms.push('Teams');
-            if (notifyResults.telegram) platforms.push('Telegram');
-            if (notifyResults.email) platforms.push('Email');
-
+            const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
             await pool.execute(
-                'INSERT INTO notifications (title, message, type, platform) VALUES (?, ?, ?, ?)',
-                [videoInfo.title, summary, 'success', platforms.join(', ') || 'System']
+                'INSERT INTO notes_history (user_id, video_id, title, thumbnail, notes, video_url) VALUES (?, ?, ?, ?, ?, ?)',
+                [userId, videoId, videoInfo.title, videoInfo.thumbnail, generatedNotes, videoUrl]
             );
 
+            logAction(userId, 'GENERATE_NOTES', { videoId, title: videoInfo.title });
+            
+            const summary = `Notes for "${videoInfo.title}" have been generated.`;
+            await sendNotifications(videoInfo.title, summary, videoUrl);
+            await pool.execute(
+                'INSERT INTO notifications (title, message, type) VALUES (?, ?, ?)',
+                [videoInfo.title, summary, 'success']
+            );
         } catch (dbError) {
-            console.error("Database/Notify Error:", dbError.message);
-            // Non-blocking: we still have the notes
+            console.warn("Non-blocking DB/Notify Error:", dbError.message);
         }
 
-        res.json({ video: videoInfo, notes });
+        res.json({ video: videoInfo, notes: generatedNotes });
     } catch (error) {
         console.error("General Process Error:", error);
-        console.error("Error stack:", error.stack);
-        res.status(500).json({ error: error.message || 'An unexpected error occurred while processing the video' });
+        res.status(500).json({ error: error.message || 'An unexpected error occurred' });
     }
 });
 
