@@ -338,15 +338,20 @@ async function initializeDatabase() {
             )
         `);
 
-        // 3. Seed Admin User
+        // 3. Seed/Update Admin User
         const [admins] = await conn.query("SELECT * FROM users WHERE email = ?", ['admin@scriptmind.com']);
+        const hashed = await bcrypt.hash('admin123', 10);
+        
         if (admins.length === 0) {
-            const hashed = await bcrypt.hash('admin123', 10);
             await conn.query(
-                "INSERT IGNORE INTO users (username, email, password, role, plan, created_at) VALUES (?, ?, ?, 'admin', 'expert', NOW())",
+                "INSERT INTO users (username, email, password, role, plan, created_at) VALUES (?, ?, ?, 'admin', 'expert', NOW())",
                 ['System Admin', 'admin@scriptmind.com', hashed]
             );
-            console.log("👤 DB Initialization: Admin user seeded.");
+            console.log("👤 DB Initialization: Admin user created.");
+        } else {
+            // Force reset password to ensure accessibility during setup
+            await conn.query("UPDATE users SET password = ?, role = 'admin' WHERE email = ?", [hashed, 'admin@scriptmind.com']);
+            console.log("👤 DB Initialization: Admin password reset to 'admin123'.");
         }
 
         console.log("🚀 DB Initialization: Success!");
