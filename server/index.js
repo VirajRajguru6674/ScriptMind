@@ -26,7 +26,10 @@ const getDbConfig = () => {
                 password: decodeURIComponent(url.password),
                 database: url.pathname.substring(1) || process.env.DB_NAME,
                 port: parseInt(url.port) || 3306,
-                ssl: { rejectUnauthorized: false }
+                ssl: { 
+                    rejectUnauthorized: false,
+                    checkServerIdentity: () => undefined // Cloud Handshake Fix
+                }
             };
         } catch (e) {
             console.error("URI Parse Error:", e.message);
@@ -39,7 +42,10 @@ const getDbConfig = () => {
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME,
         port: parseInt(process.env.DB_PORT) || 3306,
-        ssl: { rejectUnauthorized: false }
+        ssl: { 
+            rejectUnauthorized: false,
+            checkServerIdentity: () => undefined // Cloud Handshake Fix
+        }
     };
 };
 
