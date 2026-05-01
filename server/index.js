@@ -15,26 +15,34 @@ app.use(express.json());
 
 // Helper: Parse DB URI and merge with SSL config
 const getDbConfig = () => {
-    const uri = process.env.DB_URI;
-    if (uri) {
-        // Simple URI handling to avoid invalid options like ssl-mode
-        return {
-            uri: uri.split('?')[0], // Strip query params
-            ssl: {
-                rejectUnauthorized: false,
-                minVersion: 'TLSv1.2'
-            }
-        };
+    const uriString = process.env.DB_URI;
+    
+    if (uriString) {
+        try {
+            // Manual parsing to be 100% sure we control the SSL object
+            const url = new URL(uriString);
+            return {
+                host: url.hostname,
+                user: url.username,
+                password: decodeURIComponent(url.password),
+                database: url.pathname.substring(1) || process.env.DB_NAME,
+                port: parseInt(url.port) || 3306,
+                ssl: {
+                    rejectUnauthorized: false,
+                    minVersion: 'TLSv1.2'
+                }
+            };
+        } catch (e) {
+            console.error("URI Parse Error, falling back to params:", e.message);
+        }
     }
+    
     return {
         host: process.env.DB_HOST,
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME,
         port: parseInt(process.env.DB_PORT) || 3306,
-        waitForConnections: true,
-        connectionLimit: 10,
-        queueLimit: 0,
         ssl: {
             rejectUnauthorized: false,
             minVersion: 'TLSv1.2'
