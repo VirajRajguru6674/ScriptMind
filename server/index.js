@@ -18,14 +18,14 @@ const pool = mysql.createPool(process.env.DB_URI || {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT || 3306,
+    port: parseInt(process.env.DB_PORT) || 3306,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    ssl: process.env.DB_SSL === 'true' ? {
+    ssl: {
         rejectUnauthorized: false,
         minVersion: 'TLSv1.2'
-    } : undefined
+    }
 });
 
 const { YoutubeTranscript } = require('youtube-transcript');
@@ -245,14 +245,14 @@ const checkPlanLimits = async (req, res, next) => {
 };
 
 // Ensure DB columns exist (Migration) & Seed Admin
-(async () => {
+async function initializeDatabase() {
     let conn;
     try {
-        console.log("DB Migration: Starting setup with dedicated connection...");
+        console.log("📡 DB Initialization: Attempting connection...");
         conn = await pool.getConnection();
+        console.log("✅ DB Initialization: Connected successfully.");
         
         // 0. Create Users Table
-        console.log("DB Migration: Step 0 - Verifying 'users' table...");
         await conn.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -265,7 +265,6 @@ const checkPlanLimits = async (req, res, next) => {
         `);
 
         // 1. Add Missing Columns
-        console.log("DB Migration: Step 1 - Adding columns...");
         const usersColumns = [
             { name: 'plan', sql: "ALTER TABLE users ADD COLUMN plan ENUM('free', 'pro', 'expert', 'organization') DEFAULT 'free'" },
             { name: 'org_id', sql: "ALTER TABLE users ADD COLUMN org_id INT DEFAULT NULL" },
@@ -290,7 +289,6 @@ const checkPlanLimits = async (req, res, next) => {
         }
 
         // 2. Create Organizations Table
-        console.log("DB Migration: Step 2 - Verifying 'organizations' table...");
         await conn.query(`
             CREATE TABLE IF NOT EXISTS organizations (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -302,8 +300,7 @@ const checkPlanLimits = async (req, res, next) => {
             )
         `);
 
-        // 4. Seed Admin User
-        console.log("DB Migration: Step 3 - Verifying Admin user...");
+        // 3. Seed Admin User
         const [admins] = await conn.query("SELECT * FROM users WHERE email = ?", ['admin@scriptmind.com']);
         if (admins.length === 0) {
             const hashed = await bcrypt.hash('admin123', 10);
@@ -311,17 +308,20 @@ const checkPlanLimits = async (req, res, next) => {
                 "INSERT IGNORE INTO users (username, email, password, role, plan, created_at) VALUES (?, ?, ?, 'admin', 'expert', NOW())",
                 ['System Admin', 'admin@scriptmind.com', hashed]
             );
-            console.log("DB Migration: Admin user seeded.");
+            console.log("👤 DB Initialization: Admin user seeded.");
         }
 
-        console.log("DB Migration: Success!");
+        console.log("🚀 DB Initialization: Success!");
 
     } catch (e) {
-        console.error("DB Migration Error:", e);
+        console.error("❌ DB Initialization CRITICAL ERROR:", e.message);
     } finally {
         if (conn) conn.release();
     }
-})();
+}
+
+// Execute initialization
+initializeDatabase();
 
 // Public Routes
 app.get('/api/settings/pricing', async (req, res) => {
