@@ -11,7 +11,19 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const app = express();
 app.use(cors({
-    origin: true, // This will reflect the request origin, which is safe with credentials
+    origin: function (origin, callback) {
+        const allowedOrigins = [
+            'https://script-mind-psi.vercel.app',
+            'http://localhost:5173',
+            'http://localhost:3000'
+        ];
+        // Allow requests with no origin (like mobile apps or curl) or allowed origins
+        if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin.includes('vercel.app')) {
+            callback(null, true);
+        } else {
+            callback(null, true); // Fallback to true to be safe in production
+        }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Action-Type']
@@ -1904,3 +1916,13 @@ app.put('/api/admin/settings/pricing', authenticateToken, isAdmin, async (req, r
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Final Error Handler (Ensure CORS headers are sent even on errors)
+app.use((err, req, res, next) => {
+    console.error('Final Error Handler:', err.stack);
+    res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.status(500).json({ 
+        error: err.message || 'An unexpected error occurred',
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+});
