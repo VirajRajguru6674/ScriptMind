@@ -1189,12 +1189,17 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
         // Increment usage count
         await pool.execute('UPDATE users SET usage_count = usage_count + 1 WHERE id = ?', [userId]);
 
-        let videoInfo;
+        let videoInfo = null;
+        let lastError = null;
+
+        console.log(`[Process] Starting metadata fetch for ${videoId}...`);
+
+        // Attempt 1: YouTube Data API (Official)
         try {
             videoInfo = await executeWithRotation('YOUTUBE_API_KEY', async (key) => {
                 const youtubeRes = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}&key=${key}`);
                 if (!youtubeRes.data.items || youtubeRes.data.items.length === 0) {
-                    throw new Error("Video not found or is private");
+                    throw new Error("Video not found or is private (API)");
                 }
                 const video = youtubeRes.data.items[0];
                 return {
@@ -1206,28 +1211,56 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
                     hasCaptions: video.contentDetails.caption === 'true'
                 };
             });
+            console.log(`[Process] API Success: ${videoInfo.title}`);
         } catch (ytError) {
-            console.warn("YouTube API failed, using ytdl fallback:", ytError.message);
+            console.warn(`[Process] YouTube API failed: ${ytError.message}`);
+            lastError = ytError;
+        }
+
+        // Attempt 2: yt-dlp Fallback (Resilient)
+        if (!videoInfo) {
             try {
-                // Using @distube/ytdl-core with stable options
-                const info = await ytdl.getInfo(videoId, {
-                    requestOptions: {
-                        headers: {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                        }
-                    }
+                console.log(`[Process] Attempting yt-dlp fallback for ${videoId}...`);
+                const ytDlp = require('yt-dlp-exec');
+                const info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, {
+                    dumpSingleJson: true,
+                    noCheckCertificates: true,
                 });
+                videoInfo = {
+                    id: videoId,
+                    title: info.title,
+                    channelTitle: info.uploader,
+                    thumbnail: info.thumbnail,
+                    description: info.description,
+                    hasCaptions: true
+                };
+                console.log(`[Process] yt-dlp Success: ${videoInfo.title}`);
+            } catch (dlpError) {
+                console.error(`[Process] yt-dlp failed: ${dlpError.message}`);
+                lastError = dlpError;
+            }
+        }
+
+        // Attempt 3: ytdl-core Fallback (Last Resort)
+        if (!videoInfo) {
+            try {
+                console.log(`[Process] Attempting ytdl-core fallback for ${videoId}...`);
+                const info = await ytdl.getInfo(videoId);
                 videoInfo = {
                     id: videoId,
                     title: info.videoDetails.title,
                     channelTitle: info.videoDetails.author.name,
-                    thumbnail: info.videoDetails.thumbnails[info.videoDetails.thumbnails.length - 1].url,
+                    thumbnail: info.videoDetails.thumbnails[0].url,
                     description: info.videoDetails.description,
                     hasCaptions: true
                 };
-            } catch (dlpError) {
-                console.error("Critical: All YouTube methods failed:", dlpError.message);
-                return res.status(500).json({ error: "YouTube is blocking the request. Please try a different video or try again later." });
+                console.log(`[Process] ytdl-core Success: ${videoInfo.title}`);
+            } catch (coreError) {
+                console.error(`[Process] All metadata attempts failed. Last error: ${coreError.message}`);
+                return res.status(500).json({ 
+                    error: "Could not fetch video details. YouTube might be blocking the request.",
+                    details: coreError.message
+                });
             }
         }
 
