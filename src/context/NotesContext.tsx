@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate, useLocation } from "react-router-dom";
+import API_BASE_URL from "@/lib/api";
 
 interface VideoInfo {
     id: string;
@@ -26,7 +27,7 @@ interface NotesContextType {
 
 const NotesContext = createContext<NotesContextType | undefined>(undefined);
 
-const API_BASE_URL = 'http://localhost:3001/api';
+
 
 export const NotesProvider = ({ children }: { children: ReactNode }) => {
     const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);

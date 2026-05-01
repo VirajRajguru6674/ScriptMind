@@ -79,6 +79,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { format, addDays, addMonths, addYears, isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import API_BASE_URL from "@/lib/api";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
 
@@ -174,9 +175,9 @@ const Admin = () => {
             const headers = { 'Authorization': `Bearer ${token}` };
 
             const [usersRes, logsRes, pricingRes] = await Promise.all([
-                fetch('http://localhost:3001/api/admin/users', { headers }),
-                fetch('http://localhost:3001/api/admin/audit-logs', { headers }),
-                fetch('http://localhost:3001/api/settings/pricing')
+                fetch(`${API_BASE_URL}/admin/users`, { headers }),
+                fetch(`${API_BASE_URL}/admin/audit-logs`, { headers }),
+                fetch(`${API_BASE_URL}/settings/pricing`)
             ]);
 
             if (!pricingRes.ok) console.error("Failed to fetch pricing");
@@ -201,7 +202,7 @@ const Admin = () => {
     const handleUpdate = async (userId: number, field: 'plan' | 'role', value: string) => {
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch(`http://localhost:3001/api/admin/users/${userId}`, {
+            const res = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ [field]: value })
@@ -218,7 +219,7 @@ const Admin = () => {
     const handlePricingUpdate = async () => {
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch('http://localhost:3001/api/admin/settings/pricing', {
+            const res = await fetch(`${API_BASE_URL}/admin/settings/pricing`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify(pricing)
@@ -236,7 +237,7 @@ const Admin = () => {
         const suspendedUntil = suspendDate ? new Date(suspendDate).toISOString().slice(0, 19).replace('T', ' ') : null;
 
         try {
-            const res = await fetch(`http://localhost:3001/api/admin/users/${selectedUser.id}/suspend`, {
+            const res = await fetch(`${API_BASE_URL}/admin/users/${selectedUser.id}/suspend`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ suspendedUntil })

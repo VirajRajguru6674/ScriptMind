@@ -8,7 +8,9 @@ export interface Collection {
   note_ids: number[];
 }
 
-const API_BASE_URL = 'http://localhost:3001/api';
+import API_BASE_URL_CENTRAL from "@/lib/api";
+
+const API_BASE_URL = API_BASE_URL_CENTRAL;
 
 export function useCollections() {
   const [collections, setCollections] = useState<Collection[]>([]);

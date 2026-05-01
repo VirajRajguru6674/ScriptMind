@@ -6,6 +6,7 @@ import PricingTable, { Plan } from '@/components/ui/modern-pricing-table';
 import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import API_BASE_URL from "@/lib/api";
 
 // Sample pricing data
 const Pricing = () => {
@@ -25,7 +26,7 @@ const Pricing = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('http://localhost:3001/api/settings/pricing')
+        fetch(`${API_BASE_URL}/settings/pricing`)
             .then(res => res.json())
             .then(data => {
                 setPrices(prev => ({ ...prev, ...data }));

@@ -9,6 +9,7 @@ import { NotesDisplay, type NotesDisplayHandle } from "@/components/NotesDisplay
 import { useAuth } from "@/context/AuthContext";
 import { useNotes } from "@/context/NotesContext";
 import { useToast } from "@/hooks/use-toast";
+import API_BASE_URL from "@/lib/api";
 
 import { StudyTimer } from "@/components/StudyTimer";
 import { SessionStats } from "@/components/SessionStats";
@@ -47,7 +48,7 @@ const Index = () => {
 
     setIsLoadingRecs(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/recommendations`, {
+      const response = await fetch(`${API_BASE_URL}/recommendations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

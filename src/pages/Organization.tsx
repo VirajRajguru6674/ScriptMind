@@ -13,6 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sparkles, Zap, Edit2, MoreVertical } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import API_BASE_URL from "@/lib/api";
 
 interface OrganizationData {
     id: number;
@@ -49,7 +50,7 @@ const Organization = () => {
     const fetchOrgData = async () => {
         try {
             const token = localStorage.getItem('token');
-            const orgRes = await fetch('http://localhost:3001/api/organization', {
+            const orgRes = await fetch(`${API_BASE_URL}/organization`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             
@@ -57,7 +58,7 @@ const Organization = () => {
                 const data = await orgRes.json();
                 setOrg(data);
                 
-                const membersRes = await fetch('http://localhost:3001/api/organization/members', {
+                const membersRes = await fetch(`${API_BASE_URL}/organization/members`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (membersRes.ok) {
@@ -76,7 +77,7 @@ const Organization = () => {
         setActionLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('http://localhost:3001/api/organization', {
+            const res = await fetch(`${API_BASE_URL}/organization`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -103,7 +104,7 @@ const Organization = () => {
         setActionLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('http://localhost:3001/api/organization/members', {
+            const res = await fetch(`${API_BASE_URL}/organization/members`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -133,7 +134,7 @@ const Organization = () => {
         if (!confirm("Are you sure you want to remove this member?")) return;
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`http://localhost:3001/api/organization/members/${memberId}`, {
+            const res = await fetch(`${API_BASE_URL}/organization/members/${memberId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -149,7 +150,7 @@ const Organization = () => {
     const handleUpdateMemberPlan = async (memberId: number, plan: "pro" | "expert") => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`http://localhost:3001/api/organization/members/${memberId}`, {
+            const res = await fetch(`${API_BASE_URL}/organization/members/${memberId}`, {
                 method: 'PATCH',
                 headers: { 
                     'Content-Type': 'application/json',

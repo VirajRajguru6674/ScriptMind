@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from "react-markdown";
+import API_BASE_URL from "@/lib/api";
 
 interface Message {
     id: string;
@@ -56,7 +57,7 @@ export function ChatInterface({ notes, videoTitle, embedded = false, promptToSen
 
         try {
             const token = localStorage.getItem("token");
-            const response = await fetch('http://localhost:3001/api/chat', {
+            const response = await fetch(`${API_BASE_URL}/chat`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',

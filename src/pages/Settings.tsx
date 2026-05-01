@@ -24,6 +24,7 @@ import {
   Camera,
   User,
 } from "lucide-react";
+import API_BASE_URL from "@/lib/api";
 import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/context/AuthContext";
@@ -55,7 +56,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-const API_BASE = "http://localhost:3001/api";
+
 
 const SHORTCUTS = [
   { keys: ["Ctrl", "K"], action: "Focus search / URL" },
@@ -160,7 +161,7 @@ const Settings = () => {
         return;
       }
       try {
-        const res = await fetch(`${API_BASE}/user/me`, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await fetch(`${API_BASE_URL}/user/me`, { headers: { Authorization: `Bearer ${token}` } });
         if (res.ok) {
           const data = await res.json();
           setProfile(data);
@@ -202,7 +203,7 @@ const Settings = () => {
     if (!token) return;
     setSavingPrefs(true);
     try {
-      const res = await fetch(`${API_BASE}/user/preferences`, {
+      const res = await fetch(`${API_BASE_URL}/user/preferences`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ [key]: value }),
@@ -229,7 +230,7 @@ const Settings = () => {
     setSavingAppearance(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE}/user/appearance`, {
+      const res = await fetch(`${API_BASE_URL}/user/appearance`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ theme_mode: pendingTheme, theme_variant: pendingVariant }),
@@ -311,7 +312,7 @@ const Settings = () => {
 
     setSavingProfile(true);
     try {
-      const res = await fetch(`${API_BASE}/user/profile`, {
+      const res = await fetch(`${API_BASE_URL}/user/profile`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

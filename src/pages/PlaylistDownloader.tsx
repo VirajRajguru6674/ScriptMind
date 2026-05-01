@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import API_BASE_URL from "@/lib/api";
 
 interface PlaylistVideo {
     id: string;
@@ -58,7 +59,7 @@ export default function PlaylistDownloader() {
         if (videoFormats[videoId]) return;
         setLoadingFormats(videoId);
         try {
-            const res = await fetch(`http://localhost:3001/api/video-formats?videoId=${videoId}`);
+            const res = await fetch(`${API_BASE_URL}/video-formats?videoId=${videoId}`);
             const data = await res.json();
             if (data.qualities?.length) {
                 setVideoFormats(prev => ({ ...prev, [videoId]: data.qualities }));
@@ -116,7 +117,7 @@ export default function PlaylistDownloader() {
 
         setIsLoading(true);
         try {
-            const response = await fetch(`http://localhost:3001/api/playlist-info?playlistId=${playlistId}`);
+            const response = await fetch(`${API_BASE_URL}/playlist-info?playlistId=${playlistId}`);
             const data = await response.json();
             if (data.videos) {
                 setVideos(data.videos);
@@ -142,7 +143,7 @@ export default function PlaylistDownloader() {
             const token = localStorage.getItem('token');
             const blob = await new Promise<Blob>((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
-                xhr.open('POST', 'http://localhost:3001/api/download');
+                xhr.open('POST', `${API_BASE_URL}/download`);
                 xhr.setRequestHeader('Content-Type', 'application/json');
                 xhr.setRequestHeader('x-action-type', 'download');
                 if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);

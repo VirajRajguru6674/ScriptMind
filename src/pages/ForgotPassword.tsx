@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet-async";
+import API_BASE_URL from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -251,7 +252,7 @@ const ForgotPassword = () => {
         setIsLoading(true);
         setError("");
         try {
-            const response = await fetch('http://localhost:3001/api/auth/forgot-password', {
+            const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
@@ -274,7 +275,7 @@ const ForgotPassword = () => {
         setIsLoading(true);
         setError("");
         try {
-            const response = await fetch('http://localhost:3001/api/auth/verify-otp', {
+            const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, otp })
@@ -301,7 +302,7 @@ const ForgotPassword = () => {
         setIsLoading(true);
         setError("");
         try {
-            const response = await fetch('http://localhost:3001/api/auth/reset-password', {
+            const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, otp, newPassword })

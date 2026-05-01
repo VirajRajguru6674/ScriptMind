@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from 'date-fns';
+import API_BASE_URL from "@/lib/api";
 
 interface Notification {
     id: number;
@@ -28,7 +29,7 @@ export function NotificationPanel() {
 
     const fetchNotifications = async () => {
         try {
-            const response = await fetch('http://localhost:3001/api/notifications');
+            const response = await fetch(`${API_BASE_URL}/notifications`);
             const data = await response.json();
 
             if (!Array.isArray(data)) {
@@ -55,7 +56,7 @@ export function NotificationPanel() {
 
     const markAsRead = async () => {
         try {
-            await fetch('http://localhost:3001/api/notifications/read', { method: 'POST' });
+            await fetch(`${API_BASE_URL}/notifications/read`, { method: 'POST' });
             fetchNotifications();
         } catch (error) {
             console.error('Failed to mark as read', error);

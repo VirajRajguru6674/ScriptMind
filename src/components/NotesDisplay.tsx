@@ -11,6 +11,7 @@ import { ChatInterface } from "./ChatInterface";
 import { Flashcard } from "./Flashcard";
 import { Mermaid } from "./Mermaid";
 import { GenerationLoader } from "./GenerationLoader";
+import API_BASE_URL from "@/lib/api";
 
 interface NotesDisplayProps {
   notes: string;
@@ -123,7 +124,7 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:3001/api/tools`, {
+      const response = await fetch(`${API_BASE_URL}/tools`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
