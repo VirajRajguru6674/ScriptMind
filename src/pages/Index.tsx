@@ -100,7 +100,7 @@ const Index = () => {
         />
       </Helmet>
 
-      <div className="min-h-screen bg-[#0A0B0E] font-sans selection:bg-primary/20 relative text-slate-200 overflow-hidden">
+      <div className="min-h-screen bg-background font-sans selection:bg-primary/20 relative text-foreground overflow-hidden transition-colors duration-300">
         <Sidebar
           onHistorySelect={loadHistoryItem}
           refreshTrigger={historyTrigger}
@@ -121,14 +121,14 @@ const Index = () => {
 
                   {/* Left Column: Content */}
                   <div className="flex flex-col items-start text-left space-y-8 animate-fade-in relative z-20">
-                    <h1 className="text-6xl lg:text-7xl font-black tracking-tighter leading-[1] text-white mt-4">
+                    <h1 className="text-6xl lg:text-7xl font-black tracking-tighter leading-[1] text-foreground mt-4">
                       Understand <br />
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-400 to-indigo-400 drop-shadow-[0_0_40px_rgba(168,85,247,0.3)]">
                         YouTube Videos.
                       </span>
                     </h1>
 
-                    <p className="text-xl text-slate-400 leading-relaxed max-w-lg font-medium">
+                    <p className="text-xl text-muted-foreground leading-relaxed max-w-lg font-medium">
                       Don't waste time watching long videos. Paste a YouTube link below and get easy-to-read notes instantly.
                     </p>
 

@@ -240,7 +240,7 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
             </Sheet>
 
             <div className={cn("hidden lg:block w-[280px] fixed inset-y-0 left-0 z-40", className)}>
-                <div className="h-full w-full bg-sidebar-background/80 backdrop-blur-xl border-r border-white/5 shadow-2xl flex flex-col overflow-hidden">
+                <div className="h-full w-full bg-sidebar-background/80 backdrop-blur-xl border-r border-sidebar-border/50 shadow-2xl flex flex-col overflow-hidden">
                     <SidebarContent />
                 </div>
             </div>
