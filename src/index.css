@@ -94,36 +94,36 @@
         --sidebar-ring: 250 80% 54%;
     }
     .dark {
-        /* Stylish Midnight Cyber: Deep Obsidian with Electric Accents */
-        --background: 260 40% 2%;
-        --foreground: 210 40% 98%;
-        --card: 260 40% 4%;
-        --card-foreground: 210 40% 98%;
-        --popover: 260 40% 4%;
-        --popover-foreground: 210 40% 98%;
-        /* Electric Magenta/Purple */
-        --primary: 280 100% 70%;
-        --primary-foreground: 210 40% 98%;
-        --secondary: 260 30% 12%;
-        --secondary-foreground: 210 40% 98%;
-        --muted: 260 30% 12%;
-        --muted-foreground: 215 20% 65%;
-        /* Neon Cyan Accent */
+        /* Proper Black (Onyx): Pure Black with High-Contrast Accents */
+        --background: 0 0% 0%;
+        --foreground: 0 0% 98%;
+        --card: 0 0% 3%;
+        --card-foreground: 0 0% 98%;
+        --popover: 0 0% 3%;
+        --popover-foreground: 0 0% 98%;
+        /* Pure White for maximum contrast */
+        --primary: 0 0% 100%;
+        --primary-foreground: 0 0% 0%;
+        --secondary: 0 0% 10%;
+        --secondary-foreground: 0 0% 98%;
+        --muted: 0 0% 10%;
+        --muted-foreground: 0 0% 65%;
+        /* Cyan Glow Accent */
         --accent: 180 100% 50%;
-        --accent-foreground: 260 40% 2%;
+        --accent-foreground: 0 0% 0%;
         --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 210 40% 98%;
-        --border: 260 30% 12%;
-        --input: 260 30% 12%;
-        --ring: 280 100% 70%;
-        --sidebar-background: 260 40% 3%;
-        --sidebar-foreground: 210 40% 98%;
-        --sidebar-primary: 280 100% 70%;
-        --sidebar-primary-foreground: 210 40% 98%;
-        --sidebar-accent: 260 30% 12%;
-        --sidebar-accent-foreground: 210 40% 98%;
-        --sidebar-border: 260 30% 12%;
-        --sidebar-ring: 280 100% 70%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 0 0% 12%;
+        --input: 0 0% 12%;
+        --ring: 0 0% 100%;
+        --sidebar-background: 0 0% 2%;
+        --sidebar-foreground: 0 0% 98%;
+        --sidebar-primary: 0 0% 100%;
+        --sidebar-primary-foreground: 0 0% 0%;
+        --sidebar-accent: 0 0% 10%;
+        --sidebar-accent-foreground: 0 0% 98%;
+        --sidebar-border: 0 0% 12%;
+        --sidebar-ring: 0 0% 100%;
     }
     /* --- Forest Theme (Green) --- */
     .theme-forest {
@@ -354,7 +354,7 @@
     body {
         @apply bg-background text-foreground antialiased;
         font-family: 'Inter', system-ui, sans-serif;
-        background-image: radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.08) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.08) 0px, transparent 50%);
+        background-image: radial-gradient(at 0% 0%, rgba(255, 255, 255, 0.02) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.02) 0px, transparent 50%);
         background-attachment: fixed;
     }
     h1,
