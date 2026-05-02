@@ -1658,8 +1658,18 @@ app.post('/api/recommendations', async (req, res) => {
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: 'llama-3.3-70b-versatile',
                 messages: [
-                    { role: 'system', content: 'Suggest 5 relevant YouTube search queries. Return ONLY a valid JSON array of 5 strings.' },
-                    { role: 'user', content: `Video: ${videoTitle}\nNotes: ${notes?.substring(0, 15000)}` }
+                    { 
+                        role: 'system', 
+                        content: `You are a YouTube discovery expert. Suggest 5 DIVERSE search queries for a "Up Next" section. 
+                        
+RULES:
+1. DO NOT suggest the same video title or exact same topic.
+2. If it's a song, suggest other hits by the same artist, similar popular songs from that era, or top tracks in that genre.
+3. If it's educational, suggest the "next logical step" in learning or related sub-topics.
+4. Ensure all 5 suggestions are different from each other.
+5. Return ONLY a valid JSON array of 5 strings.` 
+                    },
+                    { role: 'user', content: `Current Video: "${videoTitle}"\nContext: ${notes?.substring(0, 5000)}` }
                 ]
             }, { headers: { 'Authorization': `Bearer ${key}` } });
 
