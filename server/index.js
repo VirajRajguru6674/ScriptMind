@@ -205,10 +205,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    // Allow download to work with query param token if header is missing (for direct links/forms if needed)
-    // but here it is a POST with JSON body usually.
+    const token = (authHeader && authHeader.split(' ')[1]) || req.query.token;
 
     if (!token) return res.status(401).json({ error: 'Authentication required' });
     jwt.verify(token, JWT_SECRET, (err, user) => {
@@ -1757,8 +1754,16 @@ app.get('/api/playlist-info', async (req, res) => {
     }
 });
 
-app.post('/api/download', authenticateToken, async (req, res) => {
-    const { videoId, quality, title } = req.body;
+app.all('/api/download', authenticateToken, async (req, res) => {
+    // Handle both POST (body) and GET (query)
+    const videoId = req.body.videoId || req.query.videoId;
+    const quality = req.body.quality || req.query.quality || '720p';
+    const title = req.body.title || req.query.title || 'video';
+    
+    if (!videoId) {
+        return res.status(400).json({ error: 'videoId is required. Please use the ScriptMind interface to start a download.' });
+    }
+
     const userId = req.user.id;
 
     try {
