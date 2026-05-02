@@ -1791,8 +1791,19 @@ app.post('/api/download', authenticateToken, async (req, res) => {
         const dlpOptions = {
             output: fullPath,
             noCheckCertificates: true,
-            format: quality === 'mp3' ? 'bestaudio/best' : `bestvideo[height<=${quality.replace('p', '')}]+bestaudio/best`,
+            preferFreeFormats: true,
+            youtubeSkipDashManifest: true,
+            format: quality === 'mp3' ? 'bestaudio/best' : `bestvideo[height<=${quality.replace('p', '')}][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best`,
+            addHeader: [
+                'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+            ]
         };
+
+        const cookiesPath = path.join(__dirname, 'cookies.json');
+        if (fs.existsSync(cookiesPath)) {
+            console.log("🍪 Using cookies.json for download");
+            dlpOptions.cookies = cookiesPath;
+        }
 
         if (quality === 'mp3') {
             dlpOptions.extractAudio = true;
