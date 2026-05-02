@@ -1439,6 +1439,9 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
                        Target 6,000+ words. Be extremely exhaustive.
                        ${buildAISystemPrompt(userPrefs.ai_tone, 'detailed', userPrefs.ai_language)}`;
 
+                // Truncate description for metadata-only fallback
+                const truncatedDescription = videoInfo.description ? videoInfo.description.substring(0, 5000) : "No description available";
+
                 const userPrompt = `VIDEO: "${videoInfo.title}"\n\nTRANSCRIPT/METADATA:\n${transcriptToUse || truncatedDescription}\n\nINSTRUCTION: Write an EXTREMELY LONG, 10-12 page masterclass guide. Expand on everything. Do not be brief.`;
 
                 console.log(`[Groq] Sending request to ${MODEL} (Payload: ${Math.round(transcriptToUse.length / 1024)} KB)`);
