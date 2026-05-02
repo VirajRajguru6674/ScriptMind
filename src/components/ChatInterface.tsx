@@ -125,13 +125,13 @@ export function ChatInterface({ notes, videoTitle, embedded = false, promptToSen
                                 </div>
                                 
                                 <div className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                    <div className="text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider px-1">
+                                    <div className={`text-[10px] font-black uppercase tracking-[0.1em] mb-1.5 px-1 ${msg.role === 'user' ? 'text-primary' : 'text-muted-foreground'}`}>
                                         {msg.role === 'user' ? 'You' : 'Assistant'}
                                     </div>
-                                    <div className={`rounded-2xl px-4 py-3 text-[14px] leading-relaxed shadow-sm border ${
+                                    <div className={`rounded-2xl px-4 py-3 text-[15px] leading-relaxed shadow-sm border transition-colors ${
                                         msg.role === 'user' 
-                                            ? 'bg-primary text-primary-foreground border-primary/20 rounded-tr-none' 
-                                            : 'bg-secondary/50 text-foreground border-border/50 rounded-tl-none'
+                                            ? 'bg-primary/10 text-foreground border-primary/20 rounded-tr-none font-medium' 
+                                            : 'bg-secondary/40 text-foreground border-border/50 rounded-tl-none'
                                     }`}>
                                         <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-black/5 dark:prose-pre:bg-white/5 prose-pre:border-none">
                                             <ReactMarkdown>{msg.content}</ReactMarkdown>
