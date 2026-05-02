@@ -398,11 +398,20 @@ async function initializeDatabase() {
                 title VARCHAR(255),
                 message TEXT,
                 type ENUM('info', 'success', 'warning', 'error') DEFAULT 'info',
+                platform VARCHAR(50) DEFAULT 'system',
                 status ENUM('unread', 'read') DEFAULT 'unread',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         `);
+
+        // Migration: Add platform column if it doesn't exist
+        try {
+            const [cols] = await conn.query("SHOW COLUMNS FROM notifications LIKE 'platform'");
+            if (cols.length === 0) {
+                await conn.query("ALTER TABLE notifications ADD COLUMN platform VARCHAR(50) DEFAULT 'system'");
+            }
+        } catch (e) {}
 
         // 7. Seed/Update Admin User (Clean Slate Approach)
         console.log("👤 DB Initialization: Resetting admin account...");

@@ -64,7 +64,7 @@ export function NotificationPanel() {
     };
 
     const getPlatformIcon = (platform: string) => {
-        const p = platform.toLowerCase();
+        const p = (platform || 'system').toLowerCase();
         if (p.includes('teams')) return <MessageSquare className="w-3 h-3 text-blue-500" />;
         if (p.includes('telegram')) return <Send className="w-3 h-3 text-sky-500" />;
         if (p.includes('email')) return <Mail className="w-3 h-3 text-amber-500" />;

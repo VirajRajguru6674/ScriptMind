@@ -80,7 +80,7 @@ const Notifications = () => {
                 // For now we use the global endpoint
                 await fetch(`${API_BASE_URL}/notifications/read`, { method: 'POST' });
             } else {
-                await fetch('http://localhost:3001/api/notifications/read', { method: 'POST' });
+                await fetch(`${API_BASE_URL}/notifications/read`, { method: 'POST' });
             }
             fetchNotifications();
         } catch (error) {
@@ -89,7 +89,7 @@ const Notifications = () => {
     };
 
     const getPlatformIcon = (platform: string) => {
-        const p = platform.toLowerCase();
+        const p = (platform || 'system').toLowerCase();
         if (p.includes('teams')) return <MessageSquare className="w-4 h-4 text-blue-500" />;
         if (p.includes('telegram')) return <Send className="w-4 h-4 text-sky-500" />;
         if (p.includes('email')) return <Mail className="w-4 h-4 text-amber-500" />;
@@ -104,7 +104,7 @@ const Notifications = () => {
     });
 
     const unreadCount = notifications.filter(n => n.status === 'unread').length;
-    const platforms = Array.from(new Set(notifications.map(n => n.platform)));
+    const platforms = Array.from(new Set(notifications.map(n => n.platform || 'system')));
 
     return (
         <>
