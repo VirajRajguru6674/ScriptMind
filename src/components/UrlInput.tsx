@@ -60,7 +60,7 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
           <Button
             type="submit"
             size="lg"
-            className="h-14 px-8 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-indigo-500 text-white shadow-[0_0_20px_rgba(var(--primary),0.3)] hover:shadow-[0_0_30px_rgba(var(--primary),0.5)] transition-all hover:scale-[1.02] active:scale-[0.98] border border-white/10"
+            className="h-14 px-8 text-base font-black rounded-xl bg-gradient-to-r from-violet-600 via-primary to-indigo-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)] transition-all hover:scale-[1.02] active:scale-[0.98] border border-white/20"
             disabled={isLoading || !url.trim() || !isValidYoutubeUrl(url)}
           >
             {isLoading ? (

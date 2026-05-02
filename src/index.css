@@ -101,9 +101,9 @@
         --card-foreground: 0 0% 98%;
         --popover: 0 0% 3%;
         --popover-foreground: 0 0% 98%;
-        /* Pure White for maximum contrast */
-        --primary: 0 0% 100%;
-        --primary-foreground: 0 0% 0%;
+        /* Stylish Cyber Purple Action Color */
+        --primary: 270 100% 60%;
+        --primary-foreground: 0 0% 100%;
         --secondary: 0 0% 10%;
         --secondary-foreground: 0 0% 98%;
         --muted: 0 0% 10%;
@@ -113,9 +113,9 @@
         --accent-foreground: 0 0% 0%;
         --destructive: 0 84.2% 60.2%;
         --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 12%;
-        --input: 0 0% 12%;
-        --ring: 0 0% 100%;
+        --border: 0 0% 15%;
+        --input: 0 0% 15%;
+        --ring: 270 100% 60%;
         --sidebar-background: 0 0% 2%;
         --sidebar-foreground: 0 0% 98%;
         --sidebar-primary: 0 0% 100%;
