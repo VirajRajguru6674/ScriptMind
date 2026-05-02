@@ -349,10 +349,13 @@
 
 @layer base {
     * {
-        @apply border-border;
+        border-color: hsl(var(--border));
     }
     body {
-        @apply bg-background text-foreground antialiased;
+        background-color: hsl(var(--background));
+        color: hsl(var(--foreground));
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
         font-family: 'Inter', system-ui, sans-serif;
         background-image: radial-gradient(at 0% 0%, rgba(255, 255, 255, 0.02) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.02) 0px, transparent 50%);
         background-attachment: fixed;
@@ -397,13 +400,38 @@
     }
     /* Enhanced Glass Effects */
     .glass {
-        @apply bg-white/10 dark:bg-black/20 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-lg;
+        background-color: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .dark .glass {
+        background-color: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .glass-card {
-        @apply bg-card/40 dark:bg-card/30 backdrop-blur-md border border-black/5 dark:border-white/10 shadow-sm transition-all duration-300 hover:bg-card/60 dark:hover:bg-card/50 hover:shadow-lg hover:border-primary/30;
+        background-color: hsla(var(--card), 0.4);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .dark .glass-card {
+        background-color: hsla(var(--card), 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .glass-card:hover {
+        background-color: hsla(var(--card), 0.6);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        border-color: hsla(var(--primary), 0.3);
+    }
+    .dark .glass-card:hover {
+        background-color: hsla(var(--card), 0.5);
     }
     .glass-panel {
-        @apply bg-background/60 backdrop-blur-xl border-r border-border;
+        background-color: hsla(var(--background), 0.6);
+        backdrop-filter: blur(24px);
+        border-right: 1px solid hsl(var(--border));
     }
     .animate-gradient {
         background-size: 200%;
