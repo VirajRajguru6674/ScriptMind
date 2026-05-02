@@ -435,7 +435,7 @@ const Settings = () => {
 
             {/* Settings Content Area - Scrollable */}
             <div className="flex-1 overflow-y-auto bg-card/30">
-              <div className="max-w-3xl p-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <div className="max-w-3xl px-8 py-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <Tabs value={activeTab} className="w-full mt-0">
 
 
