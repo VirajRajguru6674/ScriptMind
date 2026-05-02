@@ -406,9 +406,9 @@ const Settings = () => {
           </header>
 
           <div className="flex-1 flex overflow-hidden">
-            {/* Settings Sidebar Navigation - Pinned to Left */}
-            <aside className="w-[240px] border-r border-border/40 bg-muted/5 p-4 space-y-1 flex flex-col shrink-0 animate-in slide-in-from-left-4 duration-500">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-3 mb-4 mt-2">Configuration</p>
+            {/* Settings Sidebar Navigation - Pinned to Left (Solid Black) */}
+            <aside className="w-[240px] border-r border-border/40 bg-sidebar-background p-4 space-y-1 flex flex-col shrink-0 animate-in slide-in-from-left-4 duration-500">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-sidebar-foreground/50 px-3 mb-4 mt-2">Configuration</p>
               {[
                 { id: "general", icon: User, label: "Account Profile" },
                 { id: "appearance", icon: Palette, label: "Appearance" },
@@ -422,8 +422,8 @@ const Settings = () => {
                   onClick={() => setActiveTab(item.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
                     activeTab === item.id 
-                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" 
-                      : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                      ? "bg-sidebar-foreground text-sidebar-background shadow-lg" 
+                      : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                   }`}
                 >
                   <item.icon className={`h-4 w-4 transition-transform ${activeTab === item.id ? "scale-110" : "group-hover:scale-110"}`} />

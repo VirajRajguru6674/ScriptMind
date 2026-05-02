@@ -54,8 +54,8 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
         <div className="flex h-full flex-col bg-sidebar-background">
             <div className="flex h-16 items-center px-6 border-b border-sidebar-border/50">
                 <Link to="/" className="flex items-center gap-3">
-                    <div className="shrink-0">
-                        <img src="/logo.png" alt="ScriptMind Logo" className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-primary/20" />
+                    <div className="shrink-0 bg-white p-1 rounded-xl">
+                        <img src="/logo.png" alt="ScriptMind Logo" className="w-8 h-8 rounded-lg object-cover" />
                     </div>
                     <span className="text-xl font-bold tracking-tight text-sidebar-foreground">ScriptMind</span>
                 </Link>
@@ -240,7 +240,7 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
             </Sheet>
 
             <div className={cn("hidden lg:block w-[280px] fixed inset-y-0 left-0 z-40", className)}>
-                <div className="h-full w-full bg-sidebar-background/80 backdrop-blur-xl border-r border-sidebar-border/50 shadow-2xl flex flex-col overflow-hidden">
+                <div className="h-full w-full bg-sidebar-background border-r border-sidebar-border shadow-2xl flex flex-col overflow-hidden">
                     <SidebarContent />
                 </div>
             </div>
