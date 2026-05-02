@@ -1424,20 +1424,22 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
                 let transcriptToUse = transcript && typeof transcript === 'string' ? (transcript.length > MAX_CHARS ? transcript.substring(0, MAX_CHARS) : transcript) : "";
 
                 const systemPrompt = transcriptToUse
-                    ? `You are an expert academic writer. Your goal is to generate HIGHLY DETAILED, EXHAUSTIVE Markdown notes for a very long video.
+                    ? `You are a world-class academic textbook author. Your goal is to write a COMPREHENSIVE MASTERCLASS BOOK based on the provided transcript.
                        
-                       CRITICAL REQUIREMENTS:
-                       1. LENGTH: Aim for a MINIMUM of 10-12 pages of content.
-                       2. STRUCTURE: Provide a "Chapter-by-Chapter" breakdown. Create a detailed section for every major topic or time block.
-                       3. DEPTH: For every section, include core concepts, detailed explanations, technical terms defined, examples, and analysis.
-                       4. VERBOSITY: Be extremely wordy and thorough. Do not summarize; expand on everything mentioned.
-                       5. FORMAT: Use H1 for main title, H2 for chapters, H3 for sub-topics. Use bolding for key terms.
+                       STRICT REQUIREMENTS FOR LENGTH (10-12 PAGES):
+                       1. FORCED VERBOSITY: You MUST expand every single concept into 4-5 detailed paragraphs. Do NOT use short bullet points alone.
+                       2. CHAPTER STRUCTURE: Organize the notes into at least 10 distinct "Chapters" or "Deep-Dive Sections".
+                       3. CONTENT DENSITY: For every minute of video mentioned, provide an exhaustive breakdown.
+                       4. ADDED VALUE: Include "Expert Analysis," "Technical Specifications," "Step-by-Step Implementation Guides," and "Critical Takeaways" for every sub-topic.
+                       5. MINIMUM LENGTH: Your response must be extremely long (target 6,000+ words). If you think you are done, keep expanding and adding more depth.
                        
                        ${buildAISystemPrompt(userPrefs.ai_tone, 'detailed', userPrefs.ai_language)}`
-                    : `Generate the most exhaustive study notes possible (target 10 pages) based on this metadata. Expand on every single concept.
+                    : `You are an expert researcher. Since the transcript is unavailable, you MUST generate a 10-12 page "Comprehensive Guide" based on the video title and description.
+                       Use your internal knowledge to expand deeply on the topics mentioned. Write a full textbook chapter for every concept found in the metadata.
+                       Target 6,000+ words. Be extremely exhaustive.
                        ${buildAISystemPrompt(userPrefs.ai_tone, 'detailed', userPrefs.ai_language)}`;
 
-                const userPrompt = `Video Title: "${videoInfo.title}"\n\nFull Transcript Content:\n${transcriptToUse}\n\nINSTRUCTION: Generate the most detailed notes possible. Aim for 10-12 pages.`;
+                const userPrompt = `VIDEO: "${videoInfo.title}"\n\nTRANSCRIPT/METADATA:\n${transcriptToUse || truncatedDescription}\n\nINSTRUCTION: Write an EXTREMELY LONG, 10-12 page masterclass guide. Expand on everything. Do not be brief.`;
 
                 console.log(`[Groq] Sending request to ${MODEL} (Payload: ${Math.round(transcriptToUse.length / 1024)} KB)`);
 
