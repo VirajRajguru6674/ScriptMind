@@ -1762,22 +1762,42 @@ app.get('/api/playlist-info', async (req, res) => {
     }
 });
 
+// Secure Cookie Helper for Production (Render-safe)
+const getSecureCookies = () => {
+    try {
+        // Option A: Base64 Env Var (Most Secure for Render)
+        if (process.env.YOUTUBE_COOKIES_BASE64) {
+            const cookiesContent = Buffer.from(process.env.YOUTUBE_COOKIES_BASE64, 'base64').toString();
+            const tempCookiesPath = path.join(os.tmpdir(), `cookies_render_${Date.now()}.txt`);
+            fs.writeFileSync(tempCookiesPath, cookiesContent);
+            return { path: tempCookiesPath, isTemp: true };
+        }
+
+        // Option B: Local File Fallback
+        const localPath = path.join(__dirname, 'cookies.json');
+        if (fs.existsSync(localPath) && fs.statSync(localPath).size > 0) {
+            return { path: localPath, isTemp: false };
+        }
+    } catch (e) {
+        console.error("Cookie Helper Error:", e.message);
+    }
+    return null;
+};
+
 app.all('/api/download', authenticateToken, async (req, res) => {
-    // Handle both POST (body) and GET (query)
     const videoId = req.body.videoId || req.query.videoId;
     const quality = req.body.quality || req.query.quality || '720p';
     const title = req.body.title || req.query.title || 'video';
+    const token = req.body.token || req.query.token; // Support for direct browser GETs
     
     if (!videoId) {
-        return res.status(400).json({ error: 'videoId is required. Please use the ScriptMind interface to start a download.' });
+        return res.status(400).json({ error: 'videoId is required.' });
     }
 
     const userId = req.user.id;
 
     try {
         const [rows] = await pool.execute('SELECT plan, role FROM users WHERE id = ?', [userId]);
-        
-        // If user not found in DB (e.g. recreated admin), use token info as fallback
         const userRecord = rows[0];
         const plan = userRecord?.plan || (req.user.role === 'admin' ? 'expert' : 'free');
         const role = userRecord?.role || req.user.role;
@@ -1788,9 +1808,7 @@ app.all('/api/download', authenticateToken, async (req, res) => {
             'expert': ['144p', '240p', '360p', '480p', '720p', '1080p', '1440p', '4k', '8k', 'mp3']
         };
 
-        // Admins and Experts get full access
         const isAllowed = role === 'admin' || (allowedQualities[plan] && allowedQualities[plan].includes(quality)) || quality === 'mp3';
-
         if (!isAllowed) {
             return res.status(403).json({ error: `Your ${plan} plan does not support ${quality} downloads.` });
         }
@@ -1799,46 +1817,67 @@ app.all('/api/download', authenticateToken, async (req, res) => {
         const fullPath = path.join(os.tmpdir(), outputName);
         const ytDlp = require('yt-dlp-exec');
 
-        console.log(`🎬 Downloading with yt-dlp: ${videoId} (${quality})`);
+        const cookieData = getSecureCookies();
+        
+        // Stealth Download Strategy
+        const attemptDownload = async (playerClient) => {
+            const dlpOptions = {
+                output: fullPath,
+                noCheckCertificates: true,
+                preferFreeFormats: true,
+                jsRuntime: 'node',
+                extractorArgs: `youtube:player-client=${playerClient}`,
+                addHeader: [
+                    'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                    'Accept-Language:en-US,en;q=0.9',
+                    'Referer:https://www.youtube.com/watch?v=' + videoId
+                ],
+                forceIpv4: true
+            };
 
-        const dlpOptions = {
-            output: fullPath,
-            noCheckCertificates: true,
-            preferFreeFormats: true,
-            format: quality === 'mp3' ? 'bestaudio/best' : `bestvideo[height<=${quality.replace('p', '')}][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best`,
-            addHeader: [
-                'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-                'Accept-Language:en-US,en;q=0.9',
-                'Referer:https://www.youtube.com/watch?v=' + videoId
-            ],
-            jsRuntime: 'node',
-            extractorArgs: 'youtube:player-client=android,web,tv_embedded',
-            forceIpv4: true
+            if (cookieData) dlpOptions.cookies = cookieData.path;
+
+            if (quality === 'mp3') {
+                dlpOptions.format = 'bestaudio/best';
+                dlpOptions.extractAudio = true;
+                dlpOptions.audioFormat = 'mp3';
+            } else {
+                // Resilient Format: Try high-quality merge, fallback to best single MP4
+                const h = quality.replace('p', '');
+                dlpOptions.format = `bestvideo[height<=${h}][ext=mp4]+bestaudio[ext=m4a]/best[height<=${h}][ext=mp4]/best[ext=mp4]/best`;
+            }
+
+            console.log(`🎬 [${playerClient}] Downloading ${videoId} (${quality})...`);
+            await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpOptions);
         };
 
-        const cookiesPath = path.join(__dirname, 'cookies.json');
-        if (fs.existsSync(cookiesPath) && fs.statSync(cookiesPath).size > 0) {
-            console.log("🍪 Using cookies.json for download");
-            dlpOptions.cookies = cookiesPath;
+        try {
+            // Priority 1: Web Embedded (Least likely to trigger bot check)
+            await attemptDownload('web_embedded,android,tv_embedded');
+        } catch (e) {
+            console.warn("⚠️ Primary client failed, retrying with iOS client...");
+            // Priority 2: iOS Client (Harder to block)
+            await attemptDownload('ios,web');
         }
 
-        if (quality === 'mp3') {
-            dlpOptions.extractAudio = true;
-            dlpOptions.audioFormat = 'mp3';
+        if (cookieData && cookieData.isTemp) {
+            try { fs.unlinkSync(cookieData.path); } catch (e) {}
         }
-        await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpOptions);
 
         await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
         logAction(userId, 'DOWNLOAD_VIDEO', { videoId, quality, title });
 
         res.download(fullPath, outputName, (err) => {
             if (err) console.error("Send file error:", err);
-            try { fs.unlinkSync(fullPath); } catch (e) { }
+            try { if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath); } catch (e) { }
         });
 
     } catch (error) {
-        console.error("Download Error (yt-dlp):", error.message);
-        res.status(500).json({ error: "Download failed. YouTube is currently restricted. Please try again later." });
+        console.error("🏁 Final Download Failure:", error.message);
+        res.status(500).json({ 
+            error: "YouTube blocked the download from our server IP. Please try again with a different resolution or use a VPN.",
+            details: error.message 
+        });
     }
 });
 
