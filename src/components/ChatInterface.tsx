@@ -106,106 +106,93 @@ export function ChatInterface({ notes, videoTitle, embedded = false, promptToSen
     };
 
     return (
-        <div className={`flex flex-col animate-fade-in overflow-hidden relative ${embedded ? 'h-full' : 'h-[700px] mt-6 bg-[#212121] rounded-2xl border border-white/5'}`}>
+        <div className={`flex flex-col animate-fade-in overflow-hidden relative ${embedded ? 'h-full' : 'h-[700px] mt-6 bg-card rounded-2xl border border-border/50'}`}>
             
-            <ScrollArea ref={scrollAreaRef} className="flex-1 relative z-10 w-full scroll-smooth">
-                <div className="pb-40 pt-8 space-y-8"> {/* Increased spacing between messages for Claude feel */}
+            <ScrollArea ref={scrollAreaRef} className="flex-1 relative z-10 w-full">
+                <div className="pb-32 pt-6 space-y-6">
                     {messages.map((msg, index) => (
                         <div
                             key={msg.id}
-                            className="w-full px-4 sm:px-8 flex justify-center"
+                            className={`w-full px-4 sm:px-6 flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
-                            {/* Claude Style: Both User and AI are left-aligned within the center column */}
-                            <div className="w-full max-w-3xl flex gap-4 sm:gap-6">
+                            <div className={`flex gap-3 max-w-[85%] sm:max-w-2xl ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                                 
                                 {/* Avatar */}
-                                <div className="shrink-0 mt-0.5">
-                                    {msg.role === 'user' ? (
-                                        <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center shadow-sm">
-                                            <User className="w-4 h-4 text-slate-200" />
-                                        </div>
-                                    ) : (
-                                        <div className="w-8 h-8 rounded-xl bg-[#D97757] flex items-center justify-center shadow-sm">
-                                            {/* Claude's signature peach/orange color with a star/sparkle icon */}
-                                            <Sparkles className="w-4 h-4 text-white fill-white/20" />
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Content and Name */}
-                                <div className="flex-1 min-w-0 pt-0.5">
-                                    <div className="text-[13px] font-bold text-slate-200 mb-1.5 tracking-wide">
-                                        {msg.role === 'user' ? 'You' : 'ScriptMind'}
+                                <div className="shrink-0 mt-1">
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm ${msg.role === 'user' ? 'bg-primary/20 text-primary' : 'bg-secondary text-secondary-foreground'}`}>
+                                        {msg.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                                     </div>
-                                    <div className="text-[15px] sm:text-base text-slate-200 leading-[1.75] font-normal">
-                                        <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none [&_strong]:text-white [&_strong]:font-semibold [&_p]:mb-5 last:[&_p]:mb-0 [&_code]:text-[#D97757] [&_code]:bg-[#D97757]/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded-md [&_code]:font-mono [&_code]:text-[13px] [&_pre]:bg-[#1a1a1a] [&_pre]:border [&_pre]:border-white/10 [&_pre]:rounded-xl [&_li]:mb-2">
+                                </div>
+                                
+                                <div className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                                    <div className="text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider px-1">
+                                        {msg.role === 'user' ? 'You' : 'Assistant'}
+                                    </div>
+                                    <div className={`rounded-2xl px-4 py-3 text-[14px] leading-relaxed shadow-sm border ${
+                                        msg.role === 'user' 
+                                            ? 'bg-primary text-primary-foreground border-primary/20 rounded-tr-none' 
+                                            : 'bg-secondary/50 text-foreground border-border/50 rounded-tl-none'
+                                    }`}>
+                                        <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-black/5 dark:prose-pre:bg-white/5 prose-pre:border-none">
                                             <ReactMarkdown>{msg.content}</ReactMarkdown>
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                     ))}
                     {isLoading && (
-                        <div className="w-full px-4 sm:px-8 flex justify-center">
-                            <div className="max-w-3xl w-full flex gap-4 sm:gap-6">
-                                <div className="shrink-0 mt-0.5">
-                                    <div className="w-8 h-8 rounded-xl bg-[#D97757] flex items-center justify-center shadow-sm opacity-80">
-                                        <Sparkles className="w-4 h-4 text-white animate-pulse" />
+                        <div className="w-full px-4 sm:px-6 flex justify-start">
+                             <div className="flex gap-3 flex-row">
+                                <div className="shrink-0 mt-1">
+                                    <div className="w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center animate-pulse">
+                                        <Bot className="w-4 h-4" />
                                     </div>
                                 </div>
-                                <div className="flex-1 min-w-0 pt-1">
-                                    <div className="text-[13px] font-bold text-slate-200 mb-1.5 tracking-wide">
-                                        ScriptMind
-                                    </div>
-                                    <div className="pt-2 flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-slate-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                                        <div className="w-2 h-2 rounded-full bg-slate-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                                        <div className="w-2 h-2 rounded-full bg-slate-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                                <div className="flex flex-col items-start pt-1">
+                                    <div className="text-[11px] font-bold text-muted-foreground mb-2 uppercase tracking-wider px-1">Assistant</div>
+                                    <div className="flex items-center gap-1.5 px-4 py-3 bg-secondary/30 rounded-2xl">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: '0ms' }} />
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: '150ms' }} />
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: '300ms' }} />
                                     </div>
                                 </div>
-                            </div>
+                             </div>
                         </div>
                     )}
                 </div>
             </ScrollArea>
 
-            {/* ChatGPT Style Floating Input Area */}
-            <div className="absolute bottom-6 left-0 right-0 px-4 pointer-events-none z-20 flex justify-center">
+            {/* Simple Pinned Input Area */}
+            <div className="shrink-0 border-t border-border/50 bg-card/80 backdrop-blur-md p-4">
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
                         handleSend();
                     }}
-                    className="w-full max-w-3xl pointer-events-auto"
+                    className="max-w-4xl mx-auto"
                 >
-                    <div className="relative flex items-center bg-[#2f2f2f] rounded-[1.5rem] shadow-md border border-white/5 pr-2 pl-2 focus-within:ring-1 focus-within:ring-white/20 transition-all">
+                    <div className="relative flex items-center bg-secondary/30 rounded-xl border border-border/50 focus-within:border-primary/50 transition-all">
                         <input
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder="Message ScriptMind..."
-                            className="flex-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0 text-[15px] text-white h-14 pl-4 placeholder:text-slate-400 w-full"
+                            placeholder="Ask a question about this video..."
+                            className="flex-1 bg-transparent border-none outline-none focus:ring-0 text-sm text-foreground h-12 px-4 placeholder:text-muted-foreground"
                             disabled={isLoading}
                         />
                         <Button
                             type="submit"
                             size="icon"
                             disabled={!input.trim() || isLoading}
-                            className={`shrink-0 h-8 w-8 rounded-full transition-colors ml-2 ${
-                                input.trim() && !isLoading 
-                                    ? 'bg-white text-black hover:bg-slate-200' 
-                                    : 'bg-white/10 text-white/50 hover:bg-white/10'
-                            }`}
+                            className="h-9 w-9 rounded-lg mr-1.5 transition-all"
                         >
-                            <ArrowUp className="h-4 w-4 stroke-[3]" />
-                            <span className="sr-only">Send</span>
+                            <ArrowUp className="h-4 w-4" />
                         </Button>
                     </div>
-                    <div className="text-center mt-2">
-                        <span className="text-[11px] text-slate-500">ScriptMind can make mistakes. Check important info.</span>
-                    </div>
+                    <p className="text-center mt-2 text-[10px] text-muted-foreground">
+                        ScriptMind AI may provide inaccurate info.
+                    </p>
                 </form>
             </div>
         </div>
