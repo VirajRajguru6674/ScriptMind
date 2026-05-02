@@ -1437,7 +1437,7 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
                     : `Generate the most exhaustive study notes possible (target 10 pages) based on this metadata. Expand on every single concept.
                        ${buildAISystemPrompt(userPrefs.ai_tone, 'detailed', userPrefs.ai_language)}`;
 
-                const userPrompt = `Video Title: "${videoTitle}"\n\nFull Transcript Content:\n${transcriptToUse}\n\nINSTRUCTION: Generate the most detailed notes possible. Aim for 10-12 pages.`;
+                const userPrompt = `Video Title: "${videoInfo.title}"\n\nFull Transcript Content:\n${transcriptToUse}\n\nINSTRUCTION: Generate the most detailed notes possible. Aim for 10-12 pages.`;
 
                 console.log(`[Groq] Sending request to ${MODEL} (Payload: ${Math.round(transcriptToUse.length / 1024)} KB)`);
 
