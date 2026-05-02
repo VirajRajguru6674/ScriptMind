@@ -1156,8 +1156,16 @@ function getYoutubeOptions() {
     try {
         const cookiePath = path.join(__dirname, 'cookies.json');
         if (fs.existsSync(cookiePath)) {
-            console.log('🍪 [Auth] Loading YouTube cookies from cookies.json...');
-            options.requestOptions.headers.Cookie = fs.readFileSync(cookiePath, 'utf8');
+            const cookieData = fs.readFileSync(cookiePath, 'utf8').trim();
+            // Basic validation to ensure it's not empty or just brackets
+            if (cookieData && cookieData.length > 10) {
+                console.log('🍪 [Auth] Loading YouTube cookies from cookies.json...');
+                options.requestOptions.headers.Cookie = cookieData;
+            } else {
+                console.warn('⚠️ [Auth] cookies.json is empty or invalid. YouTube might block requests with 429.');
+            }
+        } else {
+            console.warn('⚠️ [Auth] cookies.json not found. For best results, provide YouTube cookies to avoid 429 errors.');
         }
     } catch (e) {
         console.warn('⚠️ [Auth] Failed to load cookies.json:', e.message);
@@ -1242,9 +1250,6 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
     console.log(`Processing video: ${videoId} for user ${userId} (${req.userPlan})`);
 
     try {
-        // Increment usage count
-        await pool.execute('UPDATE users SET usage_count = usage_count + 1 WHERE id = ?', [userId]);
-
         let videoInfo = null;
         let lastError = null;
 
@@ -1348,17 +1353,22 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
                 const MODEL = 'llama-3.1-8b-instant';
                 const MAX_OUTPUT_TOKENS = 4000;
                 
-                // Truncate transcript if too long
-                const MAX_CHARS = 50000;
-                let transcriptToUse = transcript.length > MAX_CHARS ? transcript.substring(0, MAX_CHARS) : transcript;
+                // Truncate transcript if too long (Reduced to 25k to avoid Groq 413/TPM limits)
+                const MAX_CHARS = 25000;
+                let transcriptToUse = transcript && typeof transcript === 'string' ? (transcript.length > MAX_CHARS ? transcript.substring(0, MAX_CHARS) : transcript) : "";
 
                 const systemPrompt = transcriptToUse
                     ? `You are an expert note-taker. Extract and organize information ONLY from the provided transcript into clear, structured Markdown notes. ${buildAISystemPrompt(userPrefs.ai_tone, userPrefs.ai_detail_level, userPrefs.ai_language)}`
                     : `The transcript is unavailable due to YouTube restrictions. You are an expert analyst. Generate the best possible study notes and summary based ONLY on the video metadata provided (Title and Description). ${buildAISystemPrompt(userPrefs.ai_tone, userPrefs.ai_detail_level, userPrefs.ai_language)}`;
 
+                // Truncate description for metadata-only fallback
+                const truncatedDescription = videoInfo.description ? videoInfo.description.substring(0, 2000) : "No description available";
+
                 const userPrompt = transcriptToUse
                     ? `Video: "${videoInfo.title}"\n\nTranscript:\n${transcriptToUse}`
-                    : `Video: "${videoInfo.title}"\n\nMetadata:\nTitle: ${videoInfo.title}\nDescription: ${videoInfo.description}`;
+                    : `Video: "${videoInfo.title}"\n\nMetadata:\nTitle: ${videoInfo.title}\nDescription: ${truncatedDescription}`;
+
+                console.log(`[Groq] Sending request to ${MODEL} (Payload size: ${Math.round((systemPrompt.length + userPrompt.length) / 1024)} KB)`);
 
                 const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                     model: MODEL,
@@ -1368,16 +1378,23 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
                     ],
                     max_tokens: MAX_OUTPUT_TOKENS,
                     temperature: 0.3
-                }, { headers: { 'Authorization': `Bearer ${key}` } });
+                }, { headers: { 'Authorization': `Bearer ${key}` }, timeout: 60000 });
 
                 let result = groqRes.data.choices[0].message.content;
                 if (userPrefs.ai_language === 'hi') result = cleanHindiText(result, 'hi');
                 return result;
             });
         } catch (groqError) {
-            console.error("Groq AI Error:", groqError.message);
+            console.error("Groq AI Error:", groqError.response?.data || groqError.message);
+            const status = groqError.response?.status;
+            if (status === 413) {
+                return res.status(500).json({ error: "The transcript is too large for the current AI model limits. Try a shorter video or provide a manual summary." });
+            }
             return res.status(500).json({ error: "Failed to generate AI notes. Please try again later." });
         }
+
+        // Increment usage count ONLY on success
+        await pool.execute('UPDATE users SET usage_count = usage_count + 1 WHERE id = ?', [userId]);
 
         // Step 4: Save and Notify
         try {
@@ -1448,14 +1465,17 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
 
     try {
         const systemPrompt = buildAISystemPrompt(userPrefs.ai_tone, userPrefs.ai_detail_level, userPrefs.ai_language);
+        // Truncate context to avoid 413
+        const truncatedContext = context ? context.substring(0, 15000) : "";
+        
         const reply = await executeWithRotation('GROQ_API_KEY', async (key) => {
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: 'llama-3.3-70b-versatile',
                 messages: [
-                    { role: 'system', content: `${systemPrompt} You are an AI tutor for "${videoTitle}". Use the notes: ${context}` },
+                    { role: 'system', content: `${systemPrompt} You are an AI tutor for "${videoTitle}". Use the notes: ${truncatedContext}` },
                     ...messages
                 ]
-            }, { headers: { 'Authorization': `Bearer ${key}` } });
+            }, { headers: { 'Authorization': `Bearer ${key}` }, timeout: 60000 });
             return groqRes.data.choices[0].message.content;
         });
         res.json({ reply });
