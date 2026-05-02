@@ -444,9 +444,24 @@ const Settings = () => {
                 {isAuthenticated && (() => {
                   const currentPlan = (profile?.plan || user?.plan || "free").toLowerCase();
                   const planStyles = {
-                    free: { badge: "bg-muted text-muted-foreground border-border", icon: "text-zinc-500" },
-                    pro: { badge: "bg-amber-500/10 text-amber-500 border-amber-500/20", icon: "text-amber-500" },
-                    expert: { badge: "bg-primary/10 text-primary border-primary/20", icon: "text-primary" }
+                    free: { 
+                      badge: "bg-muted text-muted-foreground border-border", 
+                      icon: "text-zinc-500",
+                      accent: "text-zinc-500",
+                      avatarBorder: "border-border"
+                    },
+                    pro: { 
+                      badge: "bg-amber-500/10 text-amber-500 border-amber-500/20", 
+                      icon: "text-amber-500",
+                      accent: "text-amber-500",
+                      avatarBorder: "border-amber-500/30"
+                    },
+                    expert: { 
+                      badge: "bg-primary/10 text-primary border-primary/20", 
+                      icon: "text-primary",
+                      accent: "text-primary",
+                      avatarBorder: "border-primary/30"
+                    }
                   };
                   const style = planStyles[currentPlan as keyof typeof planStyles] || planStyles.free;
                   
