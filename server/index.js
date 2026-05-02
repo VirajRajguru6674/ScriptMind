@@ -413,15 +413,19 @@ async function initializeDatabase() {
             }
         } catch (e) {}
 
-        // 7. Seed/Update Admin User (Clean Slate Approach)
-        console.log("👤 DB Initialization: Resetting admin account...");
-        await conn.query("DELETE FROM users WHERE email = ? OR username = ?", ['admin@scriptmind.com', 'System Admin']);
-        const hashed = await bcrypt.hash('admin123', 10);
-        await conn.query(
-            "INSERT INTO users (username, email, password, role, plan, created_at) VALUES (?, ?, ?, 'admin', 'expert', NOW())",
-            ['System Admin', 'admin@scriptmind.com', hashed]
-        );
-        console.log("👤 DB Initialization: Admin user recreated successfully.");
+        // 7. Seed Admin User (Safe Approach)
+        console.log("👤 DB Initialization: Checking admin account...");
+        const [admins] = await conn.query("SELECT id FROM users WHERE email = ?", ['admin@scriptmind.com']);
+        if (admins.length === 0) {
+            const hashed = await bcrypt.hash('admin123', 10);
+            await conn.query(
+                "INSERT INTO users (username, email, password, role, plan, created_at) VALUES (?, ?, ?, 'admin', 'expert', NOW())",
+                ['System Admin', 'admin@scriptmind.com', hashed]
+            );
+            console.log("👤 DB Initialization: Admin user created successfully.");
+        } else {
+            console.log("👤 DB Initialization: Admin user already exists.");
+        }
 
         console.log("🚀 DB Initialization: Success!");
 
@@ -1671,10 +1675,12 @@ app.get('/api/video-formats', async (req, res) => {
     if (!videoId) return res.status(400).json({ error: 'videoId required' });
     try {
         const ytDlp = require('yt-dlp-exec');
+        console.log(`🔍 Fetching formats for: ${videoId}`);
         const info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, {
             dumpSingleJson: true,
             noCheckCertificates: true,
-            preferFreeFormats: true
+            preferFreeFormats: true,
+            youtubeSkipDashManifest: true
         });
 
         const formats = info.formats || [];
@@ -1696,10 +1702,22 @@ app.get('/api/video-formats', async (req, res) => {
             .sort((a, b) => a - b)
             .map(h => ({ value: heightToValue[h], label: heightToLabel[h], height: h }));
         qualities.push({ value: 'mp3', label: 'Audio Only (MP3)' });
+
+        if (qualities.length <= 1) {
+             throw new Error("No video formats found");
+        }
+
         res.json({ qualities });
     } catch (error) {
         console.error('Video formats error (yt-dlp):', error.message);
-        res.status(500).json({ error: 'YouTube is temporarily unavailable. Please try again later.' });
+        // Return fallback qualities instead of 500
+        const fallbacks = [
+            { value: '360p', label: '360p' },
+            { value: '720p', label: '720p' },
+            { value: '1080p', label: '1080p' },
+            { value: 'mp3', label: 'Audio Only (MP3)' },
+        ];
+        res.json({ qualities: fallbacks, isFallback: true });
     }
 });
 
