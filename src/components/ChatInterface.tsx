@@ -119,9 +119,15 @@ export function ChatInterface({ notes, videoTitle, embedded = false, promptToSen
                                 
                                 {/* Avatar */}
                                 <div className="shrink-0 mt-1">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm ${msg.role === 'user' ? 'bg-primary/20 text-primary' : 'bg-secondary text-secondary-foreground'}`}>
-                                        {msg.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-                                    </div>
+                                    {msg.role === 'user' ? (
+                                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center shadow-md shadow-indigo-500/20 text-white border border-white/10">
+                                            <User className="w-4.5 h-4.5" />
+                                        </div>
+                                    ) : (
+                                        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-500/20 text-white border border-white/10">
+                                            <Bot className="w-4.5 h-4.5" />
+                                        </div>
+                                    )}
                                 </div>
                                 
                                 <div className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
@@ -145,8 +151,8 @@ export function ChatInterface({ notes, videoTitle, embedded = false, promptToSen
                         <div className="w-full px-4 sm:px-6 flex justify-start">
                              <div className="flex gap-3 flex-row">
                                 <div className="shrink-0 mt-1">
-                                    <div className="w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center animate-pulse">
-                                        <Bot className="w-4 h-4" />
+                                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-500/20 text-white border border-white/10 animate-pulse">
+                                        <Bot className="w-4.5 h-4.5" />
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-start pt-1">
