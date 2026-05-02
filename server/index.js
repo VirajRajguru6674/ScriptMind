@@ -1762,8 +1762,12 @@ app.post('/api/download', authenticateToken, async (req, res) => {
     const userId = req.user.id;
 
     try {
-        const [rows] = await pool.execute('SELECT plan FROM users WHERE id = ?', [userId]);
-        const plan = rows[0]?.plan || 'free';
+        const [rows] = await pool.execute('SELECT plan, role FROM users WHERE id = ?', [userId]);
+        
+        // If user not found in DB (e.g. recreated admin), use token info as fallback
+        const userRecord = rows[0];
+        const plan = userRecord?.plan || (req.user.role === 'admin' ? 'expert' : 'free');
+        const role = userRecord?.role || req.user.role;
 
         const allowedQualities = {
             'free': ['144p', '240p', '360p', '480p', '720p', 'mp3'],
@@ -1771,7 +1775,10 @@ app.post('/api/download', authenticateToken, async (req, res) => {
             'expert': ['144p', '240p', '360p', '480p', '720p', '1080p', '1440p', '4k', '8k', 'mp3']
         };
 
-        if (!allowedQualities[plan].includes(quality) && quality !== 'mp3') {
+        // Admins and Experts get full access
+        const isAllowed = role === 'admin' || (allowedQualities[plan] && allowedQualities[plan].includes(quality)) || quality === 'mp3';
+
+        if (!isAllowed) {
             return res.status(403).json({ error: `Your ${plan} plan does not support ${quality} downloads.` });
         }
 
