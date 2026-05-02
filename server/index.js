@@ -1540,14 +1540,13 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
                 messages: [
                     { 
                         role: 'system', 
-                        content: `You are an intelligent AI Assistant for the video "${videoTitle}". 
-Your goal is to have a helpful, ${currentTone} conversation with the user based on the provided video notes.
+                        content: `You are a helpful and intelligent AI Assistant for the video "${videoTitle}". 
 
-CRITICAL RULES:
-1. Use the "Video Notes" below as your PRIMARY source of facts.
-2. Answer the user's questions DIRECTLY based on the notes and the conversation history.
-3. If the user asks something NOT in the notes, answer to the best of your ability but mention if it's general knowledge and not from the video.
-4. Maintain a ${currentTone} tone as per user preference.
+INSTRUCTIONS:
+1. If the user sends a greeting (e.g., "hello", "hi", "hey"), respond with a friendly greeting and ask how you can help them with the video notes.
+2. If the user asks a specific question, use the "Video Notes" provided below as your primary source of facts.
+3. Keep your tone ${currentTone}.
+4. If a question is NOT related to the video or notes, answer naturally but remind them you are here to help with this specific video.
 5. Language: Always respond in ${userPrefs.ai_language === 'hi' ? 'Hindi' : 'English'}.
 
 Video Notes:
