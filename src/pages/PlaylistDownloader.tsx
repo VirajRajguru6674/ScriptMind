@@ -156,9 +156,18 @@ export default function PlaylistDownloader() {
                         setDownloadProgress((prev) => ({ ...prev, [videoId]: prev[videoId] ?? 0 }));
                     }
                 };
-                xhr.onload = () => {
-                    if (xhr.status >= 200 && xhr.status < 300) resolve(xhr.response as Blob);
-                    else reject(new Error("Download failed"));
+                xhr.onload = async () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve(xhr.response as Blob);
+                    } else {
+                        try {
+                            const text = await xhr.response.text();
+                            const errorData = JSON.parse(text);
+                            reject(new Error(errorData.error || "Download failed"));
+                        } catch (e) {
+                            reject(new Error("Download failed"));
+                        }
+                    }
                 };
                 xhr.onerror = () => reject(new Error("Download failed"));
                 xhr.send(JSON.stringify({ videoId, quality: qualityToUse, title }));
@@ -173,8 +182,12 @@ export default function PlaylistDownloader() {
             window.URL.revokeObjectURL(downloadUrl);
             toast({ title: "Download complete", description: title });
             setDownloadedVideos(prev => new Set(prev).add(videoId));
-        } catch (error) {
-            toast({ variant: "destructive", title: "Download Error", description: `Failed to download ${title}` });
+        } catch (error: any) {
+            toast({ 
+                variant: "destructive", 
+                title: "Download Error", 
+                description: error.message || `Failed to download ${title}` 
+            });
         } finally {
             setIsDownloading(null);
             setDownloadProgress((p) => {
