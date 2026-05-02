@@ -355,7 +355,56 @@ async function initializeDatabase() {
             )
         `);
 
-        // 3. Seed/Update Admin User (Clean Slate Approach)
+        // 3. Create Audit Logs Table
+        await conn.query(`
+            CREATE TABLE IF NOT EXISTS audit_logs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT,
+                action VARCHAR(100),
+                details JSON,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // 4. Create Notes History Table
+        await conn.query(`
+            CREATE TABLE IF NOT EXISTS notes_history (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT,
+                video_id VARCHAR(100),
+                title VARCHAR(255),
+                thumbnail TEXT,
+                notes LONGTEXT,
+                video_url VARCHAR(255),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        `);
+
+        // 5. Create System Settings Table
+        await conn.query(`
+            CREATE TABLE IF NOT EXISTS system_settings (
+                setting_key VARCHAR(100) PRIMARY KEY,
+                setting_value JSON,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        `);
+
+        // 6. Create Notifications Table
+        await conn.query(`
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT,
+                title VARCHAR(255),
+                message TEXT,
+                type ENUM('info', 'success', 'warning', 'error') DEFAULT 'info',
+                status ENUM('unread', 'read') DEFAULT 'unread',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        `);
+
+        // 7. Seed/Update Admin User (Clean Slate Approach)
         console.log("👤 DB Initialization: Resetting admin account...");
         await conn.query("DELETE FROM users WHERE email = ? OR username = ?", ['admin@scriptmind.com', 'System Admin']);
         const hashed = await bcrypt.hash('admin123', 10);
