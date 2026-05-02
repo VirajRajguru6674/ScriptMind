@@ -1410,32 +1410,29 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
                 } catch (prefErr) { console.warn("Could not fetch user prefs, using defaults"); }
 
                 const MODEL = 'llama-3.3-70b-versatile';
-                const MAX_OUTPUT_TOKENS = 8000; // Increased significantly for 5-12 pages
+                const MAX_OUTPUT_TOKENS = 8000; 
                 
-                // Truncate transcript if too long (Increased to 40k for more context)
-                const MAX_CHARS = 40000;
+                // Truncate transcript to 120k chars to capture up to 2 hours of video
+                const MAX_CHARS = 120000;
                 let transcriptToUse = transcript && typeof transcript === 'string' ? (transcript.length > MAX_CHARS ? transcript.substring(0, MAX_CHARS) : transcript) : "";
 
                 const systemPrompt = transcriptToUse
-                    ? `You are a world-class educational analyst. Your task is to generate EXHAUSTIVE, HYPER-DETAILED Markdown notes based on the provided transcript. 
-                       CRITICAL: 
-                       1. Aim for a length of at least 5-12 full pages of content. 
-                       2. Do NOT skip any details. 
-                       3. Break down every topic into sub-topics with deep explanations, examples, and step-by-step guides. 
-                       4. Use many headers (H1, H2, H3), bullet points, and detailed paragraphs.
-                       ${buildAISystemPrompt(userPrefs.ai_tone, userPrefs.ai_detail_level, userPrefs.ai_language)}`
-                    : `The transcript is unavailable. You are an expert analyst. Generate the most COMPREHENSIVE study notes possible based ONLY on the video metadata. 
-                       Try to expand on every concept mentioned in the title and description to reach a length of 5-12 pages.
-                       ${buildAISystemPrompt(userPrefs.ai_tone, userPrefs.ai_detail_level, userPrefs.ai_language)}`;
+                    ? `You are an expert academic writer. Your goal is to generate HIGHLY DETAILED, EXHAUSTIVE Markdown notes for a very long video.
+                       
+                       CRITICAL REQUIREMENTS:
+                       1. LENGTH: Aim for a MINIMUM of 10-12 pages of content.
+                       2. STRUCTURE: Provide a "Chapter-by-Chapter" breakdown. Create a detailed section for every major topic or time block.
+                       3. DEPTH: For every section, include core concepts, detailed explanations, technical terms defined, examples, and analysis.
+                       4. VERBOSITY: Be extremely wordy and thorough. Do not summarize; expand on everything mentioned.
+                       5. FORMAT: Use H1 for main title, H2 for chapters, H3 for sub-topics. Use bolding for key terms.
+                       
+                       ${buildAISystemPrompt(userPrefs.ai_tone, 'detailed', userPrefs.ai_language)}`
+                    : `Generate the most exhaustive study notes possible (target 10 pages) based on this metadata. Expand on every single concept.
+                       ${buildAISystemPrompt(userPrefs.ai_tone, 'detailed', userPrefs.ai_language)}`;
 
-                // Truncate description for metadata-only fallback
-                const truncatedDescription = videoInfo.description ? videoInfo.description.substring(0, 5000) : "No description available";
+                const userPrompt = `Video Title: "${videoTitle}"\n\nFull Transcript Content:\n${transcriptToUse}\n\nINSTRUCTION: Generate the most detailed notes possible. Aim for 10-12 pages.`;
 
-                const userPrompt = transcriptToUse
-                    ? `Video: "${videoInfo.title}"\n\nTranscript:\n${transcriptToUse}\n\nIMPORTANT: Provide extremely long and exhaustive notes covering everything.`
-                    : `Video: "${videoInfo.title}"\n\nMetadata:\nTitle: ${videoInfo.title}\nDescription: ${truncatedDescription}\n\nIMPORTANT: Provide extremely long and exhaustive notes covering everything.`;
-
-                console.log(`[Groq] Sending request to ${MODEL} (Payload size: ${Math.round((systemPrompt.length + userPrompt.length) / 1024)} KB)`);
+                console.log(`[Groq] Sending request to ${MODEL} (Payload: ${Math.round(transcriptToUse.length / 1024)} KB)`);
 
                 const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                     model: MODEL,
@@ -1444,8 +1441,9 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
                         { role: 'user', content: userPrompt }
                     ],
                     max_tokens: MAX_OUTPUT_TOKENS,
-                    temperature: 0.4
-                }, { headers: { 'Authorization': `Bearer ${key}` }, timeout: 90000 });
+                    temperature: 0.5, // Slightly higher for more descriptive writing
+                    top_p: 1
+                }, { headers: { 'Authorization': `Bearer ${key}` }, timeout: 120000 }); // 2 min timeout for huge notes
 
                 let result = groqRes.data.choices[0].message.content;
                 if (userPrefs.ai_language === 'hi') result = cleanHindiText(result, 'hi');
