@@ -389,53 +389,53 @@ const Settings = () => {
       <div className="min-h-screen bg-background font-sans selection:bg-primary/20 relative">
         <Sidebar />
 
-        <main className="lg:pl-[280px]">
-          <div className="container py-6 lg:py-10 max-w-3xl mx-auto space-y-8 animate-fade-in">
-            {/* Header */}
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <Link to="/">
-                  <Button variant="ghost" size="icon" className="rounded-full shrink-0">
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </Link>
-                <div>
-                  <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Settings</h1>
-                  <p className="text-sm text-muted-foreground">Customize your ScriptMind experience</p>
-                </div>
+        <main className="lg:pl-[280px] h-screen flex flex-col overflow-hidden">
+          {/* Top Navbar for Settings */}
+          <header className="h-16 border-b border-border/40 bg-background/80 backdrop-blur-md flex items-center justify-between px-8 shrink-0 z-20">
+            <div className="flex items-center gap-4">
+              <Link to="/">
+                <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 hover:bg-muted">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </Link>
+              <div className="h-4 w-px bg-border/60 mx-1" />
+              <div>
+                <h1 className="text-lg font-bold tracking-tight">Settings</h1>
               </div>
             </div>
+          </header>
 
-            <div className="flex flex-col lg:flex-row gap-10 items-start">
-              {/* Settings Sidebar Navigation */}
-              <aside className="w-full lg:w-64 lg:shrink-0 lg:sticky lg:top-24 space-y-1">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-3 mb-3">Settings Menu</p>
-                {[
-                  { id: "general", icon: User, label: "Account Profile" },
-                  { id: "appearance", icon: Palette, label: "Appearance" },
-                  { id: "ai", icon: Sparkles, label: "AI & Generation" },
-                  { id: "account", icon: BarChart3, label: "Usage & Plan" },
-                  { id: "data", icon: Shield, label: "Security & Data" },
-                  { id: "about", icon: Info, label: "Product Info" },
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
-                      activeTab === item.id 
-                        ? "bg-primary/10 text-primary shadow-sm shadow-primary/5" 
-                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                    }`}
-                  >
-                    <item.icon className={`h-4 w-4 transition-transform ${activeTab === item.id ? "scale-110" : "group-hover:scale-110"}`} />
-                    <span className="text-sm font-semibold">{item.label}</span>
-                    {activeTab === item.id && <div className="ml-auto w-1 h-4 bg-primary rounded-full animate-in slide-in-from-right-1" />}
-                  </button>
-                ))}
-              </aside>
+          <div className="flex-1 flex overflow-hidden">
+            {/* Settings Sidebar Navigation - Pinned to Left */}
+            <aside className="w-[240px] border-r border-border/40 bg-muted/5 p-4 space-y-1 flex flex-col shrink-0 animate-in slide-in-from-left-4 duration-500">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-3 mb-4 mt-2">Configuration</p>
+              {[
+                { id: "general", icon: User, label: "Account Profile" },
+                { id: "appearance", icon: Palette, label: "Appearance" },
+                { id: "ai", icon: Sparkles, label: "AI & Generation" },
+                { id: "account", icon: BarChart3, label: "Usage & Plan" },
+                { id: "data", icon: Shield, label: "Security & Data" },
+                { id: "about", icon: Info, label: "Product Info" },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
+                    activeTab === item.id 
+                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" 
+                      : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                  }`}
+                >
+                  <item.icon className={`h-4 w-4 transition-transform ${activeTab === item.id ? "scale-110" : "group-hover:scale-110"}`} />
+                  <span className="text-sm font-semibold">{item.label}</span>
+                  {activeTab === item.id && <ChevronRight className="ml-auto w-3.5 h-3.5 opacity-50" />}
+                </button>
+              ))}
+            </aside>
 
-              {/* Settings Content Area */}
-              <div className="flex-1 w-full max-w-2xl min-h-[600px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Settings Content Area - Scrollable */}
+            <div className="flex-1 overflow-y-auto bg-card/30">
+              <div className="max-w-3xl p-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <Tabs value={activeTab} className="w-full mt-0">
 
 
