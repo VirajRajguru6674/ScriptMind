@@ -406,105 +406,72 @@ const Settings = () => {
               </div>
             </div>
 
-            {/* Tabbed Settings */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-6 h-auto flex-wrap gap-1 p-1 bg-muted/30">
-                <TabsTrigger value="general" className="gap-2">
-                  <Monitor className="h-4 w-4" />
-                  General
-                </TabsTrigger>
-                <TabsTrigger value="appearance" className="gap-2">
-                  <Palette className="h-4 w-4" />
-                  Appearance
-                </TabsTrigger>
-                <TabsTrigger value="ai" className="gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  AI & Notes
-                </TabsTrigger>
-                <TabsTrigger value="account" className="gap-2">
-                  <BarChart3 className="h-4 w-4" />
-                  Account
-                </TabsTrigger>
-                <TabsTrigger value="data" className="gap-2">
-                  <Shield className="h-4 w-4" />
-                  Data
-                </TabsTrigger>
-                <TabsTrigger value="about" className="gap-2">
-                  <Info className="h-4 w-4" />
-                  About
-                </TabsTrigger>
-              </TabsList>
+            <div className="flex flex-col lg:flex-row gap-10 items-start">
+              {/* Settings Sidebar Navigation */}
+              <aside className="w-full lg:w-64 lg:shrink-0 lg:sticky lg:top-24 space-y-1">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-3 mb-3">Settings Menu</p>
+                {[
+                  { id: "general", icon: User, label: "Account Profile" },
+                  { id: "appearance", icon: Palette, label: "Appearance" },
+                  { id: "ai", icon: Sparkles, label: "AI & Generation" },
+                  { id: "account", icon: BarChart3, label: "Usage & Plan" },
+                  { id: "data", icon: Shield, label: "Security & Data" },
+                  { id: "about", icon: Info, label: "Product Info" },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
+                      activeTab === item.id 
+                        ? "bg-primary/10 text-primary shadow-sm shadow-primary/5" 
+                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                    }`}
+                  >
+                    <item.icon className={`h-4 w-4 transition-transform ${activeTab === item.id ? "scale-110" : "group-hover:scale-110"}`} />
+                    <span className="text-sm font-semibold">{item.label}</span>
+                    {activeTab === item.id && <div className="ml-auto w-1 h-4 bg-primary rounded-full animate-in slide-in-from-right-1" />}
+                  </button>
+                ))}
+              </aside>
+
+              {/* Settings Content Area */}
+              <div className="flex-1 w-full max-w-2xl min-h-[600px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <Tabs value={activeTab} className="w-full mt-0">
+
 
               <TabsContent value="general" className="space-y-6">
                 {/* Profile Section */}
                 {isAuthenticated && (() => {
                   const currentPlan = (profile?.plan || user?.plan || "free").toLowerCase();
                   const planStyles = {
-                    free: {
-                      card: "border-border/50 bg-card/50",
-                      header: "bg-gradient-to-r from-zinc-900/50 to-zinc-800/30 border-b border-zinc-800/50",
-                      badge: "bg-zinc-800 text-zinc-400 border border-white/10",
-                      avatarBorder: "border-zinc-700/50",
-                      accent: "text-zinc-400"
-                    },
-                    pro: {
-                      card: "border-amber-500/30 bg-gradient-to-br from-amber-950/20 via-card/50 to-amber-900/10 shadow-lg shadow-amber-500/5",
-                      header: "bg-gradient-to-r from-amber-900/30 to-amber-800/20 border-b border-amber-500/30",
-                      badge: "bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_8px_rgba(245,158,11,0.2)]",
-                      avatarBorder: "border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.3)]",
-                      accent: "text-amber-400"
-                    },
-                    expert: {
-                      card: "border-purple-500/40 bg-gradient-to-br from-purple-950/30 via-card/50 to-purple-900/20 shadow-xl shadow-purple-500/10",
-                      header: "bg-gradient-to-r from-purple-900/40 to-purple-800/30 border-b border-purple-500/40",
-                      badge: "bg-purple-500/20 text-purple-400 border border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.3)]",
-                      avatarBorder: "border-purple-500/50 shadow-[0_0_16px_rgba(168,85,247,0.4)]",
-                      accent: "text-purple-400"
-                    }
+                    free: { badge: "bg-muted text-muted-foreground border-border", icon: "text-zinc-500" },
+                    pro: { badge: "bg-amber-500/10 text-amber-500 border-amber-500/20", icon: "text-amber-500" },
+                    expert: { badge: "bg-primary/10 text-primary border-primary/20", icon: "text-primary" }
                   };
                   const style = planStyles[currentPlan as keyof typeof planStyles] || planStyles.free;
                   
                   return (
-                    <Card className={`relative overflow-hidden ${style.card} transition-all duration-300`}>
-                      {/* Plan-specific gradient overlay */}
-                      {currentPlan === "expert" && (
-                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-purple-500/5 pointer-events-none" />
-                      )}
-                      {currentPlan === "pro" && (
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-amber-500/5 pointer-events-none" />
-                      )}
-                      
-                      <CardHeader className={`relative ${style.header} pb-4`}>
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className={`p-2 rounded-xl bg-primary/10 ${style.accent}`}>
-                                <User className="h-5 w-5" />
-                              </div>
-                              <div>
-                                <CardTitle className="text-xl font-bold">Profile</CardTitle>
-                                <CardDescription className="mt-0.5">Manage your profile information and avatar</CardDescription>
-                              </div>
-                            </div>
+                    <Card className="border border-border/40 bg-card shadow-sm overflow-hidden">
+                      <CardHeader className="border-b border-border/40 bg-muted/20 pb-6">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1">
+                            <CardTitle className="text-xl font-bold flex items-center gap-2">
+                              Personal Profile
+                              <Badge className={`capitalize font-bold text-[10px] px-2 py-0 h-5 ${style.badge}`}>
+                                {currentPlan} Plan
+                              </Badge>
+                            </CardTitle>
+                            <CardDescription>Manage your identity and public information</CardDescription>
                           </div>
                           {!isEditingProfile && (
-                            <div className="flex flex-col items-end gap-3">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={handleEditProfile}
-                                className="bg-background/50 hover:bg-background border-border/50"
-                              >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </Button>
-                              <Badge className={`capitalize font-bold text-xs px-3 py-1 ${style.badge}`}>
-                                {currentPlan === "free" ? "Free" : currentPlan === "pro" ? "Pro" : "Expert"}
-                              </Badge>
-                            </div>
+                            <Button variant="outline" size="sm" onClick={handleEditProfile} className="h-9 px-4 rounded-xl">
+                              <Edit className="h-3.5 w-3.5 mr-2" />
+                              Edit Profile
+                            </Button>
                           )}
                         </div>
                       </CardHeader>
+
                       <CardContent className="relative space-y-6 pt-6">
                       {!isEditingProfile ? (
                         <div className="space-y-6">
@@ -1107,27 +1074,29 @@ const Settings = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
-            </Tabs>
+                </Tabs>
+              </div>
+            </div>
           </div>
         </main>
-      </div>
 
-      <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Clear all history?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete all your notes history. You won't be able to recover it.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={clearing}>Cancel</AlertDialogCancel>
-            <Button variant="destructive" disabled={clearing} onClick={handleClearHistory}>
-              {clearing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Clear all"}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Clear all history?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete all your notes history. You won't be able to recover it.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={clearing}>Cancel</AlertDialogCancel>
+              <Button variant="destructive" disabled={clearing} onClick={handleClearHistory}>
+                {clearing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Clear all"}
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </>
   );
 };
