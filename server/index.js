@@ -1673,12 +1673,19 @@ app.get('/api/video-formats', async (req, res) => {
     try {
         const ytDlp = require('yt-dlp-exec');
         console.log(`🔍 Fetching formats for: ${videoId}`);
-        const info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, {
+        const dlpOptions = {
             dumpSingleJson: true,
             noCheckCertificates: true,
             preferFreeFormats: true,
-            youtubeSkipDashManifest: true
-        });
+            jsRuntime: 'node'
+        };
+
+        const cookiesPath = path.join(__dirname, 'cookies.json');
+        if (fs.existsSync(cookiesPath) && fs.statSync(cookiesPath).size > 0) {
+            dlpOptions.cookies = cookiesPath;
+        }
+
+        const info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpOptions);
 
         const formats = info.formats || [];
         const heights = new Set();
@@ -1797,15 +1804,15 @@ app.all('/api/download', authenticateToken, async (req, res) => {
             output: fullPath,
             noCheckCertificates: true,
             preferFreeFormats: true,
-            youtubeSkipDashManifest: true,
             format: quality === 'mp3' ? 'bestaudio/best' : `bestvideo[height<=${quality.replace('p', '')}][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best`,
             addHeader: [
                 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
-            ]
+            ],
+            jsRuntime: 'node'
         };
 
         const cookiesPath = path.join(__dirname, 'cookies.json');
-        if (fs.existsSync(cookiesPath)) {
+        if (fs.existsSync(cookiesPath) && fs.statSync(cookiesPath).size > 0) {
             console.log("🍪 Using cookies.json for download");
             dlpOptions.cookies = cookiesPath;
         }
@@ -1814,7 +1821,6 @@ app.all('/api/download', authenticateToken, async (req, res) => {
             dlpOptions.extractAudio = true;
             dlpOptions.audioFormat = 'mp3';
         }
-
         await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpOptions);
 
         await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
