@@ -378,6 +378,13 @@ async function initializeDatabase() {
             )
         `);
 
+        // Migration: Ensure notes is LONGTEXT
+        try {
+            await conn.query("ALTER TABLE notes_history MODIFY COLUMN notes LONGTEXT");
+        } catch (e) {
+            console.warn("Notes history migration skipped or already applied.");
+        }
+
         // 5. Create System Settings Table
         await conn.query(`
             CREATE TABLE IF NOT EXISTS system_settings (
