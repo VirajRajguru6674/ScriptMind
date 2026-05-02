@@ -60,42 +60,38 @@
 }
 
 @layer base {
-    :root {
-        /* Professional Black & White Theme */
-        --background: 0 0% 100%;
-        --foreground: 0 0% 0%;
+     :root {
+        /* Premium Light Mode: Clean, Airy, Professional */
+        --background: 210 40% 98%;
+        --foreground: 222 47% 11%;
         --card: 0 0% 100%;
-        --card-foreground: 0 0% 0%;
+        --card-foreground: 222 47% 11%;
         --popover: 0 0% 100%;
-        --popover-foreground: 0 0% 0%;
-        
-        /* Solid Black Primary for Buttons/Links */
-        --primary: 0 0% 0%;
-        --primary-foreground: 0 0% 100%;
-        
-        --secondary: 0 0% 96%;
-        --secondary-foreground: 0 0% 0%;
-        --muted: 0 0% 96%;
-        --muted-foreground: 0 0% 40%;
-        --accent: 0 0% 92%;
-        --accent-foreground: 0 0% 0%;
-        --destructive: 0 84% 60%;
-        --destructive-foreground: 0 0% 100%;
-        
-        --border: 0 0% 90%;
-        --input: 0 0% 90%;
-        --ring: 0 0% 0%;
+        --popover-foreground: 222 47% 11%;
+        /* Sophisticated Indigo/Violet */
+        --primary: 250 80% 54%;
+        /* Deep Indigo */
+        --primary-foreground: 210 40% 98%;
+        --secondary: 210 40% 96.1%;
+        --secondary-foreground: 222 47% 11.2%;
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215 16% 47%;
+        --accent: 210 40% 96.1%;
+        --accent-foreground: 222 47% 11.2%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 214 32% 91%;
+        --input: 214 32% 91%;
+        --ring: 250 80% 54%;
         --radius: 0.75rem;
-        
-        /* Inverted Professional Sidebar (Black background, White text) */
-        --sidebar-background: 0 0% 0%;
-        --sidebar-foreground: 0 0% 100%;
-        --sidebar-primary: 0 0% 100%;
-        --sidebar-primary-foreground: 0 0% 0%;
-        --sidebar-accent: 0 0% 15%;
-        --sidebar-accent-foreground: 0 0% 100%;
-        --sidebar-border: 0 0% 20%;
-        --sidebar-ring: 0 0% 100%;
+        --sidebar-background: 0 0% 100%;
+        --sidebar-foreground: 240 5.3% 26.1%;
+        --sidebar-primary: 250 80% 54%;
+        --sidebar-primary-foreground: 0 0% 98%;
+        --sidebar-accent: 210 40% 96.1%;
+        --sidebar-accent-foreground: 240 5.9% 10%;
+        --sidebar-border: 220 13% 91%;
+        --sidebar-ring: 250 80% 54%;
     }
     .dark {
         /* Proper Black (Onyx): Pure Black with High-Contrast Accents */

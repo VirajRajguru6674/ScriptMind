@@ -54,8 +54,8 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
         <div className="flex h-full flex-col bg-sidebar-background">
             <div className="flex h-16 items-center px-6 border-b border-sidebar-border/50">
                 <Link to="/" className="flex items-center gap-3">
-                    <div className="shrink-0 bg-white p-1 rounded-xl">
-                        <img src="/logo.png" alt="ScriptMind Logo" className="w-8 h-8 rounded-lg object-cover" />
+                    <div className="shrink-0">
+                        <img src="/logo.png" alt="ScriptMind Logo" className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-primary/20" />
                     </div>
                     <span className="text-xl font-bold tracking-tight text-sidebar-foreground">ScriptMind</span>
                 </Link>
@@ -64,30 +64,30 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
             <div className="flex-1 py-4 flex flex-col gap-4 overflow-hidden min-h-0">
                 <div className="px-4 shrink-0">
                     <div className="space-y-1">
-                        <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground hover:text-sidebar-primary hover:bg-white/10 transition-all" onClick={() => { (onNewNote || reset)(); setOpen(false); onCloseMobile?.(); }}>
+                        <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5 transition-all" onClick={() => { (onNewNote || reset)(); setOpen(false); onCloseMobile?.(); }}>
                             <Plus className="h-4 w-4" />
                             New Note
                         </Button>
 
-                        <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground hover:text-sidebar-primary hover:bg-white/10 transition-all" asChild>
+                        <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5 transition-all" asChild>
                             <Link to="/playlist">
                                 <Video className="h-4 w-4" />
                                 Playlist Downloader
                             </Link>
                         </Button>
-                        <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground hover:text-sidebar-primary hover:bg-white/10 transition-all" asChild>
+                        <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5 transition-all" asChild>
                             <Link to="/pricing">
                                 <CreditCard className="h-4 w-4" />
                                 Pricing
                             </Link>
                         </Button>
-                        <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground hover:text-sidebar-primary hover:bg-white/10 transition-all" asChild>
+                        <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5 transition-all" asChild>
                             <Link to="/notifications">
                                 <Bell className="h-4 w-4" />
                                 Notifications
                             </Link>
                         </Button>
-                        <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground hover:text-sidebar-primary hover:bg-white/10 transition-all" asChild>
+                        <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5 transition-all" asChild>
                             <Link to="/organization">
                                 <Users className="h-4 w-4" />
                                 Organization
@@ -99,35 +99,35 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
                 {/* History Section */}
                 <div className="px-4 flex-1 flex flex-col min-h-0">
                     <div className="flex items-center justify-between px-2 mb-2 shrink-0">
-                        <h2 className="text-xs font-semibold uppercase tracking-wider text-white">
+                        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
                             History
                         </h2>
                         {history.length > 0 && (
-                            <button onClick={clearHistory} className="text-[10px] text-white/60 hover:text-destructive transition-colors">Clear</button>
+                            <button onClick={clearHistory} className="text-[10px] text-muted-foreground hover:text-destructive transition-colors">Clear</button>
                         )}
                     </div>
 
                     {/* History Search */}
                     {history.length > 0 && (
                         <div className="mb-2 shrink-0 relative">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/50" />
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                             <Input
                                 placeholder="Search notes..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="h-9 pl-8 text-xs bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                                className="h-9 pl-8 text-xs bg-secondary/30 border-border/50"
                             />
                         </div>
                     )}
 
                     {/* All / Favorites Tabs */}
                     {history.length > 0 && (
-                        <div className="flex bg-white/5 rounded-lg p-0.5 mb-2 shrink-0 border border-white/10">
+                        <div className="flex bg-secondary/50 rounded-lg p-0.5 mb-2 shrink-0">
                             <button
                                 onClick={() => setFavoritesOnly(false)}
                                 className={cn(
                                     "flex-1 px-2 py-1 text-[10px] font-medium rounded-md transition-all",
-                                    !favoritesOnly ? "bg-white text-black shadow-lg" : "text-white/60 hover:text-white"
+                                    !favoritesOnly ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                                 )}
                             >
                                 All
@@ -136,7 +136,7 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
                                 onClick={() => setFavoritesOnly(true)}
                                 className={cn(
                                     "flex-1 px-2 py-1 text-[10px] font-medium rounded-md transition-all flex items-center justify-center gap-1",
-                                    favoritesOnly ? "bg-white text-black shadow-lg" : "text-white/60 hover:text-white"
+                                    favoritesOnly ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                                 )}
                             >
                                 <Star className="w-3 h-3" />
@@ -240,7 +240,7 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
             </Sheet>
 
             <div className={cn("hidden lg:block w-[280px] fixed inset-y-0 left-0 z-40", className)}>
-                <div className="h-full w-full bg-sidebar-background border-r border-sidebar-border shadow-2xl flex flex-col overflow-hidden">
+                <div className="h-full w-full bg-sidebar-background/80 backdrop-blur-xl border-r border-sidebar-border/50 shadow-2xl flex flex-col overflow-hidden">
                     <SidebarContent />
                 </div>
             </div>
