@@ -1523,15 +1523,36 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
     }
 
     try {
-        const systemPrompt = buildAISystemPrompt(userPrefs.ai_tone, userPrefs.ai_detail_level, userPrefs.ai_language);
+        const toneInstructions = {
+            educational: "instructive and professional",
+            casual: "friendly and conversational",
+            formal: "formal and structured",
+            concise: "brief and to the point"
+        };
+        const currentTone = toneInstructions[userPrefs.ai_tone] || toneInstructions.educational;
+
         // Truncate context to avoid 413
-        const truncatedContext = context ? context.substring(0, 15000) : "";
+        const truncatedContext = context ? context.substring(0, 15000) : "No specific notes available.";
         
         const reply = await executeWithRotation('GROQ_API_KEY', async (key) => {
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: 'llama-3.3-70b-versatile',
                 messages: [
-                    { role: 'system', content: `${systemPrompt} You are an AI tutor for "${videoTitle}". Use the notes: ${truncatedContext}` },
+                    { 
+                        role: 'system', 
+                        content: `You are an intelligent AI Assistant for the video "${videoTitle}". 
+Your goal is to have a helpful, ${currentTone} conversation with the user based on the provided video notes.
+
+CRITICAL RULES:
+1. Use the "Video Notes" below as your PRIMARY source of facts.
+2. Answer the user's questions DIRECTLY based on the notes and the conversation history.
+3. If the user asks something NOT in the notes, answer to the best of your ability but mention if it's general knowledge and not from the video.
+4. Maintain a ${currentTone} tone as per user preference.
+5. Language: Always respond in ${userPrefs.ai_language === 'hi' ? 'Hindi' : 'English'}.
+
+Video Notes:
+${truncatedContext}`
+                    },
                     ...messages
                 ]
             }, { headers: { 'Authorization': `Bearer ${key}` }, timeout: 60000 });
