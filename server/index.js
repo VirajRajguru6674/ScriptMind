@@ -1677,7 +1677,8 @@ app.get('/api/video-formats', async (req, res) => {
             dumpSingleJson: true,
             noCheckCertificates: true,
             preferFreeFormats: true,
-            jsRuntime: 'node'
+            jsRuntime: 'node',
+            extractorArgs: 'youtube:player-client=android,web,tv_embedded'
         };
 
         const cookiesPath = path.join(__dirname, 'cookies.json');
@@ -1806,9 +1807,13 @@ app.all('/api/download', authenticateToken, async (req, res) => {
             preferFreeFormats: true,
             format: quality === 'mp3' ? 'bestaudio/best' : `bestvideo[height<=${quality.replace('p', '')}][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best`,
             addHeader: [
-                'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+                'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                'Accept-Language:en-US,en;q=0.9',
+                'Referer:https://www.youtube.com/watch?v=' + videoId
             ],
-            jsRuntime: 'node'
+            jsRuntime: 'node',
+            extractorArgs: 'youtube:player-client=android,web,tv_embedded',
+            forceIpv4: true
         };
 
         const cookiesPath = path.join(__dirname, 'cookies.json');
