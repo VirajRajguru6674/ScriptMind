@@ -57,7 +57,7 @@ const Notifications = () => {
     const fetchNotifications = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/notifications`);
+            const response = await fetch(`${API_BASE_URL}/alerts`);
             const data = await response.json();
             if (Array.isArray(data)) {
                 setNotifications(data);
@@ -78,9 +78,9 @@ const Notifications = () => {
             if (id) {
                 // Individual mark as read logic if backend supports it
                 // For now we use the global endpoint
-                await fetch(`${API_BASE_URL}/notifications/read`, { method: 'POST' });
+                await fetch(`${API_BASE_URL}/alerts/read`, { method: 'POST' });
             } else {
-                await fetch(`${API_BASE_URL}/notifications/read`, { method: 'POST' });
+                await fetch(`${API_BASE_URL}/alerts/read`, { method: 'POST' });
             }
             fetchNotifications();
         } catch (error) {

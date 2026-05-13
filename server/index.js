@@ -1499,7 +1499,7 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
     }
 });
 
-app.get('/api/notifications', async (req, res) => {
+app.get('/api/alerts', async (req, res) => {
     try {
         const [rows] = await pool.query('SELECT * FROM notifications ORDER BY created_at DESC LIMIT 20');
         res.json(rows);
@@ -1508,7 +1508,7 @@ app.get('/api/notifications', async (req, res) => {
     }
 });
 
-app.post('/api/notifications/read', async (req, res) => {
+app.post('/api/alerts/read', async (req, res) => {
     try {
         await pool.query('UPDATE notifications SET status = "read" WHERE status = "unread"');
         res.json({ success: true });
@@ -1918,28 +1918,42 @@ app.all('/api/download', authenticateToken, async (req, res) => {
             await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpOptions);
         };
 
+        let downloadSuccess = false;
         try {
             // Priority 1: Web Embedded (Least likely to trigger bot check)
             await attemptDownload('web_embedded,android,tv_embedded');
+            downloadSuccess = true;
         } catch (e) {
             console.warn("⚠️ yt-dlp primary client failed, retrying with iOS client...");
             try {
                 // Priority 2: iOS Client (Harder to block)
                 await attemptDownload('ios,web');
+                downloadSuccess = true;
             } catch (e2) {
                 console.warn("⚠️ yt-dlp iOS client failed. Attempting ytdl-core fallback...");
                 try {
                     const ytdl = require('@distube/ytdl-core');
+                    console.log(`🚀 [ytdl-core] Streaming ${videoId} directly...`);
+                    
+                    res.setHeader('Content-Disposition', `attachment; filename="${outputName}"`);
+                    res.setHeader('Content-Type', quality === 'mp3' ? 'audio/mpeg' : 'video/mp4');
+
                     const stream = ytdl(videoId, {
                         quality: quality === 'mp3' ? 'highestaudio' : 'highest',
                         filter: quality === 'mp3' ? 'audioonly' : 'videoandaudio'
                     });
-                    const writeStream = fs.createWriteStream(fullPath);
-                    await new Promise((resolve, reject) => {
-                        stream.pipe(writeStream);
-                        writeStream.on('finish', resolve);
-                        writeStream.on('error', reject);
-                        stream.on('error', reject);
+
+                    stream.pipe(res);
+
+                    return new Promise((resolve, reject) => {
+                        stream.on('end', () => {
+                            console.log("✅ Direct stream finished");
+                            resolve();
+                        });
+                        stream.on('error', (err) => {
+                            console.error("❌ Stream error:", err.message);
+                            reject(err);
+                        });
                     });
                 } catch (e3) {
                     console.error("❌ All download methods failed.");
@@ -1952,20 +1966,26 @@ app.all('/api/download', authenticateToken, async (req, res) => {
             try { fs.unlinkSync(cookieData.path); } catch (e) { }
         }
 
-        await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
-        logAction(userId, 'DOWNLOAD_VIDEO', { videoId, quality, title });
+        if (downloadSuccess) {
+            await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
+            logAction(userId, 'DOWNLOAD_VIDEO', { videoId, quality, title });
 
-        res.download(fullPath, outputName, (err) => {
-            if (err) console.error("Send file error:", err);
-            try { if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath); } catch (e) { }
-        });
+            res.download(fullPath, outputName, (err) => {
+                if (err) console.error("Send file error:", err);
+                try { if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath); } catch (e) { }
+            });
+        }
 
     } catch (error) {
         console.error("🏁 Final Download Failure:", error.message);
-        res.status(500).json({
-            error: "YouTube blocked the download from our server IP. Please try again with a different resolution or use a VPN.",
-            details: error.message
-        });
+        if (!res.headersSent) {
+            res.status(500).json({
+                error: "YouTube blocked the download from our server IP. Please try again with a different resolution or use a VPN.",
+                details: error.message
+            });
+        } else {
+            res.end(); // Headers already sent, just close the connection gracefully
+        }
     }
 });
 

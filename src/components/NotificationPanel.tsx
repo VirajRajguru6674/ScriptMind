@@ -29,7 +29,7 @@ export function NotificationPanel() {
 
     const fetchNotifications = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/notifications`);
+            const response = await fetch(`${API_BASE_URL}/alerts`);
             const data = await response.json();
 
             if (!Array.isArray(data)) {
@@ -56,7 +56,7 @@ export function NotificationPanel() {
 
     const markAsRead = async () => {
         try {
-            await fetch(`${API_BASE_URL}/notifications/read`, { method: 'POST' });
+            await fetch(`${API_BASE_URL}/alerts/read`, { method: 'POST' });
             fetchNotifications();
         } catch (error) {
             console.error('Failed to mark as read', error);
