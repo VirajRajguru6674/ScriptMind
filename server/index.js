@@ -1945,7 +1945,7 @@ app.all('/api/download', authenticateToken, async (req, res) => {
 
                     stream.pipe(res);
 
-                    return new Promise((resolve, reject) => {
+                    await new Promise((resolve, reject) => {
                         stream.on('end', () => {
                             console.log("✅ Direct stream finished");
                             resolve();
@@ -1955,6 +1955,14 @@ app.all('/api/download', authenticateToken, async (req, res) => {
                             reject(err);
                         });
                     });
+
+                    if (cookieData && cookieData.isTemp) {
+                        try { fs.unlinkSync(cookieData.path); } catch (e) { }
+                    }
+
+                    await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
+                    logAction(userId, 'DOWNLOAD_VIDEO', { videoId, quality, title });
+                    return;
                 } catch (e3) {
                     console.error("❌ All download methods failed.");
                     throw new Error(`Download failed after multiple attempts. YouTube might be blocking our server IP. Error: ${e3.message}`);
