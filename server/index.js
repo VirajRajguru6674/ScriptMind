@@ -1733,9 +1733,29 @@ app.get('/api/video-formats', async (req, res) => {
             dlpOptions.cookies = cookiesPath;
         }
 
-        const info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpOptions);
+        let info;
+        try {
+            console.log(`🔍 [yt-dlp] Fetching formats for: ${videoId}`);
+            info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpOptions);
+        } catch (dlpError) {
+            console.warn(`⚠️ yt-dlp failed: ${dlpError.message}. Trying ytdl-core...`);
+            try {
+                const ytdl = require('@distube/ytdl-core');
+                const ytdlInfo = await ytdl.getInfo(videoId);
+                // Convert ytdl-core formats to yt-dlp-like structure for the rest of the logic
+                info = {
+                    formats: ytdlInfo.formats.map(f => ({
+                        height: f.height,
+                        format_note: f.qualityLabel
+                    }))
+                };
+            } catch (ytdlError) {
+                console.error(`❌ Both yt-dlp and ytdl-core failed: ${ytdlError.message}`);
+                throw new Error("Could not fetch formats from any source");
+            }
+        }
 
-        const formats = info.formats || [];
+        const formats = info?.formats || [];
         const heights = new Set();
         const addHeight = (h) => { if (h && h > 0) heights.add(parseInt(h, 10)); };
 
@@ -1902,9 +1922,30 @@ app.all('/api/download', authenticateToken, async (req, res) => {
             // Priority 1: Web Embedded (Least likely to trigger bot check)
             await attemptDownload('web_embedded,android,tv_embedded');
         } catch (e) {
-            console.warn("⚠️ Primary client failed, retrying with iOS client...");
-            // Priority 2: iOS Client (Harder to block)
-            await attemptDownload('ios,web');
+            console.warn("⚠️ yt-dlp primary client failed, retrying with iOS client...");
+            try {
+                // Priority 2: iOS Client (Harder to block)
+                await attemptDownload('ios,web');
+            } catch (e2) {
+                console.warn("⚠️ yt-dlp iOS client failed. Attempting ytdl-core fallback...");
+                try {
+                    const ytdl = require('@distube/ytdl-core');
+                    const stream = ytdl(videoId, {
+                        quality: quality === 'mp3' ? 'highestaudio' : 'highest',
+                        filter: quality === 'mp3' ? 'audioonly' : 'videoandaudio'
+                    });
+                    const writeStream = fs.createWriteStream(fullPath);
+                    await new Promise((resolve, reject) => {
+                        stream.pipe(writeStream);
+                        writeStream.on('finish', resolve);
+                        writeStream.on('error', reject);
+                        stream.on('error', reject);
+                    });
+                } catch (e3) {
+                    console.error("❌ All download methods failed.");
+                    throw new Error(`Download failed after multiple attempts. YouTube might be blocking our server IP. Error: ${e3.message}`);
+                }
+            }
         }
 
         if (cookieData && cookieData.isTemp) {
