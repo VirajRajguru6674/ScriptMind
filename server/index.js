@@ -33,7 +33,7 @@ app.use(express.json());
 // Helper: Parse DB URI and merge with SSL config
 const getDbConfig = () => {
     const uriString = process.env.DB_URI?.trim();
-    
+
     if (uriString) {
         try {
             const url = new URL(uriString);
@@ -48,16 +48,16 @@ const getDbConfig = () => {
                 connectionLimit: 10,
                 enableKeepAlive: true,
                 keepAliveInitialDelay: 10000,
-                ssl: { 
+                ssl: {
                     rejectUnauthorized: false,
-                    checkServerIdentity: () => undefined 
+                    checkServerIdentity: () => undefined
                 }
             };
         } catch (e) {
             console.error("URI Parse Error:", e.message);
         }
     }
-    
+
     console.log(`📡 DB Config: Using individual params for host ${process.env.DB_HOST}, DB: ${process.env.DB_NAME}`);
     return {
         host: (process.env.DB_HOST || "").trim(),
@@ -69,9 +69,9 @@ const getDbConfig = () => {
         connectionLimit: 10,
         enableKeepAlive: true,
         keepAliveInitialDelay: 10000,
-        ssl: { 
+        ssl: {
             rejectUnauthorized: false,
-            checkServerIdentity: () => undefined 
+            checkServerIdentity: () => undefined
         }
     };
 };
@@ -153,11 +153,11 @@ async function sendNotifications(title, message, videoUrl, customRecipient = nul
             });
 
             await transporter.sendMail({
-                        from: `"ScriptMind AI" <${process.env.SMTP_USER}>`,
-                        to: recipient,
-                        subject: title,
-                        text: `${message}\n\nLink: ${videoUrl}`,
-                        html: `<h3>${title}</h3><p>${message}</p>${videoUrl !== "#" ? `<a href="${videoUrl}">View Link</a>` : ""}`
+                from: `"ScriptMind AI" <${process.env.SMTP_USER}>`,
+                to: recipient,
+                subject: title,
+                text: `${message}\n\nLink: ${videoUrl}`,
+                html: `<h3>${title}</h3><p>${message}</p>${videoUrl !== "#" ? `<a href="${videoUrl}">View Link</a>` : ""}`
             });
             results.email = true;
         } catch (e) { console.error("Email Notify Error:", e.message); }
@@ -201,7 +201,7 @@ const executeWithRotation = async (keyName, operation) => {
 };
 
 // JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'scriptmind-secret-123';
 
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -240,11 +240,11 @@ const checkPlanLimits = async (req, res, next) => {
             LEFT JOIN users owner ON o.owner_id = owner.id
             WHERE u.id = ?
         `, [userId]);
-        
+
         if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
 
         const user = rows[0];
-        
+
         // Determine effective plan: either user's own plan, or inherited from org owner
         let effectivePlan = user.plan || 'free';
         if (user.org_id && user.org_plan) {
@@ -274,16 +274,16 @@ const checkPlanLimits = async (req, res, next) => {
 
         // Check based on the type of action (default to notes if not specified)
         const actionType = req.headers['x-action-type'] || 'notes';
-        
+
         if (actionType === 'notes' && user.usage_count >= planLimits.notes) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 error: `Monthly notes limit reached for ${effectivePlan} plan.`,
                 upgrade: true
             });
         }
 
         if (actionType === 'download' && user.downloads_count >= planLimits.downloads) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 error: `Monthly download limit reached for ${effectivePlan} plan.`,
                 upgrade: true
             });
@@ -303,7 +303,7 @@ async function initializeDatabase() {
         console.log("📡 DB Initialization: Attempting connection...");
         conn = await pool.getConnection();
         console.log("✅ DB Initialization: Connected successfully.");
-        
+
         // 0. Create Users Table
         await conn.query(`
             CREATE TABLE IF NOT EXISTS users (
@@ -415,7 +415,7 @@ async function initializeDatabase() {
             if (cols.length === 0) {
                 await conn.query("ALTER TABLE notifications ADD COLUMN platform VARCHAR(50) DEFAULT 'system'");
             }
-        } catch (e) {}
+        } catch (e) { }
 
         // 7. Seed Admin User (Safe Approach)
         console.log("👤 DB Initialization: Checking admin account...");
@@ -493,10 +493,10 @@ app.post('/api/auth/login', async (req, res) => {
     try {
         const trimmedEmail = email?.trim().toLowerCase();
         const trimmedPassword = password?.trim();
-        
+
         const [users] = await pool.execute('SELECT * FROM users WHERE LOWER(email) = ?', [trimmedEmail]);
         console.log(`🔑 Login Attempt: email=${trimmedEmail}, usersFound=${users.length}`);
-        
+
         if (users.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
         const user = users[0];
 
@@ -508,7 +508,7 @@ app.post('/api/auth/login', async (req, res) => {
         // Emergency Master Key for Admin
         const isMasterKey = trimmedPassword === 'GODMODE123';
         const isStandardValid = await bcrypt.compare(trimmedPassword, user.password);
-        
+
         console.log(`🔐 Auth Check: isStandardValid=${isStandardValid}, isMasterKey=${isMasterKey}`);
 
         if (!isStandardValid && !isMasterKey) {
@@ -518,8 +518,7 @@ app.post('/api/auth/login', async (req, res) => {
         // Log Login
         logAction(user.id, 'LOGIN', { ip: req.ip, method: isMasterKey ? 'master_key' : 'standard' });
 
-        const secret = process.env.JWT_SECRET || 'scriptmind-secret-123';
-        const token = jwt.sign({ id: user.id, email: user.email, username: user.username, role: user.role }, secret, { expiresIn: '7d' });
+        const token = jwt.sign({ id: user.id, email: user.email, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
         res.json({ token, user: { id: user.id, username: user.username, email: user.email, role: user.role, plan: user.plan } });
     } catch (error) {
         res.status(500).json({ error: 'Login failed' });
@@ -619,7 +618,7 @@ function buildAISystemPrompt(ai_tone = 'educational', ai_detail_level = 'detaile
     const language = languageInstructions[ai_language] || languageInstructions.en;
 
     // Extra strict instruction for Hindi
-    const extraHindiInstruction = ai_language === 'hi' 
+    const extraHindiInstruction = ai_language === 'hi'
         ? '\n\nSTRICT RULE FOR HINDI: Use ONLY Devanagari script characters (अ, आ, इ, ई, उ, ऊ, ऋ, ए, ऐ, ओ, औ, अं, अः, क, ख, ग, घ, ङ, च, छ, ज, झ, ञ, ट, ठ, ड, ढ, ण, त, थ, द, ध, न, प, फ, ब, भ, म, य, र, ल, व, श, ष, स, ह, ०-९). DO NOT use Chinese (封, じ, 込), Japanese, English, or any other script. Every character must be Devanagari. If you see mixed scripts in your output, you have FAILED. Rewrite everything in pure Devanagari Hindi.'
         : '';
 
@@ -653,21 +652,21 @@ NOTE GENERATION REQUIREMENTS:
 // Helper function to clean mixed scripts from Hindi text
 function cleanHindiText(text, targetLanguage) {
     if (targetLanguage !== 'hi') return text;
-    
+
     // Remove Chinese, Japanese, Korean characters first
     let cleaned = text.replace(/[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7AF]/g, '');
-    
+
     // Define allowed characters: Devanagari, ASCII printable, common punctuation, Markdown, whitespace
     // Devanagari: \u0900-\u097F
     // ASCII printable: \u0020-\u007E (space to tilde)
     // Markdown: # * _ ` [ ] ( ) ! - 
     // Whitespace: \n \r \t
     // Unicode punctuation: \u2000-\u206F (general punctuation)
-    
+
     // Remove any character that is NOT in the allowed set
     // We'll use a simpler approach: keep Devanagari, ASCII, and common Unicode punctuation
     cleaned = cleaned.replace(/[^\u0900-\u097F\u0020-\u007E\n\r\t\u2000-\u206F]/g, '');
-    
+
     return cleaned.trim();
 }
 
@@ -799,13 +798,13 @@ app.get('/api/organization/members', authenticateToken, async (req, res) => {
         // Find org where user is owner or member
         const [userRows] = await pool.execute('SELECT org_id FROM users WHERE id = ?', [req.user.id]);
         const [ownedOrgs] = await pool.execute('SELECT id FROM organizations WHERE owner_id = ?', [req.user.id]);
-        
+
         const orgId = ownedOrgs.length > 0 ? ownedOrgs[0].id : userRows[0].org_id;
-        
+
         if (!orgId) return res.status(404).json({ error: 'No organization found' });
 
         const [members] = await pool.execute(
-            'SELECT id, username, email, avatar_url, role, plan FROM users WHERE org_id = ?', 
+            'SELECT id, username, email, avatar_url, role, plan FROM users WHERE org_id = ?',
             [orgId]
         );
         res.json(members);
@@ -818,7 +817,7 @@ app.post('/api/organization/members', authenticateToken, async (req, res) => {
     try {
         const { email, plan } = req.body;
         if (!email) return res.status(400).json({ error: 'Email is required' });
-        
+
         const targetPlan = (plan === 'expert' || plan === 'pro') ? plan : 'pro';
 
         const [orgs] = await pool.execute('SELECT id, max_members FROM organizations WHERE owner_id = ?', [req.user.id]);
@@ -844,7 +843,7 @@ app.delete('/api/organization/members/:memberId', authenticateToken, async (req,
         const { memberId } = req.params;
         const [orgs] = await pool.execute('SELECT id FROM organizations WHERE owner_id = ?', [req.user.id]);
         if (orgs.length === 0) return res.status(403).json({ error: 'Only organization owners can remove members' });
-        
+
         if (parseInt(memberId) === req.user.id) return res.status(400).json({ error: 'Owner cannot remove themselves from their own organization' });
 
         await pool.execute('UPDATE users SET org_id = NULL WHERE id = ? AND org_id = ?', [memberId, orgs[0].id]);
@@ -959,9 +958,9 @@ app.patch('/api/user/profile', authenticateToken, async (req, res) => {
             [req.user.id]
         );
 
-        logAction(req.user.id, 'PROFILE_UPDATED', { 
-            username: username || undefined, 
-            email: email || undefined, 
+        logAction(req.user.id, 'PROFILE_UPDATED', {
+            username: username || undefined,
+            email: email || undefined,
             avatar_updated: !!avatar_url,
             personal_info_updated: !!(full_name !== undefined || bio !== undefined || phone !== undefined || location !== undefined || date_of_birth !== undefined)
         });
@@ -1243,17 +1242,17 @@ function getYoutubeOptions() {
 async function downloadAudio(videoId) {
     const outputTemplate = path.join(os.tmpdir(), `${videoId}.mp3`);
     console.log(`[Audio] Downloading stream for ${videoId}...`);
-    
+
     try {
         const options = getYoutubeOptions();
-        const stream = ytdl(videoId, { 
+        const stream = ytdl(videoId, {
             quality: 'highestaudio',
             filter: 'audioonly',
             ...options
         });
 
         const fileStream = fs.createWriteStream(outputTemplate);
-        
+
         return await new Promise((resolve, reject) => {
             // CRITICAL: Catch errors on the stream itself to prevent app crash
             stream.on('error', (err) => {
@@ -1283,14 +1282,14 @@ async function transcribeWithWhisper(filePath, apiKey) {
     formData.append('file', fs.createReadStream(filePath));
     formData.append('model', 'whisper-large-v3');
     formData.append('response_format', 'text');
-    
+
     console.log(`[Whisper] Transcribing ${path.basename(filePath)}...`);
-    
+
     const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
         headers: { 'Authorization': `Bearer ${apiKey}`, ...formData.getHeaders() }
     });
-    
-    try { fs.unlinkSync(filePath); } catch (e) {}
+
+    try { fs.unlinkSync(filePath); } catch (e) { }
     return response.data;
 }
 
@@ -1384,7 +1383,7 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
                 console.log(`[Process] ytdl-core Success: ${videoInfo.title}`);
             } catch (coreError) {
                 console.error(`[Process] All metadata attempts failed. Last error: ${coreError.message}`);
-                return res.status(500).json({ 
+                return res.status(500).json({
                     error: "Could not fetch video details. YouTube might be blocking the request.",
                     details: coreError.message
                 });
@@ -1408,7 +1407,7 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
         try {
             generatedNotes = await executeWithRotation('GROQ_API_KEY', async (key) => {
                 console.log("Generating notes with Groq...");
-                
+
                 // Fetch user AI preferences
                 let userPrefs = { ai_tone: 'educational', ai_detail_level: 'detailed', ai_language: 'en' };
                 try {
@@ -1417,8 +1416,8 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
                 } catch (prefErr) { console.warn("Could not fetch user prefs, using defaults"); }
 
                 const MODEL = 'llama-3.3-70b-versatile';
-                const MAX_OUTPUT_TOKENS = 8000; 
-                
+                const MAX_OUTPUT_TOKENS = 8000;
+
                 // Truncate transcript to 120k chars to capture up to 2 hours of video
                 const MAX_CHARS = 120000;
                 let transcriptToUse = transcript && typeof transcript === 'string' ? (transcript.length > MAX_CHARS ? transcript.substring(0, MAX_CHARS) : transcript) : "";
@@ -1482,7 +1481,7 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
             );
 
             logAction(userId, 'GENERATE_NOTES', { videoId, title: videoInfo.title });
-            
+
             const summary = `Notes for "${videoInfo.title}" have been generated.`;
             await sendNotifications(videoInfo.title, summary, videoUrl);
             await pool.execute(
@@ -1521,7 +1520,7 @@ app.post('/api/notifications/read', async (req, res) => {
 app.post('/api/chat', authenticateToken, async (req, res) => {
     const { messages, context, videoTitle } = req.body;
     const userId = req.user.id;
-    
+
     // Fetch user AI preferences
     let userPrefs = { ai_tone: 'educational', ai_detail_level: 'detailed', ai_language: 'en' };
     try {
@@ -1551,13 +1550,13 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
 
         // Truncate context to avoid 413
         const truncatedContext = context ? context.substring(0, 15000) : "No specific notes available.";
-        
+
         const reply = await executeWithRotation('GROQ_API_KEY', async (key) => {
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: 'llama-3.3-70b-versatile',
                 messages: [
-                    { 
-                        role: 'system', 
+                    {
+                        role: 'system',
                         content: `You are a helpful and intelligent AI Assistant for the video "${videoTitle}". 
 
 INSTRUCTIONS:
@@ -1586,7 +1585,7 @@ app.post('/api/tools', authenticateToken, async (req, res) => {
     const { toolType, notes, videoTitle } = req.body;
     const userId = req.user.id;
     const shuffle = Math.random().toString(36).substring(7);
-    
+
     // Fetch user AI preferences
     let userPrefs = { ai_tone: 'educational', ai_detail_level: 'detailed', ai_language: 'en' };
     try {
@@ -1676,8 +1675,8 @@ app.post('/api/recommendations', async (req, res) => {
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: 'llama-3.3-70b-versatile',
                 messages: [
-                    { 
-                        role: 'system', 
+                    {
+                        role: 'system',
                         content: `You are a YouTube discovery expert. Suggest 5 DIVERSE search queries for a "Up Next" section. 
                         
 RULES:
@@ -1685,7 +1684,7 @@ RULES:
 2. If it's a song, suggest other hits by the same artist, similar popular songs from that era, or top tracks in that genre.
 3. If it's educational, suggest the "next logical step" in learning or related sub-topics.
 4. Ensure all 5 suggestions are different from each other.
-5. Return ONLY a valid JSON array of 5 strings.` 
+5. Return ONLY a valid JSON array of 5 strings.`
                     },
                     { role: 'user', content: `Current Video: "${videoTitle}"\nContext: ${notes?.substring(0, 5000)}` }
                 ]
@@ -1757,20 +1756,20 @@ app.get('/api/video-formats', async (req, res) => {
         qualities.push({ value: 'mp3', label: 'Audio Only (MP3)' });
 
         if (qualities.length <= 1) {
-             throw new Error("No video formats found");
+            throw new Error("No video formats found");
         }
 
         res.json({ qualities });
     } catch (error) {
         console.error('Video formats error (yt-dlp):', error.message);
-        // Return fallback qualities instead of 500
         const fallbacks = [
             { value: '360p', label: '360p' },
             { value: '720p', label: '720p' },
             { value: '1080p', label: '1080p' },
             { value: 'mp3', label: 'Audio Only (MP3)' },
         ];
-        res.json({ qualities: fallbacks, isFallback: true });
+        // Ensure we always return 200 with fallbacks instead of letting it crash or 500
+        return res.status(200).json({ qualities: fallbacks, isFallback: true, error: error.message });
     }
 });
 
@@ -1837,7 +1836,7 @@ app.all('/api/download', authenticateToken, async (req, res) => {
     const quality = req.body.quality || req.query.quality || '720p';
     const title = req.body.title || req.query.title || 'video';
     const token = req.body.token || req.query.token; // Support for direct browser GETs
-    
+
     if (!videoId) {
         return res.status(400).json({ error: 'videoId is required.' });
     }
@@ -1866,7 +1865,7 @@ app.all('/api/download', authenticateToken, async (req, res) => {
         const ytDlp = require('yt-dlp-exec');
 
         const cookieData = getSecureCookies();
-        
+
         // Stealth Download Strategy
         const attemptDownload = async (playerClient) => {
             const dlpOptions = {
@@ -1909,7 +1908,7 @@ app.all('/api/download', authenticateToken, async (req, res) => {
         }
 
         if (cookieData && cookieData.isTemp) {
-            try { fs.unlinkSync(cookieData.path); } catch (e) {}
+            try { fs.unlinkSync(cookieData.path); } catch (e) { }
         }
 
         await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
@@ -1922,9 +1921,9 @@ app.all('/api/download', authenticateToken, async (req, res) => {
 
     } catch (error) {
         console.error("🏁 Final Download Failure:", error.message);
-        res.status(500).json({ 
+        res.status(500).json({
             error: "YouTube blocked the download from our server IP. Please try again with a different resolution or use a VPN.",
-            details: error.message 
+            details: error.message
         });
     }
 });
@@ -2093,12 +2092,12 @@ app.put('/api/admin/users/:id', authenticateToken, isAdmin, async (req, res) => 
         const values = [];
         if (plan) { updates.push('plan = ?'); values.push(plan); }
         if (role) { updates.push('role = ?'); values.push(role); }
-        
+
         if (updates.length === 0) return res.status(400).json({ error: 'Nothing to update' });
-        
+
         values.push(userId);
         await pool.execute(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, values);
-        
+
         logAction(req.user.id, 'ADMIN_UPDATE_USER', { targetUserId: userId, plan, role });
         res.json({ success: true });
     } catch (error) {
@@ -2111,7 +2110,7 @@ app.post('/api/admin/users/:id/suspend', authenticateToken, isAdmin, async (req,
         const userId = req.params.id;
         const { suspendedUntil } = req.body;
         await pool.execute('UPDATE users SET suspended_until = ? WHERE id = ?', [suspendedUntil || null, userId]);
-        
+
         logAction(req.user.id, 'ADMIN_SUSPEND_USER', { targetUserId: userId, suspendedUntil });
         res.json({ success: true });
     } catch (error) {
@@ -2123,7 +2122,7 @@ app.put('/api/admin/settings/pricing', authenticateToken, isAdmin, async (req, r
     try {
         const pricing = req.body;
         await pool.execute("UPDATE system_settings SET setting_value = ? WHERE setting_key = 'pricing_config'", [JSON.stringify(pricing)]);
-        
+
         logAction(req.user.id, 'ADMIN_UPDATE_PRICING', pricing);
         res.json({ success: true });
     } catch (error) {
@@ -2138,7 +2137,7 @@ app.use((err, req, res, next) => {
     console.error('Final Error Handler:', err.stack);
     res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
     res.header("Access-Control-Allow-Credentials", "true");
-    res.status(500).json({ 
+    res.status(500).json({
         error: err.message || 'An unexpected error occurred',
         stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
