@@ -24,8 +24,8 @@ import Organization from "@/pages/Organization";
 
 const queryClient = new QueryClient();
 
-// In a real app, this would be in an environment variable
-const GOOGLE_CLIENT_ID = "509177086998-6k4n22s2igdufn27blepvki8j62srnp8.apps.googleusercontent.com";
+// Load from env variable for security and configuration on Vercel
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "509177086998-6k4n22s2igdufn27blepvki8j62srnp8.apps.googleusercontent.com";
 
 const App = () => (
   <HelmetProvider>

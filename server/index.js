@@ -326,7 +326,20 @@ async function initializeDatabase() {
             { name: 'downloads_count', sql: "ALTER TABLE users ADD COLUMN downloads_count INT DEFAULT 0" },
             { name: 'theme_mode', sql: "ALTER TABLE users ADD COLUMN theme_mode VARCHAR(20) DEFAULT 'system'" },
             { name: 'theme_variant', sql: "ALTER TABLE users ADD COLUMN theme_variant VARCHAR(20) DEFAULT 'default'" },
-            { name: 'billing_cycle', sql: "ALTER TABLE users ADD COLUMN billing_cycle ENUM('monthly', 'quarterly', 'yearly') DEFAULT 'monthly'" }
+            { name: 'billing_cycle', sql: "ALTER TABLE users ADD COLUMN billing_cycle ENUM('monthly', 'quarterly', 'yearly') DEFAULT 'monthly'" },
+            { name: 'google_id', sql: "ALTER TABLE users ADD COLUMN google_id VARCHAR(255) DEFAULT NULL" },
+            { name: 'github_id', sql: "ALTER TABLE users ADD COLUMN github_id VARCHAR(255) DEFAULT NULL" },
+            { name: 'avatar_url', sql: "ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT NULL" },
+            { name: 'ai_tone', sql: "ALTER TABLE users ADD COLUMN ai_tone VARCHAR(50) DEFAULT 'educational'" },
+            { name: 'ai_detail_level', sql: "ALTER TABLE users ADD COLUMN ai_detail_level VARCHAR(50) DEFAULT 'detailed'" },
+            { name: 'ai_language', sql: "ALTER TABLE users ADD COLUMN ai_language VARCHAR(50) DEFAULT 'en'" },
+            { name: 'reset_token', sql: "ALTER TABLE users ADD COLUMN reset_token VARCHAR(255) DEFAULT NULL" },
+            { name: 'reset_expires', sql: "ALTER TABLE users ADD COLUMN reset_expires DATETIME DEFAULT NULL" },
+            { name: 'full_name', sql: "ALTER TABLE users ADD COLUMN full_name VARCHAR(100) DEFAULT NULL" },
+            { name: 'bio', sql: "ALTER TABLE users ADD COLUMN bio TEXT DEFAULT NULL" },
+            { name: 'phone', sql: "ALTER TABLE users ADD COLUMN phone VARCHAR(20) DEFAULT NULL" },
+            { name: 'location', sql: "ALTER TABLE users ADD COLUMN location VARCHAR(100) DEFAULT NULL" },
+            { name: 'date_of_birth', sql: "ALTER TABLE users ADD COLUMN date_of_birth DATE DEFAULT NULL" }
         ];
 
         for (const col of usersColumns) {
