@@ -45,41 +45,44 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
   return (
     <div className="w-full space-y-3">
       <form onSubmit={handleSubmit} className="w-full">
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <div className="relative flex-1">
-            <Link2 className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/70" />
-            <Input
-              type="url"
-              placeholder="Paste YouTube video URL here..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="h-14 pl-12 pr-4 text-base rounded-xl border border-border bg-secondary/30 text-foreground placeholder:text-muted-foreground focus:bg-secondary/50 focus-visible:ring-1 focus-visible:ring-primary/50 transition-all shadow-inner"
-              disabled={isLoading}
-            />
+        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md shadow-inner">
+          {/* Icon */}
+          <div className="pl-3 shrink-0">
+            <Link2 className="h-4 w-4 text-muted-foreground/50" />
           </div>
+
+          {/* Input */}
+          <Input
+            type="url"
+            placeholder="Paste YouTube video URL here..."
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            className="flex-1 h-11 border-0 bg-transparent shadow-none focus-visible:ring-0 text-sm placeholder:text-muted-foreground/40 text-foreground px-2"
+            disabled={isLoading}
+          />
+
+          {/* Button */}
           <Button
             type="submit"
-            size="lg"
-            className="h-14 px-8 text-base font-black rounded-xl bg-gradient-to-r from-violet-600 via-primary to-indigo-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)] transition-all hover:scale-[1.02] active:scale-[0.98] border border-white/20"
+            className="h-11 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
             disabled={isLoading || !url.trim() || !isValidYoutubeUrl(url)}
           >
             {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Processing
-              </>
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
                 Generate
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-1.5 h-4 w-4" />
               </>
             )}
           </Button>
         </div>
+
         {url && !isValidYoutubeUrl(url) && (
-          <p className="mt-2 text-sm text-destructive">Please enter a valid YouTube URL</p>
+          <p className="mt-2 text-xs text-destructive/80 pl-2">Please enter a valid YouTube URL</p>
         )}
       </form>
+
 
       <div className="flex items-center justify-center gap-2">
         <span className="text-sm text-muted-foreground">Auto-fetch not working?</span>
