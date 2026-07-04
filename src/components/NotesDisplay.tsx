@@ -12,6 +12,7 @@ import { Flashcard } from "./Flashcard";
 import { Mermaid } from "./Mermaid";
 import { GenerationLoader } from "./GenerationLoader";
 import API_BASE_URL from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 interface NotesDisplayProps {
   notes: string;
