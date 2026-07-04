@@ -2264,6 +2264,9 @@ app.all('/api/download', authenticateToken, async (req, res) => {
                     try { if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath); } catch (e) { }
                 });
             }
+        } catch (innerError) {
+            console.error("❌ Fallback sequence failed:", innerError.message);
+            throw innerError;
         }
 
     } catch (error) {
