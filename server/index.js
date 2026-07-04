@@ -1824,6 +1824,7 @@ app.get('/api/video-formats', async (req, res) => {
                 extractorArgs: `youtube:player-client=${playerClient}`,
                 forceIpv4: true,
                 userAgent: getYoutubeUserAgent(),
+                remoteComponents: 'ejs:github',
                 addHeader: [
                     'Accept-Language:en-US,en;q=0.9',
                     'Referer:https://www.youtube.com/watch?v=' + videoId
@@ -2006,6 +2007,7 @@ app.all('/api/download', authenticateToken, async (req, res) => {
                 jsRuntime: 'node',
                 extractorArgs: `youtube:player-client=${playerClient}`,
                 userAgent: getYoutubeUserAgent(),
+                remoteComponents: 'ejs:github',
                 addHeader: [
                     'Accept-Language:en-US,en;q=0.9',
                     'Referer:https://www.youtube.com/watch?v=' + videoId
