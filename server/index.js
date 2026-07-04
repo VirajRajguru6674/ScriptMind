@@ -1270,12 +1270,17 @@ const getSecureCookies = () => {
     return null;
 };
 
+// Helper to get matching User-Agent for YouTube requests
+function getYoutubeUserAgent() {
+    return process.env.YOUTUBE_USER_AGENT || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+}
+
 // Helper: Load Cookies for YouTube (Bypass 429)
 function getYoutubeOptions() {
     const options = {
         requestOptions: {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent': getYoutubeUserAgent(),
             }
         }
     };
@@ -1818,8 +1823,8 @@ app.get('/api/video-formats', async (req, res) => {
                 jsRuntime: 'node',
                 extractorArgs: `youtube:player-client=${playerClient}`,
                 forceIpv4: true,
+                userAgent: getYoutubeUserAgent(),
                 addHeader: [
-                    'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
                     'Accept-Language:en-US,en;q=0.9',
                     'Referer:https://www.youtube.com/watch?v=' + videoId
                 ]
@@ -2000,8 +2005,8 @@ app.all('/api/download', authenticateToken, async (req, res) => {
                 preferFreeFormats: true,
                 jsRuntime: 'node',
                 extractorArgs: `youtube:player-client=${playerClient}`,
+                userAgent: getYoutubeUserAgent(),
                 addHeader: [
-                    'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
                     'Accept-Language:en-US,en;q=0.9',
                     'Referer:https://www.youtube.com/watch?v=' + videoId
                 ],
