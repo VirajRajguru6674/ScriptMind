@@ -110,9 +110,7 @@ const Notifications = () => {
                         <div className="flex h-16 items-center justify-between px-6">
                             {/* Left: page title */}
                             <div className="flex items-center gap-3">
-                                <div className="flex p-2 bg-gradient-to-tr from-primary to-purple-600 rounded-xl text-white shadow-md shadow-primary/20">
-                                    <Bell className="w-4 h-4" />
-                                </div>
+                                <Bell className="w-5 h-5 text-primary" />
                                 <h1 className="text-lg sm:text-xl font-black tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-purple-400 bg-clip-text text-transparent">
                                     Notifications
                                 </h1>
