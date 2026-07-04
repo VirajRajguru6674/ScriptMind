@@ -145,7 +145,7 @@ const Notifications = () => {
                         {/* Search & Filters */}
                         <div className="flex flex-col sm:flex-row gap-3 w-full">
                             <div className="relative flex-1 group">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors duration-300" />
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
                                 <Input
                                     placeholder="Search notifications..."
                                     className="pl-11 h-11 bg-card/40 border-border rounded-xl focus-visible:ring-primary/40 focus-visible:border-primary/50 placeholder:text-muted-foreground/40 transition-all"

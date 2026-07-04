@@ -48,7 +48,7 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
         <div className="flex gap-2">
           {/* Input */}
           <div className="relative flex-1">
-            <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+            <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="url"
               placeholder="Paste YouTube video URL here..."
