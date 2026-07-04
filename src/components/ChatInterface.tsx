@@ -214,9 +214,9 @@ export function ChatInterface({ notes, videoTitle, embedded = false, promptToSen
                             type="submit"
                             size="icon"
                             disabled={!input.trim() || isLoading}
-                            className="h-8.5 w-8.5 rounded-xl transition-all duration-150 shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground shadow-sm mr-0.5"
+                            className="h-8 w-8 rounded-full transition-all duration-150 shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md mr-1 hover:scale-105 active:scale-95 flex items-center justify-center"
                         >
-                            <Send className="h-3.5 w-3.5" />
+                            <ArrowUp className="h-4 w-4 stroke-[3px]" />
                         </Button>
                     </div>
                 </form>
