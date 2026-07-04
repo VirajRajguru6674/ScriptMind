@@ -232,7 +232,7 @@ export default function PlaylistDownloader() {
                 <Header />
 
                 <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
-                    <div className="max-w-6xl space-y-8 pb-12">
+                    <div className="w-full space-y-8 pb-12">
                         {/* Title, Subtitle, and Input aligned directly on page */}
                         <div className="space-y-4 text-left">
                             <div className="space-y-1.5">
