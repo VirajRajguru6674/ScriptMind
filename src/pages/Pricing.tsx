@@ -214,8 +214,8 @@ const Pricing = () => {
                         {/* Main Category Tabs */}
                         <div className="flex flex-col items-center gap-8">
                             <div className="text-center space-y-4">
-                                <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tight">Choose Your Plan</h1>
-                                <p className="text-muted-foreground text-lg max-w-2xl">Select the perfect subscription for your learning journey.</p>
+                                <h1 className="text-2xl sm:text-3xl md:text-5xl font-black text-foreground tracking-tight">Choose Your Plan</h1>
+                                <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl px-4 sm:px-0">Select the perfect subscription for your learning journey.</p>
                             </div>
 
                             <div className="flex bg-secondary/60 border border-border/40 p-1.5 rounded-2xl w-full max-w-[400px] shadow-sm">
