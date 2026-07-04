@@ -323,7 +323,6 @@ const Index = () => {
               </div>
             </div>
           ) : (
-            {/* Dashboard layout filling the screen */}
             <div className="min-h-screen lg:h-screen p-4 lg:p-6 overflow-y-auto lg:overflow-hidden flex flex-col">
               <div className="grid lg:grid-cols-[380px_1fr] gap-6 lg:h-full max-w-[1920px] mx-auto w-full">
                 {/* Left Column: Context & Tools */}
