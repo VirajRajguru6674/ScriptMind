@@ -109,49 +109,46 @@ const Index = () => {
 
 
 
-        <main className="lg:pl-[280px]">
+        <main className="lg:pl-[280px] pt-14 lg:pt-0">
           {(!videoInfo && !notes && !isLoadingVideo && !isLoadingNotes) ? (
-            <div className="relative min-h-screen flex items-center justify-center overflow-hidden p-6 lg:p-12">
+            <div className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-10 sm:px-6 sm:py-12 lg:px-12">
               {/* Aurora Background */}
-              <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] mix-blend-screen pointer-events-none" />
-              <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[100px] mix-blend-screen pointer-events-none" />
+              <div className="absolute top-[-20%] right-[-10%] w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-primary/10 rounded-full blur-[120px] mix-blend-screen pointer-events-none" />
+              <div className="absolute bottom-[-10%] left-[-10%] w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-purple-500/10 rounded-full blur-[100px] mix-blend-screen pointer-events-none" />
 
-              <div className="container relative z-10 w-full max-w-7xl mx-auto">
-                <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+              <div className="relative z-10 w-full max-w-7xl mx-auto">
+                <div className="grid lg:grid-cols-2 gap-10 lg:gap-20 items-center">
 
                   {/* Left Column: Content */}
-                  <div className="flex flex-col items-start text-left space-y-8 animate-fade-in relative z-20">
-                    <h1 className="text-6xl lg:text-7xl font-black tracking-tighter leading-[1] text-foreground mt-4">
-                      Understand <br />
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-400 to-indigo-400 drop-shadow-[0_0_40px_rgba(168,85,247,0.3)]">
+                  <div className="flex flex-col items-start text-left space-y-6 sm:space-y-8 animate-fade-in relative z-20">
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter leading-[1.05] text-foreground mt-2 sm:mt-4">
+                      Understand{" "}
+                      <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-400 to-indigo-400 drop-shadow-[0_0_40px_rgba(168,85,247,0.3)]">
                         YouTube Videos.
                       </span>
                     </h1>
 
-                    <p className="text-xl text-muted-foreground leading-relaxed max-w-lg font-medium">
+                    <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-lg font-medium">
                       Don't waste time watching long videos. Paste a YouTube link below and get easy-to-read notes instantly.
                     </p>
 
-                    <div className="w-full max-w-md pt-4">
-                      <div className="ring-1 ring-white/10 p-1.5 rounded-3xl bg-white/[0.02] backdrop-blur-xl shadow-2xl relative">
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-indigo-500/10 rounded-3xl pointer-events-none" />
-                        <UrlInput onSubmit={handleSubmit} isLoading={isLoadingVideo || isLoadingNotes} />
-                      </div>
-                      
+                    <div className="w-full max-w-lg">
+                      <UrlInput onSubmit={handleSubmit} isLoading={isLoadingVideo || isLoadingNotes} />
+
                       {/* How it works simple steps */}
-                      <div className="mt-8 pt-6 border-t border-white/5">
-                        <p className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">How it works:</p>
-                        <div className="flex flex-col gap-3">
+                      <div className="mt-6 pt-5 border-t border-white/5">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">How it works:</p>
+                        <div className="flex flex-col gap-2.5">
                           <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-black">1</div>
+                            <div className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px] font-black shrink-0">1</div>
                             <span className="text-sm text-slate-400">Copy any YouTube video link.</span>
                           </div>
                           <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs font-black">2</div>
+                            <div className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-[10px] font-black shrink-0">2</div>
                             <span className="text-sm text-slate-400">Paste it in the box above.</span>
                           </div>
                           <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs font-black">3</div>
+                            <div className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-black shrink-0">3</div>
                             <span className="text-sm text-slate-400">Read your AI-generated notes!</span>
                           </div>
                         </div>
