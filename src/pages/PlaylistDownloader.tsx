@@ -39,6 +39,15 @@ const FALLBACK_RESOLUTIONS = [
     { value: 'mp3', label: 'Audio Only (MP3)' },
 ];
 
+const BULK_QUALITIES = [
+    { value: '360p', label: '360p' },
+    { value: '720p', label: '720p' },
+    { value: '1080p', label: '1080p' },
+    { value: '1440p', label: '1440p' },
+    { value: '4k', label: '4K (Ultra HD)' },
+    { value: 'mp3', label: 'Audio Only (MP3)' },
+];
+
 const QUALITY_ORDER = ['144p', '240p', '360p', '480p', '720p', '1080p', '1440p', '4k', '8k', 'mp3'];
 const QUALITY_LABELS: Record<string, string> = { '144p': '144p', '240p': '240p', '360p': '360p', '480p': '480p', '720p': '720p', '1080p': '1080p', '1440p': '1440p', '4k': '4K (Ultra HD)', '8k': '8K', 'mp3': 'Audio Only (MP3)' };
 
@@ -73,38 +82,7 @@ export default function PlaylistDownloader() {
         }
     };
 
-    // Fetch formats for all videos when playlist loads (throttled)
-    useEffect(() => {
-        if (videos.length === 0) return;
-        const BATCH_SIZE = 3;
-        let idx = 0;
-        const runBatch = async () => {
-            const batch = videos.slice(idx, idx + BATCH_SIZE);
-            idx += BATCH_SIZE;
-            await Promise.all(batch.map((v) => fetchVideoFormats(v.id)));
-            if (idx < videos.length) runBatch();
-        };
-        runBatch();
-    }, [videos.map((v) => v.id).join(',')]);
 
-    // Union of qualities across all videos for bulk selector
-    const playlistQualities = useMemo(() => {
-        const seen = new Set<string>();
-        videos.forEach((v) => {
-            (videoFormats[v.id] || []).forEach((q) => seen.add(q.value));
-        });
-        const sorted = [...seen].sort((a, b) => QUALITY_ORDER.indexOf(a) - QUALITY_ORDER.indexOf(b));
-        return sorted.map((v) => ({ value: v, label: QUALITY_LABELS[v] ?? v }));
-    }, [videos, videoFormats]);
-
-    // Sync bulk quality when playlist qualities load - use best available if current not supported
-    useEffect(() => {
-        if (playlistQualities.length && !playlistQualities.some((q) => q.value === quality)) {
-            const videoQualities = playlistQualities.filter((q) => q.value !== 'mp3');
-            const best = (videoQualities.length ? videoQualities[videoQualities.length - 1] : playlistQualities[0])?.value ?? '1080p';
-            setQuality(best);
-        }
-    }, [playlistQualities]);
 
     const handleFetchPlaylist = async () => {
         if (!url) return;
@@ -272,7 +250,7 @@ export default function PlaylistDownloader() {
 
                                     <div className="flex items-center gap-3">
                                         <Select
-                                            value={playlistQualities.some((q) => q.value === quality) ? quality : (playlistQualities[0]?.value ?? '1080p')}
+                                            value={quality}
                                             onValueChange={setQuality}
                                         >
                                             <SelectTrigger className="w-[200px] h-10 rounded-xl bg-secondary/30 border-transparent">
@@ -280,7 +258,7 @@ export default function PlaylistDownloader() {
                                                 <SelectValue placeholder="Resolution" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {(playlistQualities.length ? playlistQualities : FALLBACK_RESOLUTIONS).map((res) => (
+                                                {BULK_QUALITIES.map((res) => (
                                                     <SelectItem key={res.value} value={res.value}>{res.label}</SelectItem>
                                                 ))}
                                             </SelectContent>
