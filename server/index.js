@@ -1255,7 +1255,11 @@ function parseNetscapeCookies(fileContent) {
 function parseNetscapeToCookieObjects(fileContent) {
     if (!fileContent.includes('\t')) {
         try {
-            return JSON.parse(fileContent);
+            const raw = JSON.parse(fileContent);
+            return Array.isArray(raw) ? raw.filter(c => {
+                const dom = (c.domain || '').toLowerCase();
+                return dom.endsWith('youtube.com') || dom.endsWith('google.com');
+            }) : [];
         } catch (e) {
             return [];
         }
@@ -1267,14 +1271,17 @@ function parseNetscapeToCookieObjects(fileContent) {
         if (!trimmed || trimmed.startsWith('#')) continue;
         const parts = trimmed.split('\t');
         if (parts.length >= 7) {
-            cookies.push({
-                name: parts[5],
-                value: parts[6],
-                domain: parts[0],
-                path: parts[2],
-                secure: parts[3] === 'TRUE',
-                expirationDate: parseInt(parts[4], 10)
-            });
+            const domain = parts[0].toLowerCase();
+            if (domain.endsWith('youtube.com') || domain.endsWith('google.com')) {
+                cookies.push({
+                    name: parts[5],
+                    value: parts[6],
+                    domain: parts[0],
+                    path: parts[2],
+                    secure: parts[3] === 'TRUE',
+                    expirationDate: parseInt(parts[4], 10)
+                });
+            }
         }
     }
     return cookies;
