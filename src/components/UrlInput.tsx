@@ -45,26 +45,24 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
   return (
     <div className="w-full space-y-3">
       <form onSubmit={handleSubmit} className="w-full">
-        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md shadow-inner">
-          {/* Icon */}
-          <div className="pl-3 shrink-0">
-            <Link2 className="h-4 w-4 text-muted-foreground/50" />
-          </div>
-
+        <div className="flex gap-2">
           {/* Input */}
-          <Input
-            type="url"
-            placeholder="Paste YouTube video URL here..."
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            className="flex-1 h-11 border-0 bg-transparent shadow-none focus-visible:ring-0 text-sm placeholder:text-muted-foreground/40 text-foreground px-2"
-            disabled={isLoading}
-          />
+          <div className="relative flex-1">
+            <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+            <Input
+              type="url"
+              placeholder="Paste YouTube video URL here..."
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className="h-12 pl-10 pr-4 text-sm rounded-xl border border-border/60 bg-card text-foreground placeholder:text-muted-foreground/40 focus-visible:ring-1 focus-visible:ring-primary/60 focus-visible:border-primary/60 transition-all"
+              disabled={isLoading}
+            />
+          </div>
 
           {/* Button */}
           <Button
             type="submit"
-            className="h-11 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
+            className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shrink-0 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-primary/20"
             disabled={isLoading || !url.trim() || !isValidYoutubeUrl(url)}
           >
             {isLoading ? (
@@ -79,7 +77,7 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
         </div>
 
         {url && !isValidYoutubeUrl(url) && (
-          <p className="mt-2 text-xs text-destructive/80 pl-2">Please enter a valid YouTube URL</p>
+          <p className="mt-1.5 text-xs text-destructive/80 pl-1">Please enter a valid YouTube URL</p>
         )}
       </form>
 
