@@ -54,7 +54,7 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
               placeholder="Paste YouTube video URL here..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="h-12 pl-10 pr-4 text-sm rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground/40 focus-visible:ring-1 focus-visible:ring-primary/60 focus-visible:border-primary/60 transition-all"
+              className="h-12 pl-10 pr-4 text-sm rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground/75 focus-visible:ring-1 focus-visible:ring-primary/60 focus-visible:border-primary/60 transition-all shadow-sm"
               disabled={isLoading}
             />
           </div>
@@ -62,7 +62,7 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
           {/* Button */}
           <Button
             type="submit"
-            className="h-12 px-6 rounded-full bg-white text-zinc-900 font-bold text-sm shrink-0 transition-all duration-200 hover:bg-white/90 hover:scale-[1.04] active:scale-[0.97] shadow-[0_0_0_1px_rgba(255,255,255,0.15)] flex items-center gap-2"
+            className="h-12 px-6 rounded-full bg-foreground text-background font-bold text-sm shrink-0 transition-all duration-200 hover:bg-foreground/90 hover:scale-[1.04] active:scale-[0.97] shadow-md flex items-center gap-2"
             disabled={isLoading || !url.trim() || !isValidYoutubeUrl(url)}
           >
             {isLoading ? (
