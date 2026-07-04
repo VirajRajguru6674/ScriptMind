@@ -2089,6 +2089,10 @@ app.all('/api/download', authenticateToken, async (req, res) => {
 
             console.log(`🎬 [${playerClient}] Downloading ${videoId} (${quality}) [Cookies: ${!!(useCookies && cookieData)}]...`);
             await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpOptions);
+
+            if (!fs.existsSync(fullPath)) {
+                throw new Error(`Output file was not created at ${fullPath}. This could be due to a missing ffmpeg binary for merging formats.`);
+            }
         };
 
         let downloadSuccess = false;
