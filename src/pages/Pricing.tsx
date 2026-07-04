@@ -6,6 +6,9 @@ import PricingTable, { Plan } from '@/components/ui/modern-pricing-table';
 import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { NotificationPanel } from "@/components/NotificationPanel";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { Sparkles } from "lucide-react";
 import API_BASE_URL from "@/lib/api";
 
 // Sample pricing data
@@ -185,10 +188,27 @@ const Pricing = () => {
                 <title>Pricing - ScriptMind</title>
             </Helmet>
 
-            <div className="min-h-screen bg-background font-sans selection:bg-primary/20 relative">
+            <div className="flex h-screen bg-background overflow-hidden selection:bg-primary/20">
                 <Sidebar />
-                <main className="lg:pl-[280px]">
-                    <div className="container py-8 lg:py-12 max-w-7xl mx-auto space-y-12 animate-fade-in">
+                <main className="flex-1 flex flex-col min-w-0 lg:ml-[296px]">
+                    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                        <div className="flex h-16 items-center justify-between px-6">
+                            {/* Page title shown in header row on desktop, aligned with sidebar logo */}
+                            <div className="flex items-center gap-3 pl-12 lg:pl-0">
+                                <Sparkles className="w-5 h-5 text-primary" />
+                                <h1 className="text-lg sm:text-xl font-black tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-purple-400 bg-clip-text text-transparent">
+                                    Pricing Plans
+                                </h1>
+                            </div>
+                            {/* Right side controls */}
+                            <div className="flex items-center gap-2">
+                                <NotificationPanel />
+                                <ThemeToggle />
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full pb-12 animate-fade-in space-y-12">
                         
                         {/* Main Category Tabs */}
                         <div className="flex flex-col items-center gap-8">
