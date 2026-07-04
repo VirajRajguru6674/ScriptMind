@@ -1838,13 +1838,13 @@ app.get('/api/video-formats', async (req, res) => {
 
         let info;
         try {
-            console.log(`🔍 [yt-dlp] Attempt 1: Fetching formats (iOS client + cookies) for: ${videoId}`);
-            info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, getBaseOptions('ios,web', true));
+            console.log(`🔍 [yt-dlp] Attempt 1: Fetching formats (iOS client, NO cookies) for: ${videoId}`);
+            info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, getBaseOptions('ios,web', false));
         } catch (err1) {
             console.warn(`⚠️ Attempt 1 failed: ${err1.message}. Retrying Attempt 2...`);
             try {
-                console.log(`🔍 [yt-dlp] Attempt 2: Fetching formats (iOS client, NO cookies) for: ${videoId}`);
-                info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, getBaseOptions('ios,web', false));
+                console.log(`🔍 [yt-dlp] Attempt 2: Fetching formats (iOS client + cookies) for: ${videoId}`);
+                info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, getBaseOptions('ios,web', true));
             } catch (err2) {
                 console.warn(`⚠️ Attempt 2 failed: ${err2.message}. Retrying Attempt 3...`);
                 try {
@@ -2033,20 +2033,20 @@ app.all('/api/download', authenticateToken, async (req, res) => {
 
         let downloadSuccess = false;
         try {
-            // Attempt 1: Web Embedded WITH cookies
-            await attemptDownload('web_embedded,android,tv_embedded', true);
+            // Attempt 1: iOS Client WITHOUT cookies (Fastest & most stable bypass)
+            await attemptDownload('ios,web', false);
             downloadSuccess = true;
         } catch (e) {
-            console.warn(`⚠️ yt-dlp primary client with cookies failed (${e.message}), retrying with iOS client WITHOUT cookies...`);
+            console.warn(`⚠️ yt-dlp iOS client without cookies failed (${e.message}), retrying with iOS client WITH cookies...`);
             try {
-                // Attempt 2: iOS Client WITHOUT cookies
-                await attemptDownload('ios,web', false);
+                // Attempt 2: iOS Client WITH cookies (Authentication fallback)
+                await attemptDownload('ios,web', true);
                 downloadSuccess = true;
             } catch (e2) {
-                console.warn(`⚠️ yt-dlp iOS client without cookies failed (${e2.message}). Attempting iOS client WITH cookies...`);
+                console.warn(`⚠️ yt-dlp iOS client with cookies failed (${e2.message}). Attempting primary client WITH cookies...`);
                 try {
-                    // Attempt 3: iOS Client WITH cookies
-                    await attemptDownload('ios,web', true);
+                    // Attempt 3: Web Embedded WITH cookies (Last resort yt-dlp attempt)
+                    await attemptDownload('web_embedded,android,tv_embedded', true);
                     downloadSuccess = true;
                 } catch (e3) {
                     console.warn(`⚠️ yt-dlp iOS client with cookies failed (${e3.message}). Attempting ytdl-core fallback with cookies...`);
