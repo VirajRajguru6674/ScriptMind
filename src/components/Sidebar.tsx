@@ -52,12 +52,13 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
 
     const SidebarContent = () => (
         <div className="flex h-full flex-col bg-sidebar-background">
-            <div className="flex h-16 items-center px-6 border-b border-sidebar-border/50">
-                <Link to="/" className="flex items-center gap-3">
-                    <div className="shrink-0">
-                        <img src="/logo.png" alt="ScriptMind Logo" className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-primary/20" />
-                    </div>
-                    <span className="text-xl font-bold tracking-tight text-sidebar-foreground">ScriptMind</span>
+            <div className="flex h-18 items-center px-6 border-b border-sidebar-border/50">
+                <Link to="/" className="flex items-center w-full">
+                    <img 
+                        src="/custom-logo.png" 
+                        alt="Logo" 
+                        className="h-10 w-auto max-w-full object-contain transition-transform duration-300 hover:scale-[1.02]" 
+                    />
                 </Link>
             </div>
 
