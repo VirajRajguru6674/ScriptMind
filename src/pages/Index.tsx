@@ -136,20 +136,20 @@ const Index = () => {
                       <UrlInput onSubmit={handleSubmit} isLoading={isLoadingVideo || isLoadingNotes} />
 
                       {/* How it works simple steps */}
-                      <div className="mt-6 pt-5 border-t border-white/5">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">How it works:</p>
+                      <div className="mt-6 pt-5 border-t border-border">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">How it works:</p>
                         <div className="flex flex-col gap-2.5">
                           <div className="flex items-center gap-3">
-                            <div className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px] font-black shrink-0">1</div>
-                            <span className="text-sm text-slate-400">Copy any YouTube video link.</span>
+                            <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-black shrink-0 border border-primary/20">1</div>
+                            <span className="text-sm text-foreground/80 font-medium">Copy any YouTube video link.</span>
                           </div>
                           <div className="flex items-center gap-3">
-                            <div className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-[10px] font-black shrink-0">2</div>
-                            <span className="text-sm text-slate-400">Paste it in the box above.</span>
+                            <div className="w-5 h-5 rounded-full bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center text-[10px] font-black shrink-0 border border-purple-500/20">2</div>
+                            <span className="text-sm text-foreground/80 font-medium">Paste it in the box above.</span>
                           </div>
                           <div className="flex items-center gap-3">
-                            <div className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-black shrink-0">3</div>
-                            <span className="text-sm text-slate-400">Read your AI-generated notes!</span>
+                            <div className="w-5 h-5 rounded-full bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-[10px] font-black shrink-0 border border-indigo-500/20">3</div>
+                            <span className="text-sm text-foreground/80 font-medium">Read your AI-generated notes!</span>
                           </div>
                         </div>
                       </div>
@@ -162,7 +162,7 @@ const Index = () => {
                   <div className="grid grid-cols-2 gap-3 lg:hidden pointer-events-none">
 
                     {/* Card 1: Video Player */}
-                    <div className="col-span-2 bg-white/[0.03] border border-white/10 rounded-2xl p-2.5 shadow-lg">
+                    <div className="col-span-2 bg-card border border-border rounded-2xl p-2.5 shadow-lg">
                       <div className="w-full aspect-video bg-black/70 rounded-xl overflow-hidden relative">
                         <div className="absolute inset-0 bg-gradient-to-tr from-primary/30 to-transparent z-10" />
                         <img
@@ -183,55 +183,55 @@ const Index = () => {
                     </div>
 
                     {/* Card 2: AI Notes */}
-                    <div className="bg-[#0F1117]/80 border border-white/10 rounded-2xl p-3 shadow-lg space-y-2.5">
+                    <div className="bg-card border border-border rounded-2xl p-3 shadow-lg space-y-2.5">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
                           <div className="w-6 h-6 rounded-md bg-primary/20 border border-primary/30 flex items-center justify-center">
                             <FileText className="w-3 h-3 text-primary" />
                           </div>
-                          <div className="h-2 w-14 bg-white/20 rounded-full" />
+                          <div className="h-2 w-14 bg-foreground/15 rounded-full" />
                         </div>
-                        <div className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[8px] font-black uppercase border border-emerald-500/20">Done</div>
+                        <div className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 text-[8px] font-black uppercase border border-emerald-500/20">Done</div>
                       </div>
                       <div className="space-y-1.5">
-                        <div className="h-2 w-1/3 bg-white/25 rounded-full" />
-                        <div className="h-1.5 w-full bg-white/[0.08] rounded-full" />
-                        <div className="h-1.5 w-[90%] bg-white/[0.08] rounded-full" />
-                        <div className="h-1.5 w-[85%] bg-white/[0.08] rounded-full" />
-                        <div className="h-1.5 w-[70%] bg-white/[0.08] rounded-full" />
+                        <div className="h-2 w-1/3 bg-foreground/20 rounded-full" />
+                        <div className="h-1.5 w-full bg-foreground/5 rounded-full" />
+                        <div className="h-1.5 w-[90%] bg-foreground/5 rounded-full" />
+                        <div className="h-1.5 w-[85%] bg-foreground/5 rounded-full" />
+                        <div className="h-1.5 w-[70%] bg-foreground/5 rounded-full" />
                       </div>
                     </div>
 
                     {/* Card 3: AI Chat Bubble */}
-                    <div className="bg-black/60 border border-white/10 rounded-2xl p-3 shadow-lg">
+                    <div className="bg-card border border-border rounded-2xl p-3 shadow-lg">
                       <div className="flex gap-2 mb-2">
                         <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-primary to-indigo-500 flex items-center justify-center shrink-0">
                           <img src="/logo.png" className="w-3.5 h-3.5 rounded-sm" alt="" />
                         </div>
-                        <div className="bg-white/5 border border-white/5 rounded-xl rounded-tl-none p-2 text-[10px] text-slate-300 leading-relaxed flex-1">
+                        <div className="bg-secondary border border-border/50 rounded-xl rounded-tl-none p-2 text-[10px] text-foreground leading-relaxed flex-1">
                           I've extracted 3 key concepts. Quick quiz?
                         </div>
                       </div>
                       <div className="flex gap-1.5">
                         <div className="px-2 py-1 rounded-full bg-primary/20 border border-primary/30 text-[8px] font-black uppercase text-primary">Quiz me</div>
-                        <div className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[8px] font-black uppercase text-slate-400">Summarize</div>
+                        <div className="px-2 py-1 rounded-full bg-muted border border-border/50 text-[8px] font-black uppercase text-muted-foreground">Summarize</div>
                       </div>
                     </div>
 
                     {/* Card 4: Study image */}
-                    <div className="col-span-2 rounded-2xl overflow-hidden relative h-[110px] border border-white/10 shadow-lg">
+                    <div className="col-span-2 rounded-2xl overflow-hidden relative h-[110px] border border-border shadow-lg">
                       <img
                         src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=800&auto=format&fit=crop"
                         alt="Study Session"
                         className="w-full h-full object-cover opacity-50"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent flex items-center px-4 gap-3">
-                        <div className="w-8 h-8 rounded-full bg-purple-500/30 flex items-center justify-center shrink-0">
-                          <Sparkles className="w-4 h-4 text-purple-300" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-transparent flex items-center px-4 gap-3">
+                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0 border border-purple-500/10">
+                          <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-300" />
                         </div>
                         <div className="space-y-1">
-                          <p className="text-xs font-bold text-white">AI-Powered Notes</p>
-                          <p className="text-[10px] text-slate-400">Instant summaries from any video</p>
+                          <p className="text-xs font-bold text-foreground">AI-Powered Notes</p>
+                          <p className="text-[10px] text-muted-foreground">Instant summaries from any video</p>
                         </div>
                       </div>
                     </div>
@@ -242,81 +242,80 @@ const Index = () => {
                   {/* === DESKTOP: 3D floating cards === */}
                   <div className="relative hidden lg:block h-[650px] perspective-[2000px] pointer-events-none">
 
-                    {/* Floating Card 1: The Video Player */}
-                    <div className="absolute top-[5%] right-[10%] w-[340px] bg-white/[0.02] backdrop-blur-3xl border border-white/10 p-3 rounded-3xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] transform rotate-[-4deg] translate-z-[50px] animate-float-slow z-10">
-                      <div className="w-full aspect-video bg-black/80 rounded-2xl mb-4 overflow-hidden relative ring-1 ring-white/5">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent mix-blend-overlay z-10" />
-                        <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1000&auto=format&fit=crop" alt="Study Video" className="w-full h-full object-cover opacity-60" />
-                        <div className="absolute inset-0 flex items-center justify-center z-20">
-                          <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
-                            <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-white border-b-[8px] border-b-transparent ml-1" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="px-3 pb-3 space-y-2">
-                        <div className="h-3 w-3/4 bg-white/20 rounded-full" />
-                        <div className="h-2 w-1/2 bg-white/10 rounded-full" />
-                      </div>
-                    </div>
-
-                    {/* Floating Card 2: The Generated Notes */}
-                    <div className="absolute top-[25%] left-[0%] w-[420px] bg-[#0F1117]/80 backdrop-blur-3xl border border-white/10 p-6 rounded-[2rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9)] transform rotate-[2deg] translate-z-[120px] animate-float-delayed z-20">
-                      <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-primary" />
-                          </div>
-                          <div>
-                            <div className="h-3 w-32 bg-white/20 rounded-full mb-2" />
-                            <div className="h-2 w-16 bg-white/10 rounded-full" />
-                          </div>
-                        </div>
-                        <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">Done</div>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="h-4 w-1/3 bg-white/20 rounded-full" />
-                        <div className="space-y-2">
-                          <div className="h-2.5 w-full bg-white/[0.08] rounded-full" />
-                          <div className="h-2.5 w-[90%] bg-white/[0.08] rounded-full" />
-                          <div className="h-2.5 w-[95%] bg-white/[0.08] rounded-full" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3 mt-6">
-                          <div className="h-28 bg-white/[0.03] rounded-2xl border border-white/5 p-4 space-y-3 shadow-inner">
-                             <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
-                               <Sparkles className="w-4 h-4 text-purple-400" />
-                             </div>
-                             <div className="h-2 w-20 bg-white/20 rounded-full" />
-                             <div className="h-1.5 w-full bg-white/10 rounded-full" />
-                          </div>
-                          <div className="h-28 bg-white/[0.03] rounded-2xl border border-white/5 p-4 space-y-3 shadow-inner">
-                             <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                               <Clock className="w-4 h-4 text-cyan-400" />
-                             </div>
-                             <div className="h-2 w-16 bg-white/20 rounded-full" />
-                             <div className="h-1.5 w-full bg-white/10 rounded-full" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Floating Card 3: AI Assistant */}
-                    <div className="absolute bottom-[5%] right-[5%] w-[320px] bg-black/80 backdrop-blur-3xl border border-white/10 p-5 rounded-3xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.9)] transform rotate-[-2deg] translate-z-[180px] animate-float z-30">
-                      <div className="flex gap-4">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-indigo-500 flex items-center justify-center shadow-[0_0_20px_rgba(var(--primary),0.4)] shrink-0">
-                          <img src="/logo.png" className="w-5 h-5 rounded-sm" alt="" />
-                        </div>
-                        <div className="flex-1 space-y-2">
-                          <div className="bg-white/5 border border-white/5 rounded-2xl rounded-tl-none p-4 text-sm text-slate-300 shadow-inner leading-relaxed">
-                            I've extracted 3 key concepts from the lecture. Would you like a quick quiz?
-                          </div>
-                          <div className="flex gap-2">
-                            <div className="px-3 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-[10px] font-black uppercase text-primary">Yes, Quiz me</div>
-                            <div className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase text-slate-400">Summarize it</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
+                     {/* Floating Card 1: The Video Player */}
+                     <div className="absolute top-[5%] right-[10%] w-[340px] bg-card/65 backdrop-blur-3xl border border-border p-3 rounded-3xl shadow-xl transform rotate-[-4deg] translate-z-[50px] animate-float-slow z-10">
+                       <div className="w-full aspect-video bg-black/80 rounded-2xl mb-4 overflow-hidden relative ring-1 ring-border/5">
+                         <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent mix-blend-overlay z-10" />
+                         <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1000&auto=format&fit=crop" alt="Study Video" className="w-full h-full object-cover opacity-60" />
+                         <div className="absolute inset-0 flex items-center justify-center z-20">
+                           <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                             <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-white border-b-[8px] border-b-transparent ml-1" />
+                           </div>
+                         </div>
+                       </div>
+                       <div className="px-3 pb-3 space-y-2">
+                         <div className="h-3 w-3/4 bg-foreground/15 rounded-full" />
+                         <div className="h-2 w-1/2 bg-foreground/10 rounded-full" />
+                       </div>
+                     </div>
+ 
+                     {/* Floating Card 2: The Generated Notes */}
+                     <div className="absolute top-[25%] left-[0%] w-[420px] bg-card/85 backdrop-blur-3xl border border-border p-6 rounded-[2rem] shadow-2xl transform rotate-[2deg] translate-z-[120px] animate-float-delayed z-20">
+                       <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
+                         <div className="flex items-center gap-3">
+                           <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
+                             <FileText className="w-5 h-5 text-primary" />
+                           </div>
+                           <div>
+                             <div className="h-3 w-32 bg-foreground/20 rounded-full mb-2" />
+                             <div className="h-2 w-16 bg-foreground/10 rounded-full" />
+                           </div>
+                         </div>
+                         <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">Done</div>
+                       </div>
+                       <div className="space-y-4">
+                         <div className="h-4 w-1/3 bg-foreground/20 rounded-full" />
+                         <div className="space-y-2">
+                           <div className="h-2.5 w-full bg-foreground/5 rounded-full" />
+                           <div className="h-2.5 w-[90%] bg-foreground/5 rounded-full" />
+                           <div className="h-2.5 w-[95%] bg-foreground/5 rounded-full" />
+                         </div>
+                         <div className="grid grid-cols-2 gap-3 mt-6">
+                           <div className="h-28 bg-muted/30 rounded-2xl border border-border/50 p-4 space-y-3 shadow-inner">
+                              <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
+                                <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                              </div>
+                              <div className="h-2 w-20 bg-foreground/20 rounded-full" />
+                              <div className="h-1.5 w-full bg-foreground/10 rounded-full" />
+                           </div>
+                           <div className="h-28 bg-muted/30 rounded-2xl border border-border/50 p-4 space-y-3 shadow-inner">
+                              <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                                <Clock className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                              </div>
+                              <div className="h-2 w-16 bg-foreground/20 rounded-full" />
+                              <div className="h-1.5 w-full bg-foreground/10 rounded-full" />
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+ 
+                     {/* Floating Card 3: AI Assistant */}
+                     <div className="absolute bottom-[5%] right-[5%] w-[320px] bg-card/85 backdrop-blur-3xl border border-border p-5 rounded-3xl shadow-xl transform rotate-[-2deg] translate-z-[180px] animate-float z-30">
+                       <div className="flex gap-4">
+                         <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-indigo-500 flex items-center justify-center shrink-0">
+                           <img src="/logo.png" className="w-5 h-5 rounded-sm" alt="" />
+                         </div>
+                         <div className="flex-1 space-y-2">
+                           <div className="bg-secondary border border-border/50 rounded-2xl rounded-tl-none p-4 text-sm text-foreground shadow-inner leading-relaxed">
+                             I've extracted 3 key concepts from the lecture. Would you like a quick quiz?
+                           </div>
+                           <div className="flex gap-2">
+                             <div className="px-3 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-[10px] font-black uppercase text-primary">Yes, Quiz me</div>
+                             <div className="px-3 py-1.5 rounded-full bg-muted border border-border/50 text-[10px] font-black uppercase text-muted-foreground">Summarize it</div>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
                   </div>
 
                 </div>
