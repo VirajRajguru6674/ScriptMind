@@ -13,6 +13,8 @@ import { useAuth } from "@/context/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sparkles, Zap, Edit2, MoreVertical } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { NotificationPanel } from "@/components/NotificationPanel";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import API_BASE_URL from "@/lib/api";
 
 interface OrganizationData {
@@ -180,23 +182,27 @@ const Organization = () => {
                 <title>Organization - ScriptMind</title>
             </Helmet>
 
-            <div className="min-h-screen bg-[#0A0B10] text-slate-200 selection:bg-primary/20">
+            <div className="flex h-screen bg-background overflow-hidden selection:bg-primary/20 text-slate-200">
                 <Sidebar />
-                <main className="lg:pl-[280px] min-h-screen">
-                    <div className="container py-8 lg:py-12 max-w-5xl mx-auto space-y-10 animate-in fade-in duration-700">
-                        
-                        {/* Header Section */}
-                        <div className="space-y-2">
-                            <h1 className="text-4xl font-black text-white tracking-tight flex items-center gap-4">
-                                <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
-                                    <Building2 className="size-8" />
-                                </div>
-                                Organization
-                            </h1>
-                            <p className="text-slate-400 font-medium text-lg ml-1">
-                                Manage your team and shared subscription benefits.
-                            </p>
+                <main className="flex-1 flex flex-col min-w-0 lg:ml-[296px]">
+                    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                        <div className="flex h-16 items-center justify-between px-6">
+                            {/* Page title shown in header row on desktop, aligned with sidebar logo */}
+                            <div className="flex items-center gap-3 pl-12 lg:pl-0">
+                                <Building2 className="w-5 h-5 text-primary" />
+                                <h1 className="text-lg sm:text-xl font-black tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-purple-400 bg-clip-text text-transparent">
+                                    Organization
+                                </h1>
+                            </div>
+                            {/* Right side controls */}
+                            <div className="flex items-center gap-2">
+                                <NotificationPanel />
+                                <ThemeToggle />
+                            </div>
                         </div>
+                    </header>
+
+                    <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-5xl mx-auto w-full pb-12 animate-in fade-in duration-700 space-y-6">
 
                         {!org ? (
                             <Card className="border-white/5 bg-white/[0.02] backdrop-blur-3xl rounded-[32px] overflow-hidden p-12 text-center space-y-8 border-0 shadow-2xl">
