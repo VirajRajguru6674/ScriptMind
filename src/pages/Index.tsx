@@ -157,8 +157,71 @@ const Index = () => {
                   </div>
 
                   {/* Right Column: Dynamic Visuals */}
+
+                  {/* === MOBILE: horizontal scroll card strip === */}
+                  <div className="flex lg:hidden gap-4 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none pointer-events-none">
+                    {/* Card 1: Video */}
+                    <div className="shrink-0 w-[260px] bg-white/[0.03] border border-white/10 rounded-2xl p-3 shadow-lg">
+                      <div className="w-full aspect-video bg-black/70 rounded-xl overflow-hidden relative mb-3">
+                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent z-10" />
+                        <img
+                          src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop"
+                          alt="Study Video"
+                          className="w-full h-full object-cover opacity-60"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center z-20">
+                          <div className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
+                            <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent ml-0.5" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5 px-1">
+                        <div className="h-2.5 w-3/4 bg-white/20 rounded-full" />
+                        <div className="h-2 w-1/2 bg-white/10 rounded-full" />
+                      </div>
+                    </div>
+
+                    {/* Card 2: AI Chat */}
+                    <div className="shrink-0 w-[260px] bg-black/60 border border-white/10 rounded-2xl p-4 shadow-lg">
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-indigo-500 flex items-center justify-center shrink-0">
+                          <img src="/logo.png" className="w-4 h-4 rounded-sm" alt="" />
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <div className="bg-white/5 border border-white/5 rounded-xl rounded-tl-none p-3 text-xs text-slate-300 leading-relaxed">
+                            I've extracted 3 key concepts from the lecture. Would you like a quick quiz?
+                          </div>
+                          <div className="flex gap-2 flex-wrap">
+                            <div className="px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30 text-[9px] font-black uppercase text-primary">Yes, Quiz me</div>
+                            <div className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-black uppercase text-slate-400">Summarize</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 3: Notes */}
+                    <div className="shrink-0 w-[240px] bg-[#0F1117]/80 border border-white/10 rounded-2xl p-4 shadow-lg">
+                      <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center">
+                            <FileText className="w-3.5 h-3.5 text-primary" />
+                          </div>
+                          <div className="h-2.5 w-20 bg-white/20 rounded-full" />
+                        </div>
+                        <div className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase border border-emerald-500/20">Done</div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-3 w-1/3 bg-white/20 rounded-full" />
+                        <div className="h-2 w-full bg-white/[0.08] rounded-full" />
+                        <div className="h-2 w-[90%] bg-white/[0.08] rounded-full" />
+                        <div className="h-2 w-[80%] bg-white/[0.08] rounded-full" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* === DESKTOP: 3D floating cards === */}
                   <div className="relative hidden lg:block h-[650px] perspective-[2000px] pointer-events-none">
-                    
+
                     {/* Floating Card 1: The Video Player */}
                     <div className="absolute top-[5%] right-[10%] w-[340px] bg-white/[0.02] backdrop-blur-3xl border border-white/10 p-3 rounded-3xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] transform rotate-[-4deg] translate-z-[50px] animate-float-slow z-10">
                       <div className="w-full aspect-video bg-black/80 rounded-2xl mb-4 overflow-hidden relative ring-1 ring-white/5">
@@ -188,11 +251,8 @@ const Index = () => {
                             <div className="h-2 w-16 bg-white/10 rounded-full" />
                           </div>
                         </div>
-                        <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
-                          Done
-                        </div>
+                        <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">Done</div>
                       </div>
-                      
                       <div className="space-y-4">
                         <div className="h-4 w-1/3 bg-white/20 rounded-full" />
                         <div className="space-y-2">
@@ -200,7 +260,6 @@ const Index = () => {
                           <div className="h-2.5 w-[90%] bg-white/[0.08] rounded-full" />
                           <div className="h-2.5 w-[95%] bg-white/[0.08] rounded-full" />
                         </div>
-                        
                         <div className="grid grid-cols-2 gap-3 mt-6">
                           <div className="h-28 bg-white/[0.03] rounded-2xl border border-white/5 p-4 space-y-3 shadow-inner">
                              <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
