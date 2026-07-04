@@ -4,14 +4,14 @@ import { Helmet } from "react-helmet-async";
 import { Sidebar } from "@/components/Sidebar";
 import { NotificationPanel } from "@/components/NotificationPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { 
-    Bell, 
-    Check, 
-    Trash2, 
-    Search, 
-    Mail, 
-    MessageSquare, 
-    Send, 
+import {
+    Bell,
+    Check,
+    Trash2,
+    Search,
+    Mail,
+    MessageSquare,
+    Send,
     Filter,
     Calendar,
     MoreVertical,
@@ -20,11 +20,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-    DropdownMenu, 
-    DropdownMenuContent, 
-    DropdownMenuItem, 
-    DropdownMenuTrigger 
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format } from 'date-fns';
@@ -86,8 +86,8 @@ const Notifications = () => {
     };
 
     const filteredNotifications = notifications.filter(n => {
-        const matchesSearch = n.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                             n.message.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            n.message.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesPlatform = filterPlatform ? n.platform === filterPlatform : true;
         return matchesSearch && matchesPlatform;
     });
@@ -218,9 +218,9 @@ const Notifications = () => {
                                             <div className={cn(
                                                 "size-8 rounded-lg flex items-center justify-center shrink-0",
                                                 n.type === 'success' ? "bg-emerald-500/10 text-emerald-400" :
-                                                n.type === 'warning' ? "bg-amber-500/10 text-amber-400" :
-                                                n.type === 'error'   ? "bg-red-500/10 text-red-400" :
-                                                "bg-muted text-muted-foreground"
+                                                    n.type === 'warning' ? "bg-amber-500/10 text-amber-400" :
+                                                        n.type === 'error' ? "bg-red-500/10 text-red-400" :
+                                                            "bg-muted text-muted-foreground"
                                             )}>
                                                 {n.type === 'success' ? <Check className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
                                             </div>
@@ -251,9 +251,9 @@ const Notifications = () => {
                                                     <span className={cn(
                                                         "inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider",
                                                         n.type === 'success' ? "text-emerald-400 bg-emerald-500/8" :
-                                                        n.type === 'warning' ? "text-amber-400 bg-amber-500/8" :
-                                                        n.type === 'error'   ? "text-red-400 bg-red-500/8" :
-                                                        "text-muted-foreground/50 bg-muted/50"
+                                                            n.type === 'warning' ? "text-amber-400 bg-amber-500/8" :
+                                                                n.type === 'error' ? "text-red-400 bg-red-500/8" :
+                                                                    "text-muted-foreground/50 bg-muted/50"
                                                     )}>
                                                         {n.type}
                                                     </span>

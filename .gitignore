@@ -30,3 +30,7 @@ dist-ssr
 server/cookies.txt
 server/cookies.json
 server/base64_cookies.txt
+
+# Scratch folders
+scratch/
+

@@ -13,8 +13,6 @@ import API_BASE_URL from "@/lib/api";
 
 import { StudyTimer } from "@/components/StudyTimer";
 import { SessionStats } from "@/components/SessionStats";
-import { NotificationPanel } from "@/components/NotificationPanel";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface Recommendation {
   title: string;
@@ -114,20 +112,6 @@ const Index = () => {
         <main className="lg:pl-[280px] pt-14 lg:pt-0">
           {(!videoInfo && !notes && !isLoadingVideo && !isLoadingNotes) ? (
             <div className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-10 sm:px-6 sm:py-12 lg:px-12">
-              {/* Mobile Branding Header */}
-              <div className="lg:hidden absolute top-4 left-16 right-4 flex items-center justify-between z-30">
-                <div className="flex items-center gap-2">
-                  <img src="/logo.png" className="h-6 w-6 object-contain rounded-md" alt="Logo" />
-                  <span className="font-extrabold text-sm tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-purple-400 bg-clip-text text-transparent">
-                    ScriptMind
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <NotificationPanel />
-                  <ThemeToggle />
-                </div>
-              </div>
-
               {/* Aurora Background */}
               <div className="absolute top-[-20%] right-[-10%] w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-primary/10 rounded-full blur-[120px] mix-blend-screen pointer-events-none" />
               <div className="absolute bottom-[-10%] left-[-10%] w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-purple-500/10 rounded-full blur-[100px] mix-blend-screen pointer-events-none" />
