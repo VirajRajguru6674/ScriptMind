@@ -410,19 +410,21 @@ export default function PlaylistDownloader() {
                         )}
 
                         {!videos.length && !isLoading && (
-                            <div className="relative rounded-3xl border border-border/40 bg-gradient-to-b from-card/30 to-card/10 backdrop-blur-md p-8 text-left max-w-2xl space-y-4 animate-in fade-in duration-500 overflow-hidden">
-                                <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-                                <div className="flex p-3 bg-secondary/50 rounded-2xl text-muted-foreground w-fit">
-                                    <ListVideo className="w-6 h-6 stroke-1.5" />
+                            <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in duration-500 space-y-4">
+                                <div className="size-16 rounded-2xl bg-muted/40 flex items-center justify-center">
+                                    <ListVideo className="w-7 h-7 text-muted-foreground/50 stroke-1" />
                                 </div>
-                                <div className="space-y-1">
-                                    <h3 className="font-extrabold text-lg text-foreground">Get Started</h3>
-                                    <p className="text-muted-foreground text-sm leading-relaxed max-w-md">
-                                        Paste a YouTube playlist link in the input bar above and click <span className="text-primary font-bold">Fetch Playlist</span> to load all videos. You can then download individual videos or select multiple for bulk download.
+                                <div className="space-y-1.5">
+                                    <h3 className="font-bold text-base text-foreground">No playlist loaded</h3>
+                                    <p className="text-sm text-muted-foreground/60 max-w-xs leading-relaxed">
+                                        Paste a YouTube playlist URL above and click{" "}
+                                        <span className="text-primary font-semibold">Fetch Playlist</span>{" "}
+                                        to get started.
                                     </p>
                                 </div>
                             </div>
                         )}
+
                     </div>
                 </div>
             </main>
