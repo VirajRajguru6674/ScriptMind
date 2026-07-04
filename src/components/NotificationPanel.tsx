@@ -78,8 +78,9 @@ export function NotificationPanel() {
             </PopoverTrigger>
 
             <PopoverContent
-                className="w-[440px] p-0 rounded-2xl shadow-2xl border-border/50 bg-card/95 backdrop-blur-xl"
+                className="w-[calc(100vw-32px)] sm:w-[440px] max-w-[440px] p-0 rounded-2xl shadow-2xl border-border bg-card/95 backdrop-blur-xl"
                 align="end"
+                sideOffset={8}
             >
                 {/* Header */}
                 <div className="px-4 py-3 border-b border-border/40 flex items-center justify-between">
