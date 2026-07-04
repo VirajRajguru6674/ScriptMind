@@ -62,7 +62,30 @@ export default function PlaylistDownloader() {
     const [loadingFormats, setLoadingFormats] = useState<string | null>(null);
     const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({});
     const [downloadedVideos, setDownloadedVideos] = useState<Set<string>>(new Set());
+    const [allowedQualities, setAllowedQualities] = useState<{ value: string; label: string }[]>(FALLBACK_RESOLUTIONS);
     const { toast } = useToast();
+
+    useEffect(() => {
+        const fetchAllowedQualities = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const headers: Record<string, string> = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                const res = await fetch(`${API_BASE_URL}/allowed-qualities`, { headers });
+                const data = await res.json();
+                if (data.qualities?.length) {
+                    setAllowedQualities(data.qualities);
+                }
+            } catch (err) {
+                console.error("Failed to load allowed qualities", err);
+            }
+        };
+        fetchAllowedQualities();
+    }, []);
 
     const fetchVideoFormats = async (videoId: string) => {
         if (videoFormats[videoId]) return;
@@ -258,7 +281,7 @@ export default function PlaylistDownloader() {
                                                 <SelectValue placeholder="Resolution" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {BULK_QUALITIES.map((res) => (
+                                                {allowedQualities.map((res) => (
                                                     <SelectItem key={res.value} value={res.value}>{res.label}</SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -322,7 +345,7 @@ export default function PlaylistDownloader() {
                                                     </div>
                                                     <p className="text-[10px] text-muted-foreground">{v.channelTitle}</p>
                                                 </div>
-                                                <DropdownMenu onOpenChange={(open) => open && fetchVideoFormats(v.id)}>
+                                                <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
                                                         <Button
                                                             variant="ghost"
@@ -334,21 +357,14 @@ export default function PlaylistDownloader() {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end" className="w-48">
-                                                        {loadingFormats === v.id ? (
-                                                            <div className="flex items-center justify-center gap-2 py-4 text-sm text-muted-foreground">
-                                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                                                Loading qualities...
-                                                            </div>
-                                                        ) : (
-                                                            (videoFormats[v.id] || FALLBACK_RESOLUTIONS).map((res) => (
-                                                                <DropdownMenuItem
-                                                                    key={res.value}
-                                                                    onClick={() => handleDownload(v.id, v.title, res.value)}
-                                                                >
-                                                                    {res.label}
-                                                                </DropdownMenuItem>
-                                                            ))
-                                                        )}
+                                                        {allowedQualities.map((res) => (
+                                                            <DropdownMenuItem
+                                                                key={res.value}
+                                                                onClick={() => handleDownload(v.id, v.title, res.value)}
+                                                            >
+                                                                {res.label}
+                                                            </DropdownMenuItem>
+                                                        ))}
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </CardContent>

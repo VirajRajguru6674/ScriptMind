@@ -1849,6 +1849,55 @@ RULES:
     }
 });
 
+app.get('/api/allowed-qualities', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const [rows] = await pool.execute('SELECT plan, role FROM users WHERE id = ?', [userId]);
+        const userRecord = rows[0];
+        const plan = userRecord?.plan || (req.user.role === 'admin' ? 'expert' : 'free');
+        
+        const allowed = {
+            'free': [
+                { value: '144p', label: '144p' },
+                { value: '240p', label: '240p' },
+                { value: '360p', label: '360p' },
+                { value: '480p', label: '480p' },
+                { value: '720p', label: '720p' },
+                { value: 'mp3', label: 'Audio Only (MP3)' }
+            ],
+            'pro': [
+                { value: '144p', label: '144p' },
+                { value: '240p', label: '240p' },
+                { value: '360p', label: '360p' },
+                { value: '480p', label: '480p' },
+                { value: '720p', label: '720p' },
+                { value: '1080p', label: '1080p' },
+                { value: '1440p', label: '1440p' },
+                { value: '4k', label: '4K (Ultra HD)' },
+                { value: 'mp3', label: 'Audio Only (MP3)' }
+            ],
+            'expert': [
+                { value: '144p', label: '144p' },
+                { value: '240p', label: '240p' },
+                { value: '360p', label: '360p' },
+                { value: '480p', label: '480p' },
+                { value: '720p', label: '720p' },
+                { value: '1080p', label: '1080p' },
+                { value: '1440p', label: '1440p' },
+                { value: '4k', label: '4K (Ultra HD)' },
+                { value: '8k', label: '8K' },
+                { value: 'mp3', label: 'Audio Only (MP3)' }
+            ]
+        };
+
+        const qualities = allowed[plan] || allowed['free'];
+        res.json({ qualities });
+    } catch (error) {
+        console.error("Allowed Qualities Error:", error.message);
+        res.status(500).json({ error: "Failed to fetch allowed qualities" });
+    }
+});
+
 app.get('/api/video-formats', async (req, res) => {
     const { videoId } = req.query;
     if (!videoId) return res.status(400).json({ error: 'videoId required' });
