@@ -135,30 +135,30 @@ const PricingTable: React.FC<PricingTableProps> = ({ plans, interval }) => {
               relative h-full p-8 rounded-[32px] border transition-all duration-300
               ${plan.isFeatured
                                 ? 'border-primary/50 bg-primary/[0.03] shadow-2xl shadow-primary/5'
-                                : 'border-white/5 bg-white/[0.02]'
+                                : 'border-border bg-card/50 shadow-sm'
                             }
             `}>
                             <div className="text-center space-y-4 mb-8">
-                                <h3 className="text-2xl font-black text-white">{plan.title}</h3>
-                                <p className="text-sm text-slate-400 font-medium leading-relaxed">{plan.description}</p>
-
+                                <h3 className="text-2xl font-black text-foreground">{plan.title}</h3>
+                                <p className="text-sm text-muted-foreground font-medium leading-relaxed">{plan.description}</p>
+ 
                                 <div className="space-y-2">
-                                    <div className="text-4xl font-black text-white flex items-center justify-center tracking-tighter">
+                                    <div className="text-4xl font-black text-foreground flex items-center justify-center tracking-tighter">
                                         ₹<ScrollingNumber value={getPriceValue(plan)} />
-                                        <span className="text-base text-slate-500 font-bold ml-1">
+                                        <span className="text-base text-muted-foreground font-bold ml-1">
                                             {getIntervalLabel()}
                                         </span>
                                     </div>
                                     <motion.div
                                         initial={{ opacity: 0, y: 5 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="text-xs text-slate-500 font-bold uppercase tracking-widest"
+                                        className="text-xs text-muted-foreground font-bold uppercase tracking-widest"
                                     >
                                         <span>Billed {interval}</span>
                                     </motion.div>
                                 </div>
                             </div>
-
+ 
                             <div className="space-y-4 mb-8">
                                 {plan.features.map((feature, featureIndex) => (
                                     <motion.div
@@ -171,11 +171,11 @@ const PricingTable: React.FC<PricingTableProps> = ({ plans, interval }) => {
                                         <div className="flex-shrink-0 size-5 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
                                             <Check className="size-3 text-primary" />
                                         </div>
-                                        <span className="text-sm text-slate-300 font-medium">{feature}</span>
+                                        <span className="text-sm text-foreground/90 font-medium">{feature}</span>
                                     </motion.div>
                                 ))}
                             </div>
-
+ 
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -185,7 +185,7 @@ const PricingTable: React.FC<PricingTableProps> = ({ plans, interval }) => {
                                     asChild={!plan.disabled}
                                     variant={plan.isFeatured ? "default" : "outline"}
                                     size="lg"
-                                    className={`w-full h-14 rounded-2xl font-bold transition-all hover:scale-[1.02] active:scale-[0.98] ${plan.isFeatured ? 'shadow-xl shadow-primary/20' : 'border-white/10 hover:bg-white/5'}`}
+                                    className={`w-full h-14 rounded-2xl font-bold transition-all hover:scale-[1.02] active:scale-[0.98] ${plan.isFeatured ? 'shadow-xl shadow-primary/20' : 'border-border hover:bg-muted'}`}
                                     disabled={plan.disabled}
                                 >
                                     {plan.disabled ? (
