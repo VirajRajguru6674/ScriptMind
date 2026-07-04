@@ -44,6 +44,7 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
   const [quizAnswers, setQuizAnswers] = useState<{ [key: number]: number }>({});
   const [showQuizResults, setShowQuizResults] = useState(false);
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [pendingChatPrompt, setPendingChatPrompt] = useState<string | null>(null);
 
   useEffect(() => {
@@ -124,6 +125,7 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
     setQuizAnswers({});
     setShowQuizResults(false);
     setCurrentQuizIndex(0);
+    setCurrentCardIndex(0);
 
     try {
       const token = localStorage.getItem("token");
@@ -210,11 +212,43 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
         );
 
       case 'flashcards':
+        if (!Array.isArray(toolContent) || toolContent.length === 0) return null;
+        const currentCard = toolContent[currentCardIndex];
         return (
-          <div className="grid gap-6 p-6 animate-fade-in sm:grid-cols-2">
-            {Array.isArray(toolContent) && toolContent.map((card: any, idx: number) => (
-              <Flashcard key={idx} id={idx} front={card.front} back={card.back} />
-            ))}
+          <div className="p-6 space-y-6 animate-fade-in flex flex-col items-center">
+            <div className="w-full max-w-md">
+              <Flashcard
+                key={currentCardIndex}
+                id={currentCardIndex}
+                front={currentCard.front}
+                back={currentCard.back}
+              />
+            </div>
+            
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between w-full max-w-md border-t border-border/40 pt-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentCardIndex(p => Math.max(0, p - 1))}
+                disabled={currentCardIndex === 0}
+                className="font-semibold text-xs rounded-xl"
+              >
+                <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+              </Button>
+              <span className="text-xs font-bold text-muted-foreground/60">
+                Card {currentCardIndex + 1} of {toolContent.length}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentCardIndex(p => Math.min(toolContent.length - 1, p + 1))}
+                disabled={currentCardIndex === toolContent.length - 1}
+                className="font-semibold text-xs rounded-xl"
+              >
+                Next <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
           </div>
         );
 
