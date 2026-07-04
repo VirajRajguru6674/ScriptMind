@@ -123,11 +123,6 @@ const Notifications = () => {
                                 <h1 className="text-lg sm:text-xl font-black tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-purple-400 bg-clip-text text-transparent">
                                     Notifications
                                 </h1>
-                                {unreadCount > 0 && (
-                                    <span className="text-xs font-black px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/20">
-                                        {unreadCount} unread
-                                    </span>
-                                )}
                             </div>
 
                             {/* Right: controls */}
