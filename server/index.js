@@ -1221,6 +1221,33 @@ app.post('/api/auth/github', async (req, res) => {
 // Disable ytdl-core update check to avoid 403 errors on startup
 process.env.YTDL_NO_UPDATE = '1';
 
+// Helper to dynamically check for cookies.txt or cookies.json
+function getCookiesPath() {
+    const txtPath = path.join(__dirname, 'cookies.txt');
+    const jsonPath = path.join(__dirname, 'cookies.json');
+    return fs.existsSync(txtPath) ? txtPath : jsonPath;
+}
+
+// Helper: Parse Netscape / raw cookie strings safely
+function parseNetscapeCookies(fileContent) {
+    if (!fileContent.includes('\t')) {
+        return fileContent; // already raw header format
+    }
+    const cookies = [];
+    const lines = fileContent.split(/\r?\n/);
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const parts = trimmed.split('\t');
+        if (parts.length >= 7) {
+            const name = parts[5];
+            const value = parts[6];
+            cookies.push(`${name}=${value}`);
+        }
+    }
+    return cookies.join('; ');
+}
+
 // Helper: Load Cookies for YouTube (Bypass 429)
 function getYoutubeOptions() {
     const options = {
@@ -1232,21 +1259,31 @@ function getYoutubeOptions() {
     };
 
     try {
-        const cookiePath = path.join(__dirname, 'cookies.json');
-        if (fs.existsSync(cookiePath)) {
-            const cookieData = fs.readFileSync(cookiePath, 'utf8').trim();
-            // Basic validation to ensure it's not empty or just brackets
-            if (cookieData && cookieData.length > 10) {
-                console.log('🍪 [Auth] Loading YouTube cookies from cookies.json...');
-                options.requestOptions.headers.Cookie = cookieData;
-            } else {
-                console.warn('⚠️ [Auth] cookies.json is empty or invalid. YouTube might block requests with 429.');
-            }
+        let cookieData = "";
+        let sourceName = "";
+
+        // Check for Base64 env var first
+        if (process.env.YOUTUBE_COOKIES_BASE64) {
+            cookieData = Buffer.from(process.env.YOUTUBE_COOKIES_BASE64, 'base64').toString().trim();
+            sourceName = "YOUTUBE_COOKIES_BASE64 environment variable";
         } else {
-            console.warn('⚠️ [Auth] cookies.json not found. For best results, provide YouTube cookies to avoid 429 errors.');
+            const cookiesPath = getCookiesPath();
+            if (fs.existsSync(cookiesPath)) {
+                cookieData = fs.readFileSync(cookiesPath, 'utf8').trim();
+                sourceName = path.basename(cookiesPath);
+            }
+        }
+
+        // Basic validation to ensure it's not empty
+        if (cookieData && cookieData.length > 10) {
+            const parsedCookie = parseNetscapeCookies(cookieData);
+            console.log(`🍪 [Auth] Loading YouTube cookies from ${sourceName}...`);
+            options.requestOptions.headers.Cookie = parsedCookie;
+        } else {
+            console.warn('⚠️ [Auth] YouTube cookies are empty or not configured. YouTube might block requests with 429.');
         }
     } catch (e) {
-        console.warn('⚠️ [Auth] Failed to load cookies.json:', e.message);
+        console.warn('⚠️ [Auth] Failed to load cookies:', e.message);
     }
     return options;
 }
@@ -1746,6 +1783,8 @@ RULES:
 app.get('/api/video-formats', async (req, res) => {
     const { videoId } = req.query;
     if (!videoId) return res.status(400).json({ error: 'videoId required' });
+    
+    const cookieData = getSecureCookies();
     try {
         const ytDlp = require('yt-dlp-exec');
         console.log(`🔍 Fetching formats for: ${videoId}`);
@@ -1757,9 +1796,8 @@ app.get('/api/video-formats', async (req, res) => {
             extractorArgs: 'youtube:player-client=android,web,tv_embedded'
         };
 
-        const cookiesPath = path.join(__dirname, 'cookies.json');
-        if (fs.existsSync(cookiesPath) && fs.statSync(cookiesPath).size > 0) {
-            dlpOptions.cookies = cookiesPath;
+        if (cookieData) {
+            dlpOptions.cookies = cookieData.path;
         }
 
         let info;
@@ -1819,6 +1857,10 @@ app.get('/api/video-formats', async (req, res) => {
         ];
         // Ensure we always return 200 with fallbacks instead of letting it crash or 500
         return res.status(200).json({ qualities: fallbacks, isFallback: true, error: error.message });
+    } finally {
+        if (cookieData && cookieData.isTemp) {
+            try { fs.unlinkSync(cookieData.path); } catch (e) { }
+        }
     }
 });
 
@@ -1870,7 +1912,7 @@ const getSecureCookies = () => {
         }
 
         // Option B: Local File Fallback
-        const localPath = path.join(__dirname, 'cookies.json');
+        const localPath = getCookiesPath();
         if (fs.existsSync(localPath) && fs.statSync(localPath).size > 0) {
             return { path: localPath, isTemp: false };
         }
@@ -1999,10 +2041,6 @@ app.all('/api/download', authenticateToken, async (req, res) => {
             }
         }
 
-        if (cookieData && cookieData.isTemp) {
-            try { fs.unlinkSync(cookieData.path); } catch (e) { }
-        }
-
         if (downloadSuccess) {
             await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
             logAction(userId, 'DOWNLOAD_VIDEO', { videoId, quality, title });
@@ -2022,6 +2060,10 @@ app.all('/api/download', authenticateToken, async (req, res) => {
             });
         } else {
             res.end(); // Headers already sent, just close the connection gracefully
+        }
+    } finally {
+        if (cookieData && cookieData.isTemp) {
+            try { fs.unlinkSync(cookieData.path); } catch (e) { }
         }
     }
 });
