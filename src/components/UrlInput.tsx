@@ -48,7 +48,7 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:relative sm:w-full sm:flex sm:items-center sm:bg-card sm:border sm:border-border sm:rounded-full sm:p-1.5 sm:focus-within:ring-2 sm:focus-within:ring-primary/20 sm:focus-within:border-primary/50 sm:transition-all sm:shadow-md sm:pl-4">
           
           {/* Input field wrapper */}
-          <div className="relative flex-1 flex items-center bg-card border border-border sm:border-0 rounded-xl sm:rounded-none h-12 sm:h-11 shadow-sm sm:shadow-none focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 sm:focus-within:ring-0 sm:focus-within:border-0 pl-10 sm:pl-3">
+          <div className="relative flex-1 flex items-center bg-card border border-border sm:border-0 rounded-xl sm:rounded-none h-12 sm:h-11 shadow-sm sm:shadow-none focus-within:ring-1 focus-within:ring-primary/60 focus-within:border-primary/60 sm:focus-within:ring-0 sm:focus-within:border-0 pl-10 sm:pl-3">
             <Link2 className="absolute left-3.5 sm:left-0 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground shrink-0" />
             <input
               type="url"
@@ -63,7 +63,7 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
           {/* Button */}
           <Button
             type="submit"
-            className="h-12 sm:h-11 w-full sm:w-auto px-6 rounded-xl sm:rounded-full bg-foreground text-background font-bold text-sm shrink-0 transition-all duration-200 hover:bg-foreground/90 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+            className="h-12 sm:h-11 w-full sm:w-auto px-6 rounded-xl sm:rounded-full bg-primary text-primary-foreground hover:bg-primary/95 font-bold text-sm shrink-0 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm flex items-center justify-center gap-2"
             disabled={isLoading || !url.trim() || !isValidYoutubeUrl(url)}
           >
             {isLoading ? (
