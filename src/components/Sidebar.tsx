@@ -13,6 +13,7 @@ import { Video, Plus, CreditCard, Search, Star, Menu, ExternalLink, Trash2, Bell
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useNotesHistory } from "@/hooks/useNotesHistory";
+import { useTheme } from "@/hooks/useTheme";
 import { UserMenu } from "@/components/UserMenu";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useNotes } from "@/context/NotesContext";
@@ -37,7 +38,7 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
         toggleFavorite,
         deleteHistoryItem,
     } = useNotesHistory();
-    const { loadHistoryItem, reset } = useNotes();
+    const { theme } = useTheme();
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
@@ -50,12 +51,14 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
         onCloseMobile?.();
     };
 
+    const logoSrc = theme === "dark" ? "/logo-dark.png" : "/logo-light.png";
+
     const SidebarContent = () => (
         <div className="flex h-full flex-col bg-sidebar-background">
             <div className="flex h-22 items-center px-6 border-b border-sidebar-border/50">
                 <Link to="/" className="flex items-center w-full">
                     <img 
-                        src="/custom-logo.png" 
+                        src={logoSrc} 
                         alt="Logo" 
                         className="h-14 w-auto max-w-full object-contain transition-transform duration-300 hover:scale-[1.02]" 
                     />
