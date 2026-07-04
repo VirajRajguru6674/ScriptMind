@@ -247,19 +247,19 @@ export default function PlaylistDownloader() {
                             </div>
 
                             <div className="flex flex-col sm:flex-row gap-3 max-w-3xl pt-2 w-full">
-                                <div className="relative flex-1">
-                                    <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/60" />
+                                <div className="relative flex-1 group">
+                                    <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors duration-300" />
                                     <Input
                                         placeholder="Paste YouTube Playlist URL here..."
                                         value={url}
                                         onChange={(e) => setUrl(e.target.value)}
-                                        className="h-11 pl-11 pr-5 rounded-xl bg-secondary/20 border-border/50 focus-visible:ring-primary backdrop-blur-md text-xs sm:text-sm w-full"
+                                        className="h-11 pl-11 pr-5 rounded-xl bg-card/40 hover:bg-card/60 border-border/60 hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary backdrop-blur-md text-xs sm:text-sm w-full transition-all duration-300 shadow-inner"
                                     />
                                 </div>
                                 <Button
                                     onClick={handleFetchPlaylist}
                                     disabled={isLoading}
-                                    className="h-11 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold text-xs sm:text-sm shadow-md shadow-primary/10 transition-all duration-300 shrink-0"
+                                    className="h-11 px-6 rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:from-primary/95 hover:to-purple-600/95 text-primary-foreground font-black text-xs sm:text-sm shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 shrink-0 hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Fetch Playlist"}
                                 </Button>
