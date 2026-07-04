@@ -1646,10 +1646,20 @@ app.post('/api/tools', authenticateToken, async (req, res) => {
             systemPrompt = `You are a Mermaid.js diagram generator. Return ONLY valid Mermaid mindmap syntax starting with 'mindmap'.
             
             CRITICAL SYNTAX RULES:
-            1. Use space indentation (2 or 4 spaces per level) to define the hierarchy.
-            2. For node labels, ALWAYS wrap them in double quotes if they contain any special characters (like parentheses, brackets, colons, commas, or multiple words). Example: id["My Node (with info)"].
-            3. Do not include any HTML tags inside node text.
-            4. Respond ONLY with the raw diagram starting with 'mindmap'. Do not wrap it in markdown code fences, do not write 'Here is your mind map:', and do not include any other conversational text.`;
+            1. Use ONLY spaces (2 or 4 spaces per level) for indentation to define hierarchy.
+            2. DO NOT use characters like '+--', '|', '-', '*', ':', or bullet points to represent links. Each line should just have spaces followed by the node ID and/or label.
+            3. For node labels, ALWAYS wrap them in double quotes if they contain any special characters (like parentheses, brackets, colons, commas, or multiple words). Example: id["My Node (with info)"].
+            4. Do not include any HTML tags inside node text.
+            5. Respond ONLY with the raw diagram starting with 'mindmap'. Do not wrap it in markdown code fences.
+            
+            EXAMPLE OF VALID SYNTAX:
+            mindmap
+              root["Main Topic"]
+                child1["Subtopic A"]
+                  grandchild1["Detail A1"]
+                  grandchild2["Detail A2"]
+                child2["Subtopic B"]
+                  grandchild3["Detail B1"]`;
             userPrompt = `Create a mind map from these notes. Return ONLY the Mermaid syntax:\n\n${notes.substring(0, 15000)}`;
             break;
         default: return res.status(400).json({ error: "Invalid tool" });
