@@ -1858,12 +1858,16 @@ app.get('/api/video-formats', async (req, res) => {
         const ytDlp = require('yt-dlp-exec');
         console.log(`🔍 Fetching formats for: ${videoId}`);
         const getBaseOptions = (playerClient, useCookies) => {
+            let extractorArgs = `youtube:player-client=${playerClient};formats=missing_pot;skip=hls,dash`;
+            if (playerClient === 'tv') {
+                extractorArgs += ';player_skip=webpage,configs';
+            }
             const opts = {
                 dumpSingleJson: true,
                 noCheckCertificates: true,
                 preferFreeFormats: true,
                 jsRuntime: 'node',
-                extractorArgs: `youtube:player-client=${playerClient};formats=missing_pot;skip=hls,dash`,
+                extractorArgs,
                 userAgent: getYoutubeUserAgent(),
                 remoteComponents: 'ejs:github',
                 addHeader: [
@@ -2053,12 +2057,16 @@ app.all('/api/download', authenticateToken, async (req, res) => {
 
         // Stealth Download Strategy
         const attemptDownload = async (playerClient, useCookies) => {
+            let extractorArgs = `youtube:player-client=${playerClient};formats=missing_pot`;
+            if (playerClient === 'tv') {
+                extractorArgs += ';player_skip=webpage,configs';
+            }
             const dlpOptions = {
                 output: fullPath,
                 noCheckCertificates: true,
                 preferFreeFormats: true,
                 jsRuntime: 'node',
-                extractorArgs: `youtube:player-client=${playerClient};formats=missing_pot`,
+                extractorArgs,
                 userAgent: getYoutubeUserAgent(),
                 remoteComponents: 'ejs:github',
                 addHeader: [
