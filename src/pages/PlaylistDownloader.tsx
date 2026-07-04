@@ -232,57 +232,69 @@ export default function PlaylistDownloader() {
                 <Header />
 
                 <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
-                    <div className="max-w-5xl mx-auto space-y-8">
-                        <div className="text-center space-y-4">
-                            <div className="inline-flex p-3 bg-primary/10 rounded-2xl text-primary mb-2">
+                    <div className="max-w-6xl mx-auto space-y-8 pb-12">
+                        {/* Premium Interactive Hero Card */}
+                        <div className="relative rounded-3xl overflow-hidden border border-border/40 bg-gradient-to-b from-card/60 to-card/25 backdrop-blur-xl p-8 sm:p-12 text-center space-y-6 shadow-2xl shadow-primary/5">
+                            <div className="absolute -top-24 -left-20 w-80 h-80 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+                            <div className="absolute -bottom-24 -right-20 w-80 h-80 bg-purple-600/10 rounded-full blur-[100px] pointer-events-none" />
+                            
+                            <div className="inline-flex p-4 bg-gradient-to-tr from-primary to-purple-600 rounded-3xl text-white shadow-xl shadow-primary/20 mb-2 transition-transform duration-300 hover:scale-105">
                                 <Youtube className="w-8 h-8" />
                             </div>
-                            <h1 className="text-4xl font-black tracking-tight mb-2">Playlist Downloader</h1>
-                            <p className="text-muted-foreground text-lg">Download entire YouTube playlists in up to 8K resolution.</p>
+                            
+                            <div className="space-y-2">
+                                <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-foreground">
+                                    Playlist Downloader
+                                </h1>
+                                <p className="text-muted-foreground text-sm sm:text-lg max-w-lg mx-auto leading-relaxed">
+                                    Download entire YouTube playlists seamlessly in high resolution. Auto-resilient download fallbacks included.
+                                </p>
+                            </div>
 
-                            <div className="flex gap-2 max-w-2xl mx-auto pt-4">
+                            <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto pt-4 w-full">
                                 <Input
                                     placeholder="Paste YouTube Playlist URL here..."
                                     value={url}
                                     onChange={(e) => setUrl(e.target.value)}
-                                    className="h-12 px-6 rounded-2xl bg-secondary/30 border-border/50 focus-visible:ring-primary"
+                                    className="h-13 px-6 rounded-2xl bg-secondary/20 border-border/50 focus-visible:ring-primary backdrop-blur-md text-sm sm:text-base"
                                 />
                                 <Button
                                     onClick={handleFetchPlaylist}
                                     disabled={isLoading}
-                                    className="h-12 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg"
+                                    className="h-13 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/10 transition-all duration-300 shrink-0"
                                 >
-                                    {isLoading ? <Loader2 className="animate-spin" /> : "Fetch Playlist"}
+                                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Fetch Playlist"}
                                 </Button>
                             </div>
                         </div>
 
                         {videos.length > 0 && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="flex items-center justify-between bg-card border border-border/50 p-4 rounded-3xl shadow-sm backdrop-blur-md sticky top-0 z-10">
-                                    <div className="flex items-center gap-4">
-                                        <Button variant="ghost" onClick={toggleSelectAll} className="gap-2 text-sm">
-                                            {selectedVideos.length === videos.length ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                                {/* Responsive Control Toolbar */}
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card/70 border border-border/50 p-4 sm:p-5 rounded-3xl shadow-lg backdrop-blur-md sticky top-4 z-10">
+                                    <div className="flex items-center justify-between sm:justify-start gap-4">
+                                        <Button variant="ghost" onClick={toggleSelectAll} className="gap-2 text-sm font-semibold rounded-xl hover:bg-secondary/50 px-3">
+                                            {selectedVideos.length === videos.length ? <CheckSquare className="w-4 h-4 text-primary" /> : <Square className="w-4 h-4" />}
                                             {selectedVideos.length === videos.length ? "Deselect All" : "Select All"}
                                         </Button>
-                                        <div className="h-6 w-[1px] bg-border/50" />
-                                        <p className="text-sm font-medium text-muted-foreground">
-                                            {selectedVideos.length} videos selected
+                                        <div className="hidden sm:block h-6 w-[1px] bg-border/50" />
+                                        <p className="text-xs sm:text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-xl">
+                                            {selectedVideos.length} Selected
                                         </p>
                                     </div>
 
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
                                         <Select
                                             value={quality}
                                             onValueChange={setQuality}
                                         >
-                                            <SelectTrigger className="w-[200px] h-10 rounded-xl bg-secondary/30 border-transparent">
-                                                <Settings2 className="w-4 h-4 mr-2" />
+                                            <SelectTrigger className="w-full sm:w-[200px] h-11 rounded-xl bg-secondary/35 border-transparent font-semibold">
+                                                <Settings2 className="w-4 h-4 mr-2 text-muted-foreground" />
                                                 <SelectValue placeholder="Resolution" />
                                             </SelectTrigger>
-                                            <SelectContent>
+                                            <SelectContent className="rounded-xl border-border/50">
                                                 {allowedQualities.map((res) => (
-                                                    <SelectItem key={res.value} value={res.value}>{res.label}</SelectItem>
+                                                    <SelectItem key={res.value} value={res.value} className="font-semibold text-xs">{res.label}</SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
@@ -290,7 +302,7 @@ export default function PlaylistDownloader() {
                                         <Button
                                             disabled={selectedVideos.length === 0 || !!isDownloading}
                                             onClick={handleBulkDownload}
-                                            className="gap-2 bg-foreground text-background hover:bg-foreground/90 rounded-xl h-10 px-6 font-bold"
+                                            className="w-full sm:w-auto gap-2 bg-foreground text-background hover:bg-foreground/90 rounded-xl h-11 px-6 font-extrabold transition-all duration-300 shadow-md"
                                         >
                                             <DownloadCloud className="w-4 h-4" />
                                             Bulk Download
@@ -298,75 +310,95 @@ export default function PlaylistDownloader() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {/* Responsive Card Grid */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                     {videos.map((v) => (
                                         <Card key={v.id} className={cn(
-                                            "group relative overflow-hidden rounded-2xl border transition-all duration-300",
-                                            selectedVideos.includes(v.id) ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20" : "border-border/50 bg-card hover:border-primary/30"
+                                            "group relative flex flex-col overflow-hidden rounded-3xl border bg-card hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/20 hover:-translate-y-1 transition-all duration-300",
+                                            selectedVideos.includes(v.id) ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20" : "border-border/50 hover:bg-card/90"
                                         )}>
-                                            <CardContent className="p-3">
-                                                <div className="relative aspect-video rounded-xl overflow-hidden mb-3">
-                                                    <img src={v.thumbnail} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt={v.title} />
-                                                    <div className="absolute top-2 left-2">
+                                            <CardContent className="p-0 flex flex-col h-full">
+                                                {/* Thumbnail Container */}
+                                                <div className="relative aspect-video w-full overflow-hidden bg-secondary">
+                                                    <img src={v.thumbnail} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt={v.title} />
+                                                    
+                                                    {/* Checkbox overlay always visible */}
+                                                    <div className="absolute top-3 left-3 z-20">
                                                         <Checkbox
                                                             checked={selectedVideos.includes(v.id)}
                                                             onCheckedChange={() => toggleVideoSelection(v.id)}
-                                                            className="w-5 h-5 border-white/50 bg-black/20 backdrop-blur-md"
+                                                            className="w-5.5 h-5.5 rounded-lg border-white/50 bg-black/40 backdrop-blur-md data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                                         />
                                                     </div>
+                                                    
+                                                    {/* Progress Spinner overlay */}
                                                     {isDownloading === v.id && (
-                                                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-3 p-4">
-                                                            <Loader2 className="w-8 h-8 animate-spin text-white shrink-0" />
-                                                            <div className="w-full max-w-[180px] space-y-1">
-                                                                <Progress value={downloadProgress[v.id] ?? 0} className="h-2" />
-                                                                <p className="text-center text-sm font-medium text-white">
+                                                        <div className="absolute inset-0 z-30 bg-black/75 backdrop-blur-sm flex flex-col items-center justify-center gap-3 p-4">
+                                                            <Loader2 className="w-9 h-9 animate-spin text-primary" />
+                                                            <div className="w-full max-w-[140px] space-y-1 text-center">
+                                                                <Progress value={downloadProgress[v.id] ?? 0} className="h-1.5 bg-white/20" />
+                                                                <p className="text-xs font-bold text-white tracking-wider">
                                                                     {downloadProgress[v.id] ?? 0}%
                                                                 </p>
                                                             </div>
                                                         </div>
                                                     )}
+                                                    
+                                                    {/* Checkmark overlay for done */}
                                                     {downloadedVideos.has(v.id) && isDownloading !== v.id && (
-                                                        <div className="absolute inset-0 bg-primary/20 backdrop-blur-[2px] flex items-center justify-center animate-in fade-in zoom-in duration-300">
-                                                            <div className="bg-primary text-primary-foreground p-2 rounded-full shadow-lg">
+                                                        <div className="absolute inset-0 z-25 bg-primary/25 backdrop-blur-[1px] flex items-center justify-center animate-in fade-in zoom-in duration-300">
+                                                            <div className="bg-primary text-primary-foreground p-2.5 rounded-full shadow-xl shadow-primary/20">
                                                                 <Check className="w-6 h-6 stroke-[3px]" />
                                                             </div>
                                                         </div>
                                                     )}
                                                 </div>
-                                                <div className="space-y-1">
-                                                    <div className="flex items-start justify-between gap-2">
-                                                        <h4 className="font-bold text-sm line-clamp-2 leading-tight group-hover:text-primary transition-colors">{v.title}</h4>
-                                                        {downloadedVideos.has(v.id) && (
-                                                            <span className="shrink-0 flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-md uppercase tracking-wider">
-                                                                <Check className="w-3 h-3" />
+
+                                                {/* Details & Actions Block */}
+                                                <div className="p-4 flex flex-col justify-between flex-1 min-h-[140px]">
+                                                    <div className="space-y-1.5">
+                                                        <h4 className="font-extrabold text-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors text-card-foreground">
+                                                            {v.title}
+                                                        </h4>
+                                                        <p className="text-[11px] font-medium text-muted-foreground">{v.channelTitle}</p>
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between pt-4 border-t border-border/30 mt-auto">
+                                                        {downloadedVideos.has(v.id) ? (
+                                                            <span className="flex items-center gap-1 text-[10px] font-black text-primary bg-primary/10 px-2 py-1 rounded-lg uppercase tracking-wider">
+                                                                <Check className="w-3.5 h-3.5" />
                                                                 Done
                                                             </span>
+                                                        ) : (
+                                                            <span className="text-[11px] text-muted-foreground font-semibold">Ready</span>
                                                         )}
+
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button
+                                                                    variant="secondary"
+                                                                    size="sm"
+                                                                    className="h-8 gap-1.5 px-3 rounded-lg bg-secondary/50 hover:bg-primary hover:text-primary-foreground transition-all duration-300 font-extrabold text-xs shadow-sm hover:shadow-md"
+                                                                    disabled={!!isDownloading}
+                                                                >
+                                                                    <Download className="w-3.5 h-3.5" />
+                                                                    Download
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end" className="w-48 rounded-xl p-1.5 shadow-xl border-border/50">
+                                                                {allowedQualities.map((res) => (
+                                                                    <DropdownMenuItem
+                                                                        key={res.value}
+                                                                        onClick={() => handleDownload(v.id, v.title, res.value)}
+                                                                        className="rounded-lg font-bold text-xs py-2 cursor-pointer focus:bg-primary focus:text-primary-foreground transition-colors"
+                                                                    >
+                                                                        {res.label}
+                                                                    </DropdownMenuItem>
+                                                                ))}
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
                                                     </div>
-                                                    <p className="text-[10px] text-muted-foreground">{v.channelTitle}</p>
                                                 </div>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="absolute bottom-2 right-2 h-8 w-8 rounded-full bg-secondary opacity-0 group-hover:opacity-100 transition-opacity"
-                                                            disabled={!!isDownloading}
-                                                        >
-                                                            <Download className="w-4 h-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="w-48">
-                                                        {allowedQualities.map((res) => (
-                                                            <DropdownMenuItem
-                                                                key={res.value}
-                                                                onClick={() => handleDownload(v.id, v.title, res.value)}
-                                                            >
-                                                                {res.label}
-                                                            </DropdownMenuItem>
-                                                        ))}
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
                                             </CardContent>
                                         </Card>
                                     ))}
@@ -375,9 +407,12 @@ export default function PlaylistDownloader() {
                         )}
 
                         {!videos.length && !isLoading && (
-                            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground opacity-30">
-                                <ListVideo className="w-20 h-20 mb-4 stroke-1" />
-                                <p>Paste a playlist link and click fetch to see videos</p>
+                            <div className="relative rounded-3xl border border-dashed border-border/60 bg-card/10 backdrop-blur-sm p-16 text-center max-w-xl mx-auto space-y-4 animate-in fade-in duration-500">
+                                <div className="inline-flex p-4 bg-secondary/40 rounded-2xl text-muted-foreground mb-2">
+                                    <ListVideo className="w-12 h-12 stroke-1" />
+                                </div>
+                                <h3 className="font-extrabold text-lg tracking-tight">No Playlist Loaded</h3>
+                                <p className="text-muted-foreground text-sm max-w-xs mx-auto">Enter a valid YouTube playlist URL above and click Fetch to retrieve videos.</p>
                             </div>
                         )}
                     </div>
