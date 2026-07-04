@@ -234,7 +234,14 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
         <>
             <Sheet open={open} onOpenChange={setOpen}>
                 <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className="shrink-0 lg:hidden fixed left-4 top-4 z-[60] bg-background/80 backdrop-blur-md border border-border">
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className={cn(
+                            "shrink-0 lg:hidden fixed left-4 top-4 z-[60] bg-background/80 backdrop-blur-md border border-border transition-all duration-200",
+                            open ? "opacity-0 scale-95 pointer-events-none" : "opacity-100 scale-100"
+                        )}
+                    >
                         <Menu className="h-5 w-5" />
                         <span className="sr-only">Toggle navigation menu</span>
                     </Button>
