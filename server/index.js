@@ -2082,9 +2082,9 @@ app.all('/api/download', authenticateToken, async (req, res) => {
                 dlpOptions.extractAudio = true;
                 dlpOptions.audioFormat = 'mp3';
             } else {
-                // Resilient Format: Try high-quality merge, fallback to best single MP4
+                // Prioritize single-file pre-merged MP4 formats to bypass missing FFmpeg binary issues on Render, then fallback to merge
                 const h = quality.replace('p', '');
-                dlpOptions.format = `bestvideo[height<=${h}][ext=mp4]+bestaudio[ext=m4a]/best[height<=${h}][ext=mp4]/best[ext=mp4]/best`;
+                dlpOptions.format = `best[height<=${h}][ext=mp4]/best[ext=mp4]/bestvideo[height<=${h}][ext=mp4]+bestaudio[ext=m4a]/best`;
             }
 
             console.log(`🎬 [${playerClient}] Downloading ${videoId} (${quality}) [Cookies: ${!!(useCookies && cookieData)}]...`);
