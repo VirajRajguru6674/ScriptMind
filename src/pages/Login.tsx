@@ -300,7 +300,7 @@ const Login = () => {
     });
 
     const handleGithubLogin = () => {
-        const clientId = "Ov23lipHB7a97XIWi8yL";
+        const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || "Ov23lipHB7a97XIWi8yL";
         const redirectUri = window.location.origin + "/login";
         const scope = "user:email";
         window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
