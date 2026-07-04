@@ -62,15 +62,15 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
           {/* Button */}
           <Button
             type="submit"
-            className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shrink-0 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-primary/20"
+            className="h-12 px-7 rounded-xl bg-gradient-to-r from-violet-600 to-primary hover:from-violet-500 hover:to-primary/90 text-white font-bold text-sm shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] shadow-lg shadow-primary/30 hover:shadow-primary/50 border border-white/10"
             disabled={isLoading || !url.trim() || !isValidYoutubeUrl(url)}
           >
             {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <><Loader2 className="h-4 w-4 animate-spin mr-2" />Processing</>
             ) : (
               <>
                 Generate
-                <ArrowRight className="ml-1.5 h-4 w-4" />
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </>
             )}
           </Button>
