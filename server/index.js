@@ -1643,7 +1643,13 @@ app.post('/api/tools', authenticateToken, async (req, res) => {
             userPrompt = `Topic: ${videoTitle}\nNotes: ${notes.substring(0, 15000)}`;
             break;
         case 'mind_map':
-            systemPrompt = `You are a Mermaid.js diagram generator. Return ONLY valid Mermaid mindmap syntax. No explanations, no markdown code fences, just the raw Mermaid diagram text starting with 'mindmap'.`;
+            systemPrompt = `You are a Mermaid.js diagram generator. Return ONLY valid Mermaid mindmap syntax starting with 'mindmap'.
+            
+            CRITICAL SYNTAX RULES:
+            1. Use space indentation (2 or 4 spaces per level) to define the hierarchy.
+            2. For node labels, ALWAYS wrap them in double quotes if they contain any special characters (like parentheses, brackets, colons, commas, or multiple words). Example: id["My Node (with info)"].
+            3. Do not include any HTML tags inside node text.
+            4. Respond ONLY with the raw diagram starting with 'mindmap'. Do not wrap it in markdown code fences, do not write 'Here is your mind map:', and do not include any other conversational text.`;
             userPrompt = `Create a mind map from these notes. Return ONLY the Mermaid syntax:\n\n${notes.substring(0, 15000)}`;
             break;
         default: return res.status(400).json({ error: "Invalid tool" });
@@ -1670,7 +1676,7 @@ app.post('/api/tools', authenticateToken, async (req, res) => {
                 res.status(500).json({ error: `Failed to parse AI response for ${toolType}` });
             }
         } else if (toolType === 'mind_map') {
-            content = content.replace(/```mermaid/g, '').replace(/```/g, '').trim();
+            content = content.replace(/```[a-zA-Z]*/g, '').replace(/```/g, '').trim();
             res.json({ result: content });
         } else {
             res.json({ result: content });
