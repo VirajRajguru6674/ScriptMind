@@ -233,12 +233,9 @@ export default function PlaylistDownloader() {
 
                 <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
                     <div className="max-w-6xl mx-auto space-y-8 pb-12">
-                        {/* Premium Interactive Hero Card */}
-                        <div className="relative rounded-3xl overflow-hidden border border-border/40 bg-gradient-to-b from-card/60 to-card/25 backdrop-blur-xl p-6 sm:p-8 text-left space-y-4 shadow-xl shadow-primary/5">
-                            <div className="absolute -top-24 -left-20 w-80 h-80 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
-                            <div className="absolute -bottom-24 -right-20 w-80 h-80 bg-purple-600/10 rounded-full blur-[100px] pointer-events-none" />
-                            
-                            <div className="space-y-1.5 z-10 relative">
+                        {/* Title, Subtitle, and Input aligned directly on page */}
+                        <div className="space-y-4 text-left">
+                            <div className="space-y-1.5">
                                 <div className="flex items-center gap-2.5">
                                     <div className="flex p-2 bg-gradient-to-tr from-primary to-purple-600 rounded-xl text-white shadow-md shadow-primary/10">
                                         <Youtube className="w-5 h-5" />
@@ -252,7 +249,7 @@ export default function PlaylistDownloader() {
                                 </p>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row gap-3 max-w-3xl pt-2 w-full z-10 relative">
+                            <div className="flex flex-col sm:flex-row gap-3 max-w-3xl pt-2 w-full">
                                 <Input
                                     placeholder="Paste YouTube Playlist URL here..."
                                     value={url}
