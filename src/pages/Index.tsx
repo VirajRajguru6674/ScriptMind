@@ -329,49 +329,42 @@ const Index = () => {
                 <div className="flex flex-col gap-6 lg:h-full lg:min-h-0 lg:overflow-hidden">
 
                   {/* Video Reference Card */}
-                  <div className="rounded-2xl overflow-hidden bg-card border border-border/50 shadow-sm shrink-0">
-                    <div className="flex flex-row lg:flex-col items-stretch">
-                      {/* Thumbnail section */}
-                      <div className="w-28 sm:w-36 lg:w-full shrink-0">
-                        <VideoPreview video={videoInfo} isLoading={isLoadingVideo} />
+                  <div className="rounded-2xl overflow-hidden bg-card border border-border/50 shadow-sm shrink-0 w-full max-w-sm lg:max-w-none">
+                    <VideoPreview video={videoInfo} isLoading={isLoadingVideo} />
+                    <div className="p-4 space-y-3 bg-card/50 backdrop-blur-sm">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
+                        <span className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-secondary/50">
+                          <Clock className="w-3.5 h-3.5" />
+                          Study Session
+                        </span>
+                        <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-500/10 text-green-500 border border-green-500/20">
+                          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                          Active
+                        </span>
                       </div>
-
-                      {/* Content section */}
-                      <div className="flex-1 p-3 lg:p-4 space-y-2 lg:space-y-3 bg-card/50 backdrop-blur-sm min-w-0 flex flex-col justify-center">
-                        <div className="flex items-center justify-between text-[10px] sm:text-xs text-muted-foreground font-medium flex-wrap gap-1">
-                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-secondary/50">
-                            <Clock className="w-3 h-3" />
-                            Study
-                          </span>
-                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-500 border border-green-500/20">
-                            <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
-                            Active
-                          </span>
+                      <h3 className="font-bold text-sm line-clamp-2 leading-relaxed tracking-tight">
+                        {videoInfo?.title}
+                      </h3>
+                      {videoInfo?.url && (
+                        <div className="pt-2 border-t border-border/30">
+                          <a
+                            href={videoInfo.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors group"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                            <span className="truncate font-mono">{videoInfo.url}</span>
+                          </a>
                         </div>
-                        <h3 className="font-bold text-xs sm:text-sm line-clamp-1 lg:line-clamp-2 leading-snug tracking-tight">
-                          {videoInfo?.title}
-                        </h3>
-                        {videoInfo?.url && (
-                          <div className="pt-1.5 border-t border-border/30 hidden sm:block lg:block">
-                            <a
-                              href={videoInfo.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground hover:text-primary transition-colors group"
-                            >
-                              <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                              <span className="truncate font-mono">{videoInfo.url}</span>
-                            </a>
-                          </div>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
 
 
 
-                  {/* Related Content (Curriculum View) */}
-                  <div className="flex-1 min-h-0 flex flex-col rounded-2xl bg-card border border-border/50 shadow-sm overflow-hidden min-h-[300px] lg:min-h-0">
+                  {/* Related Content (Curriculum View) - Hidden on Mobile */}
+                  <div className="hidden lg:flex flex-col rounded-2xl bg-card border border-border/50 shadow-sm overflow-hidden flex-1 min-h-0">
                     <div className="p-4 border-b border-border/50 flex items-center justify-between bg-card/50 backdrop-blur-sm shrink-0">
                       <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                         <PlayCircle className="w-4 h-4 text-primary" />
@@ -455,6 +448,7 @@ const Index = () => {
                       </button>
                     </div>
                   </div>
+
                 </div>
 
                 {/* Right Column: Key Content */}
