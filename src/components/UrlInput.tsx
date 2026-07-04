@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link2, ArrowRight, Loader2, ClipboardPaste } from "lucide-react";
+import { Link2, ArrowRight, Loader2, ClipboardPaste, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -62,16 +62,13 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
           {/* Button */}
           <Button
             type="submit"
-            className="h-12 px-7 rounded-xl bg-gradient-to-r from-violet-600 to-primary hover:from-violet-500 hover:to-primary/90 text-white font-bold text-sm shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] shadow-lg shadow-primary/30 hover:shadow-primary/50 border border-white/10"
+            className="h-12 px-6 rounded-full bg-white text-zinc-900 font-bold text-sm shrink-0 transition-all duration-200 hover:bg-white/90 hover:scale-[1.04] active:scale-[0.97] shadow-[0_0_0_1px_rgba(255,255,255,0.15)] flex items-center gap-2"
             disabled={isLoading || !url.trim() || !isValidYoutubeUrl(url)}
           >
             {isLoading ? (
-              <><Loader2 className="h-4 w-4 animate-spin mr-2" />Processing</>
+              <><Loader2 className="h-4 w-4 animate-spin" />Processing</>
             ) : (
-              <>
-                Generate
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </>
+              <><Zap className="h-4 w-4 fill-current" />Generate</>
             )}
           </Button>
         </div>
