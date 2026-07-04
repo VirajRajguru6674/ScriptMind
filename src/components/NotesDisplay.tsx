@@ -42,6 +42,7 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
   const [isLoadingTool, setIsLoadingTool] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<{ [key: number]: number }>({});
   const [showQuizResults, setShowQuizResults] = useState(false);
+  const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
   const [pendingChatPrompt, setPendingChatPrompt] = useState<string | null>(null);
 
   useEffect(() => {
@@ -121,6 +122,7 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
     setToolContent(null);
     setQuizAnswers({});
     setShowQuizResults(false);
+    setCurrentQuizIndex(0);
 
     try {
       const token = localStorage.getItem("token");
@@ -216,15 +218,16 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
         );
 
       case 'quiz':
-        const correctCount = Array.isArray(toolContent)
-          ? toolContent.filter((q: any, idx: number) => quizAnswers[idx] === q.correctIndex).length
-          : 0;
-        const totalCount = Array.isArray(toolContent) ? toolContent.length : 0;
-        const scorePercentage = Math.round((correctCount / totalCount) * 100) || 0;
+        if (!Array.isArray(toolContent) || toolContent.length === 0) return null;
 
-        return (
-          <div className="p-6 space-y-8 animate-fade-in">
-            {showQuizResults && (
+        const correctCount = toolContent.filter((q: any, idx: number) => quizAnswers[idx] === q.correctIndex).length;
+        const totalCount = toolContent.length;
+        const scorePercentage = Math.round((correctCount / totalCount) * 100) || 0;
+        const isCurrentQuestionAnswered = quizAnswers[currentQuizIndex] !== undefined;
+
+        if (showQuizResults) {
+          return (
+            <div className="p-6 space-y-6 animate-fade-in">
               <div className="bg-secondary/20 border border-border/50 rounded-xl p-6 text-center animate-in zoom-in-95 duration-300">
                 <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-3">Your Result</p>
                 <div className="text-5xl font-black text-foreground tabular-nums tracking-tight mb-2">{scorePercentage}%</div>
@@ -234,49 +237,109 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
                     scorePercentage >= 70 ? 'Great job! 👏' : 'Keep reviewing the notes! 💪'}
                 </p>
               </div>
-            )}
 
-            {Array.isArray(toolContent) && toolContent.map((q: any, idx: number) => (
-              <div key={idx} className="space-y-3">
-                <h3 className="font-medium text-lg text-foreground">{idx + 1}. {q.question}</h3>
-                <div className="space-y-2">
-                  {q.options.map((option: string, optIdx: number) => {
-                    const isSelected = quizAnswers[idx] === optIdx;
-                    const isCorrect = q.correctIndex === optIdx;
-                    let btnClass = "w-full justify-start text-left h-auto py-3 px-4 border-border/50";
-                    if (showQuizResults) {
-                      if (isCorrect) btnClass = "w-full justify-start text-left h-auto py-3 px-4 bg-green-500/20 border-green-500/30 text-green-600 hover:bg-green-500/20";
-                      else if (isSelected && !isCorrect) btnClass = "w-full justify-start text-left h-auto py-3 px-4 bg-red-500/20 border-red-500/30 text-red-600 hover:bg-red-500/20";
-                    } else if (isSelected) {
-                      btnClass = "w-full justify-start text-left h-auto py-3 px-4 bg-primary/10 border-primary/30 text-primary hover:bg-primary/20";
-                    }
-
-                    return (
-                      <Button
-                        key={optIdx}
-                        variant="outline"
-                        className={btnClass}
-                        onClick={() => !showQuizResults && setQuizAnswers(prev => ({ ...prev, [idx]: optIdx }))}
-                      >
-                        <span className="mr-2 opacity-50">{String.fromCharCode(65 + optIdx)}.</span>
-                        {option}
-                        {showQuizResults && isCorrect && <CheckCircle2 className="ml-auto w-4 h-4 text-green-600" />}
-                        {showQuizResults && isSelected && !isCorrect && <XCircle className="ml-auto w-4 h-4 text-red-600" />}
-                      </Button>
-                    );
-                  })}
-                </div>
+              {/* Review Section */}
+              <div className="space-y-6">
+                <h3 className="font-bold text-lg text-foreground border-b border-border/40 pb-2">Review Questions</h3>
+                {toolContent.map((q: any, idx: number) => {
+                  const isCorrect = quizAnswers[idx] === q.correctIndex;
+                  return (
+                    <div key={idx} className={`p-4 rounded-xl border ${isCorrect ? 'bg-green-500/5 border-green-500/20' : 'bg-red-500/5 border-red-500/20'} space-y-2`}>
+                      <h4 className="font-medium text-sm text-foreground flex items-center gap-2">
+                        <span>{idx + 1}. {q.question}</span>
+                        {isCorrect ? <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" /> : <XCircle className="w-4 h-4 text-red-500 shrink-0" />}
+                      </h4>
+                      <p className="text-xs text-muted-foreground">
+                        Your Answer: <strong className={isCorrect ? 'text-green-500' : 'text-red-500'}>{q.options[quizAnswers[idx]]}</strong>
+                      </p>
+                      {!isCorrect && (
+                        <p className="text-xs text-muted-foreground">
+                          Correct Answer: <strong className="text-green-500">{q.options[q.correctIndex]}</strong>
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            ))}
 
-            {!showQuizResults && Object.keys(quizAnswers).length === toolContent.length && (
-              <Button className="w-full" onClick={() => setShowQuizResults(true)}>Check Answers</Button>
-            )}
-            {showQuizResults && (
-              <Button className="w-full" variant="secondary" onClick={() => { setQuizAnswers({}); setShowQuizResults(false); }}>
+              <Button className="w-full" variant="secondary" onClick={() => { setQuizAnswers({}); setShowQuizResults(false); setCurrentQuizIndex(0); }}>
                 Take Quiz Again
               </Button>
-            )}
+            </div>
+          );
+        }
+
+        const q = toolContent[currentQuizIndex];
+
+        return (
+          <div className="p-6 space-y-6 animate-fade-in">
+            {/* Progress bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-muted-foreground font-semibold">
+                <span>Question {currentQuizIndex + 1} of {totalCount}</span>
+                <span>{Math.round(((currentQuizIndex) / totalCount) * 100)}% Complete</span>
+              </div>
+              <div className="w-full h-1.5 bg-secondary/50 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${((currentQuizIndex) / totalCount) * 100}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="font-semibold text-xl text-foreground leading-snug">{currentQuizIndex + 1}. {q.question}</h3>
+              
+              <div className="space-y-2">
+                {q.options.map((option: string, optIdx: number) => {
+                  const isSelected = quizAnswers[currentQuizIndex] === optIdx;
+                  let btnClass = "w-full justify-start text-left h-auto py-3 px-4 border-border/50 hover:bg-secondary/10";
+                  if (isSelected) {
+                    btnClass = "w-full justify-start text-left h-auto py-3 px-4 bg-primary/10 border-primary/30 text-primary hover:bg-primary/20";
+                  }
+
+                  return (
+                    <Button
+                      key={optIdx}
+                      variant="outline"
+                      className={btnClass}
+                      onClick={() => setQuizAnswers(prev => ({ ...prev, [currentQuizIndex]: optIdx }))}
+                    >
+                      <span className="mr-2 opacity-50">{String.fromCharCode(65 + optIdx)}.</span>
+                      {option}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Navigation buttons */}
+            <div className="flex items-center justify-between border-t border-border/40 pt-4 gap-4">
+              <Button
+                variant="ghost"
+                onClick={() => setCurrentQuizIndex(p => Math.max(0, p - 1))}
+                disabled={currentQuizIndex === 0}
+              >
+                <ChevronLeft className="mr-2 h-4 w-4" /> Previous
+              </Button>
+
+              {currentQuizIndex < totalCount - 1 ? (
+                <Button
+                  onClick={() => setCurrentQuizIndex(p => Math.min(totalCount - 1, p + 1))}
+                  disabled={!isCurrentQuestionAnswered}
+                >
+                  Next Question <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => setShowQuizResults(true)}
+                  disabled={!isCurrentQuestionAnswered}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  Submit & View Score
+                </Button>
+              )}
+            </div>
           </div>
         );
 
