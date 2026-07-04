@@ -45,24 +45,19 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
   return (
     <div className="w-full space-y-3">
       <form onSubmit={handleSubmit} className="w-full">
-        <div className="flex gap-2">
-          {/* Input */}
-          <div className="relative flex-1">
-            <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="url"
-              placeholder="Paste YouTube video URL here..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="h-12 pl-10 pr-4 text-sm rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground/75 focus-visible:ring-1 focus-visible:ring-primary/60 focus-visible:border-primary/60 transition-all shadow-sm"
-              disabled={isLoading}
-            />
-          </div>
-
-          {/* Button */}
+        <div className="relative w-full flex items-center bg-card border border-border rounded-full p-1.5 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all shadow-md pl-4">
+          <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
+          <input
+            type="url"
+            placeholder="Paste YouTube link here..."
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            className="flex-1 h-11 bg-transparent border-0 text-sm text-foreground placeholder:text-muted-foreground/75 focus:outline-none pl-3 pr-2 w-full min-w-0"
+            disabled={isLoading}
+          />
           <Button
             type="submit"
-            className="h-12 px-6 rounded-full bg-foreground text-background font-bold text-sm shrink-0 transition-all duration-200 hover:bg-foreground/90 hover:scale-[1.04] active:scale-[0.97] shadow-md flex items-center gap-2"
+            className="h-11 px-6 rounded-full bg-foreground text-background font-bold text-sm shrink-0 transition-all duration-200 hover:bg-foreground/90 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
             disabled={isLoading || !url.trim() || !isValidYoutubeUrl(url)}
           >
             {isLoading ? (
