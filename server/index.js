@@ -205,7 +205,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'scriptmind-secret-123';
 
 const authenticateToken = (req, res, next) => {
     if (req.method === 'OPTIONS') {
-        return next();
+        return res.sendStatus(204);
     }
     const authHeader = req.headers['authorization'];
     const token = (authHeader && authHeader.split(' ')[1]) || req.query.token;
