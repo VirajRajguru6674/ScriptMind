@@ -236,11 +236,11 @@ export default function PlaylistDownloader() {
                         {/* Title, Subtitle, and Input aligned directly on page */}
                         <div className="space-y-4 text-left">
                             <div className="space-y-1.5">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="flex p-2 bg-gradient-to-tr from-primary to-purple-600 rounded-xl text-white shadow-md shadow-primary/10">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex p-2.5 bg-gradient-to-tr from-primary to-purple-600 rounded-2xl text-white shadow-lg shadow-primary/20 transition-transform duration-300 hover:scale-105">
                                         <Youtube className="w-5 h-5" />
                                     </div>
-                                    <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">
+                                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight bg-gradient-to-r from-white via-neutral-100 to-purple-300 bg-clip-text text-transparent pb-0.5">
                                         Playlist Downloader
                                     </h1>
                                 </div>
