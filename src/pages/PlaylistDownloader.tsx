@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { Header } from '@/components/Header';
+import { NotificationPanel } from '@/components/NotificationPanel';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -229,24 +230,30 @@ export default function PlaylistDownloader() {
         <div className="flex h-screen bg-background overflow-hidden">
             <Sidebar />
             <main className="flex-1 flex flex-col min-w-0 lg:ml-[296px]">
-                <Header />
+                <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                    <div className="flex h-16 items-center justify-between px-6">
+                        {/* Page title shown in header row on desktop, aligned with sidebar logo */}
+                        <div className="flex items-center gap-3">
+                            <div className="flex p-2 bg-gradient-to-tr from-primary to-purple-600 rounded-xl text-white shadow-md shadow-primary/20">
+                                <Youtube className="w-4 h-4" />
+                            </div>
+                            <h1 className="text-lg sm:text-xl font-black tracking-tight bg-gradient-to-r from-white via-neutral-100 to-purple-300 bg-clip-text text-transparent">
+                                Playlist Downloader
+                            </h1>
+                        </div>
+                        {/* Right side controls */}
+                        <div className="flex items-center gap-2">
+                            <NotificationPanel />
+                            <ThemeToggle />
+                        </div>
+                    </div>
+                </header>
 
                 <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
                     <div className="w-full space-y-8 pb-12">
-                        {/* Title, Subtitle, and Input aligned directly on page */}
+                        {/* URL input bar only, title moved to header */}
                         <div className="space-y-4 text-left">
-                            <div className="space-y-1.5">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex p-2.5 bg-gradient-to-tr from-primary to-purple-600 rounded-2xl text-white shadow-lg shadow-primary/20 transition-transform duration-300 hover:scale-105">
-                                        <Youtube className="w-5 h-5" />
-                                    </div>
-                                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight bg-gradient-to-r from-white via-neutral-100 to-purple-300 bg-clip-text text-transparent pb-0.5">
-                                        Playlist Downloader
-                                    </h1>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col sm:flex-row gap-3 max-w-3xl pt-2 w-full">
+                            <div className="flex flex-col sm:flex-row gap-3 max-w-3xl w-full">
                                 <div className="relative flex-1 group">
                                     <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors duration-300" />
                                     <Input
