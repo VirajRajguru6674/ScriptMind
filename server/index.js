@@ -1824,23 +1824,33 @@ app.get('/api/video-formats', async (req, res) => {
 
         let info;
         try {
-            console.log(`🔍 [yt-dlp] Fetching formats for: ${videoId}`);
-            info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpOptions);
-        } catch (dlpError) {
-            console.warn(`⚠️ yt-dlp failed: ${dlpError.message}. Trying ytdl-core...`);
+            console.log(`🔍 [yt-dlp] Fetching formats with iOS client for: ${videoId}`);
+            const iosOptions = {
+                ...dlpOptions,
+                extractorArgs: 'youtube:player-client=ios,web'
+            };
+            info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, iosOptions);
+        } catch (iosError) {
+            console.warn(`⚠️ yt-dlp iOS client failed: ${iosError.message}. Retrying with android client...`);
             try {
-                const ytdl = require('@distube/ytdl-core');
-                const ytdlInfo = await ytdl.getInfo(videoId);
-                // Convert ytdl-core formats to yt-dlp-like structure for the rest of the logic
-                info = {
-                    formats: ytdlInfo.formats.map(f => ({
-                        height: f.height,
-                        format_note: f.qualityLabel
-                    }))
-                };
-            } catch (ytdlError) {
-                console.error(`❌ Both yt-dlp and ytdl-core failed: ${ytdlError.message}`);
-                throw new Error("Could not fetch formats from any source");
+                console.log(`🔍 [yt-dlp] Fetching formats with Android client for: ${videoId}`);
+                info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpOptions);
+            } catch (dlpError) {
+                console.warn(`⚠️ yt-dlp Android client failed: ${dlpError.message}. Trying ytdl-core...`);
+                try {
+                    const ytdl = require('@distube/ytdl-core');
+                    const ytdlOptions = getYoutubeOptions();
+                    const ytdlInfo = await ytdl.getInfo(videoId, ytdlOptions);
+                    info = {
+                        formats: ytdlInfo.formats.map(f => ({
+                            height: f.height,
+                            format_note: f.qualityLabel
+                        }))
+                    };
+                } catch (ytdlError) {
+                    console.error(`❌ Both yt-dlp and ytdl-core failed: ${ytdlError.message}`);
+                    throw new Error("Could not fetch formats from any source");
+                }
             }
         }
 
