@@ -231,8 +231,8 @@ export default function PlaylistDownloader() {
             <main className="flex-1 flex flex-col min-w-0 lg:ml-[296px]">
                 <Header />
 
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
-                    <div className="max-w-6xl mx-auto space-y-8 pb-12">
+                <div className="flex-1 overflow-y-auto p-4 md:py-8 md:pr-8 md:pl-0 space-y-8">
+                    <div className="max-w-6xl space-y-8 pb-12">
                         {/* Title, Subtitle, and Input aligned directly on page */}
                         <div className="space-y-4 text-left">
                             <div className="space-y-1.5">
@@ -244,9 +244,6 @@ export default function PlaylistDownloader() {
                                         Playlist Downloader
                                     </h1>
                                 </div>
-                                <p className="text-muted-foreground text-xs sm:text-sm max-w-xl leading-relaxed">
-                                    Download entire YouTube playlists seamlessly in high resolution. Auto-resilient download fallbacks included.
-                                </p>
                             </div>
 
                             <div className="flex flex-col sm:flex-row gap-3 max-w-3xl pt-2 w-full">
