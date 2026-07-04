@@ -109,7 +109,7 @@ const Notifications = () => {
                     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                         <div className="flex h-16 items-center justify-between px-6">
                             {/* Left: page title */}
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 pl-12 lg:pl-0">
                                 <Bell className="w-5 h-5 text-primary" />
                                 <h1 className="text-lg sm:text-xl font-black tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-purple-400 bg-clip-text text-transparent">
                                     Notifications

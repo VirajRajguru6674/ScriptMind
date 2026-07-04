@@ -233,7 +233,7 @@ export default function PlaylistDownloader() {
                 <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                     <div className="flex h-16 items-center justify-between px-6">
                         {/* Page title shown in header row on desktop, aligned with sidebar logo */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 pl-12 lg:pl-0">
                             <Youtube className="w-5 h-5 text-primary" />
                             <h1 className="text-lg sm:text-xl font-black tracking-tight bg-gradient-to-r from-white via-neutral-100 to-purple-300 bg-clip-text text-transparent">
                                 Playlist Downloader
