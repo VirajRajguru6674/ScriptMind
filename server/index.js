@@ -1258,7 +1258,7 @@ function parseNetscapeToCookieObjects(fileContent) {
             const raw = JSON.parse(fileContent);
             return Array.isArray(raw) ? raw.filter(c => {
                 const dom = (c.domain || '').toLowerCase();
-                return dom.endsWith('youtube.com') || dom.endsWith('google.com');
+                return dom.endsWith('youtube.com');
             }) : [];
         } catch (e) {
             return [];
@@ -1272,7 +1272,7 @@ function parseNetscapeToCookieObjects(fileContent) {
         const parts = trimmed.split('\t');
         if (parts.length >= 7) {
             const domain = parts[0].toLowerCase();
-            if (domain.endsWith('youtube.com') || domain.endsWith('google.com')) {
+            if (domain.endsWith('youtube.com')) {
                 cookies.push({
                     name: parts[5],
                     value: parts[6],
