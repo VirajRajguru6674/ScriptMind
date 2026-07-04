@@ -306,10 +306,13 @@ const Login = () => {
         window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
     };
 
+    const hasCalledGithubLogin = useRef(false);
+
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-        if (code) {
+        if (code && !hasCalledGithubLogin.current) {
+            hasCalledGithubLogin.current = true;
             setIsLoading(true);
             const redirectUri = window.location.origin + "/login";
             githubLogin(code, redirectUri).then(() => {
