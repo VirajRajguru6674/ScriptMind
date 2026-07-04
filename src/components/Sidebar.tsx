@@ -52,7 +52,8 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
         onCloseMobile?.();
     };
 
-    const logoSrc = theme === "dark" ? "/logo-dark.png" : "/logo-light.png";
+    const isDark = theme === "dark" || (theme === "system" && typeof window !== 'undefined' && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const logoSrc = isDark ? "/logo-dark.png" : "/logo-light.png";
 
     const SidebarContent = () => (
         <div className="flex h-full flex-col bg-sidebar-background">
