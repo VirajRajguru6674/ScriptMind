@@ -1652,7 +1652,7 @@ app.post('/api/tools', authenticateToken, async (req, res) => {
     try {
         const contentRaw = await executeWithRotation('GROQ_API_KEY', async (key) => {
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                model: 'llama-3.1-8b-instant',
+                model: 'llama-3.3-70b-versatile',
                 messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
                 temperature: 0.7,
                 max_tokens: 4000
