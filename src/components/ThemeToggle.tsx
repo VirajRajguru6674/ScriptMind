@@ -6,11 +6,9 @@ export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
+    <button
       onClick={toggleTheme}
-      className="h-9 w-9 rounded-full"
+      className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted active:scale-95 transition-all text-foreground outline-none focus-visible:ring-1 focus-visible:ring-primary"
     >
       {theme === "dark" ? (
         <Sun className="h-5 w-5 text-foreground" />
@@ -18,6 +16,6 @@ export function ThemeToggle() {
         <Moon className="h-5 w-5 text-foreground" />
       )}
       <span className="sr-only">Toggle theme</span>
-    </Button>
+    </button>
   );
 }

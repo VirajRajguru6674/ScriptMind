@@ -67,14 +67,14 @@ export function NotificationPanel() {
     return (
         <Popover onOpenChange={(open) => open && markAsRead()}>
             <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full">
+                <button className="relative h-10 w-10 rounded-full flex items-center justify-center text-foreground hover:bg-muted active:scale-95 transition-all outline-none focus-visible:ring-1 focus-visible:ring-primary">
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
                         <span className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
                             {unreadCount}
                         </span>
                     )}
-                </Button>
+                </button>
             </PopoverTrigger>
 
             <PopoverContent
