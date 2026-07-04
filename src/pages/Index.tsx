@@ -323,12 +323,11 @@ const Index = () => {
               </div>
             </div>
           ) : (
-            /* Dashboard layout filling the screen */
-            /* Dashboard layout filling the screen */
-            <div className="h-screen p-4 lg:p-6 overflow-hidden flex flex-col">
-              <div className="grid lg:grid-cols-[380px_1fr] gap-6 h-full max-w-[1920px] mx-auto w-full">
+            {/* Dashboard layout filling the screen */}
+            <div className="min-h-screen lg:h-screen p-4 lg:p-6 overflow-y-auto lg:overflow-hidden flex flex-col">
+              <div className="grid lg:grid-cols-[380px_1fr] gap-6 lg:h-full max-w-[1920px] mx-auto w-full">
                 {/* Left Column: Context & Tools */}
-                <div className="flex flex-col gap-6 h-full min-h-0 overflow-hidden">
+                <div className="flex flex-col gap-6 lg:h-full lg:min-h-0 lg:overflow-hidden">
 
                   {/* Video Reference Card */}
                   <div className="rounded-2xl overflow-hidden bg-card border border-border/50 shadow-sm shrink-0">
@@ -366,7 +365,7 @@ const Index = () => {
 
 
                   {/* Related Content (Curriculum View) */}
-                  <div className="flex-1 min-h-0 flex flex-col rounded-2xl bg-card border border-border/50 shadow-sm overflow-hidden">
+                  <div className="flex-1 min-h-0 flex flex-col rounded-2xl bg-card border border-border/50 shadow-sm overflow-hidden min-h-[300px] lg:min-h-0">
                     <div className="p-4 border-b border-border/50 flex items-center justify-between bg-card/50 backdrop-blur-sm shrink-0">
                       <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                         <PlayCircle className="w-4 h-4 text-primary" />
@@ -453,7 +452,7 @@ const Index = () => {
                 </div>
 
                 {/* Right Column: Key Content */}
-                <div className="h-full min-h-0 flex flex-col">
+                <div className="lg:h-full lg:min-h-0 flex flex-col min-h-[500px]">
                   <div className="h-full rounded-3xl overflow-hidden shadow-2xl border border-border/50 bg-card relative flex flex-col transition-all duration-500 hover:shadow-primary/5">
                     {notes ? (
                       <NotesDisplay

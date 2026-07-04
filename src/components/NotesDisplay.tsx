@@ -367,19 +367,19 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-card text-card-foreground">
-      <div className="flex items-center justify-between border-b border-border/40 px-6 py-3 bg-card/80 backdrop-blur-md sticky top-0 z-10">
-        <div className="flex items-center gap-1 bg-secondary/50 p-1 rounded-xl">
-          <Button variant="ghost" size="sm" onClick={() => setActiveTab('notes')} className={`text-xs font-semibold px-4 py-1.5 rounded-lg transition-all ${activeTab === 'notes' ? 'bg-background shadow-sm text-slate-800 dark:text-slate-100' : 'text-muted-foreground hover:text-slate-600 dark:hover:text-slate-300'}`}>
-            <FileText className="mr-2 h-3.5 w-3.5" /> Notes
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-border/40 px-4 sm:px-6 py-3 bg-card/80 backdrop-blur-md sticky top-0 z-10 gap-3">
+        <div className="flex items-center gap-1 bg-secondary/50 p-1 rounded-xl overflow-x-auto scrollbar-none shrink-0">
+          <Button variant="ghost" size="sm" onClick={() => setActiveTab('notes')} className={`text-xs font-semibold px-3 sm:px-4 py-1.5 rounded-lg transition-all ${activeTab === 'notes' ? 'bg-background shadow-sm text-slate-800 dark:text-slate-100' : 'text-muted-foreground hover:text-slate-600 dark:hover:text-slate-300'}`}>
+            <FileText className="mr-1.5 sm:mr-2 h-3.5 w-3.5" /> Notes
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setActiveTab('chat')} className={`text-xs font-semibold px-4 py-1.5 rounded-lg transition-all ${activeTab === 'chat' ? 'bg-background shadow-sm text-slate-800 dark:text-slate-100' : 'text-muted-foreground hover:text-slate-600 dark:hover:text-slate-300'}`}>
-            <MessageSquare className="mr-2 h-3.5 w-3.5" /> AI Chat
+          <Button variant="ghost" size="sm" onClick={() => setActiveTab('chat')} className={`text-xs font-semibold px-3 sm:px-4 py-1.5 rounded-lg transition-all ${activeTab === 'chat' ? 'bg-background shadow-sm text-slate-800 dark:text-slate-100' : 'text-muted-foreground hover:text-slate-600 dark:hover:text-slate-300'}`}>
+            <MessageSquare className="mr-1.5 sm:mr-2 h-3.5 w-3.5" /> AI Chat
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setActiveTab('tools')} className={`text-xs font-semibold px-4 py-1.5 rounded-lg transition-all ${activeTab === 'tools' ? 'bg-background shadow-sm text-slate-800 dark:text-slate-100' : 'text-muted-foreground hover:text-slate-600 dark:hover:text-slate-300'}`}>
-            <Sparkles className="mr-2 h-3.5 w-3.5" /> Tools
+          <Button variant="ghost" size="sm" onClick={() => setActiveTab('tools')} className={`text-xs font-semibold px-3 sm:px-4 py-1.5 rounded-lg transition-all ${activeTab === 'tools' ? 'bg-background shadow-sm text-slate-800 dark:text-slate-100' : 'text-muted-foreground hover:text-slate-600 dark:hover:text-slate-300'}`}>
+            <Sparkles className="mr-1.5 sm:mr-2 h-3.5 w-3.5" /> Tools
           </Button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-end gap-2 shrink-0">
           {activeTab === 'notes' && (
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={copyToClipboard} className="h-8 w-8"><Copy className="h-4 w-4" /></Button>
