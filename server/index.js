@@ -1856,7 +1856,7 @@ app.get('/api/video-formats', async (req, res) => {
                 noCheckCertificates: true,
                 preferFreeFormats: true,
                 jsRuntime: 'node',
-                extractorArgs: `youtube:player-client=${playerClient}`,
+                extractorArgs: `youtube:player-client=${playerClient};formats=missing_pot;skip=hls,dash`,
                 forceIpv4: true,
                 userAgent: getYoutubeUserAgent(),
                 remoteComponents: 'ejs:github',
@@ -2040,7 +2040,7 @@ app.all('/api/download', authenticateToken, async (req, res) => {
                 noCheckCertificates: true,
                 preferFreeFormats: true,
                 jsRuntime: 'node',
-                extractorArgs: `youtube:player-client=${playerClient}`,
+                extractorArgs: `youtube:player-client=${playerClient};formats=missing_pot`,
                 userAgent: getYoutubeUserAgent(),
                 remoteComponents: 'ejs:github',
                 addHeader: [
