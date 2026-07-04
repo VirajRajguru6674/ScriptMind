@@ -54,7 +54,7 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
               placeholder="Paste YouTube video URL here..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="h-12 pl-10 pr-4 text-sm rounded-xl border border-border/60 bg-card text-foreground placeholder:text-muted-foreground/40 focus-visible:ring-1 focus-visible:ring-primary/60 focus-visible:border-primary/60 transition-all"
+              className="h-12 pl-10 pr-4 text-sm rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground/40 focus-visible:ring-1 focus-visible:ring-primary/60 focus-visible:border-primary/60 transition-all"
               disabled={isLoading}
             />
           </div>

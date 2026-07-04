@@ -80,8 +80,8 @@
         --accent-foreground: 222 47% 11.2%;
         --destructive: 0 84.2% 60.2%;
         --destructive-foreground: 210 40% 98%;
-        --border: 214 32% 91%;
-        --input: 214 32% 91%;
+        --border: 214 16% 84%;
+        --input: 214 16% 84%;
         --ring: 250 80% 54%;
         --radius: 0.75rem;
         --sidebar-background: 0 0% 100%;
@@ -97,32 +97,32 @@
         /* Proper Black (Onyx): Pure Black with High-Contrast Accents */
         --background: 0 0% 0%;
         --foreground: 0 0% 98%;
-        --card: 0 0% 3%;
+        --card: 0 0% 6.5%;
         --card-foreground: 0 0% 98%;
-        --popover: 0 0% 3%;
+        --popover: 0 0% 6.5%;
         --popover-foreground: 0 0% 98%;
         /* Stylish Cyber Purple Action Color */
         --primary: 270 100% 60%;
         --primary-foreground: 0 0% 100%;
-        --secondary: 0 0% 10%;
+        --secondary: 0 0% 12%;
         --secondary-foreground: 0 0% 98%;
-        --muted: 0 0% 10%;
+        --muted: 0 0% 12%;
         --muted-foreground: 0 0% 65%;
         /* Cyan Glow Accent */
         --accent: 180 100% 50%;
         --accent-foreground: 0 0% 0%;
         --destructive: 0 84.2% 60.2%;
         --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 15%;
-        --input: 0 0% 15%;
+        --border: 0 0% 16.5%;
+        --input: 0 0% 16.5%;
         --ring: 270 100% 60%;
-        --sidebar-background: 0 0% 2%;
+        --sidebar-background: 0 0% 4%;
         --sidebar-foreground: 0 0% 98%;
         --sidebar-primary: 0 0% 100%;
         --sidebar-primary-foreground: 0 0% 0%;
-        --sidebar-accent: 0 0% 10%;
+        --sidebar-accent: 0 0% 12%;
         --sidebar-accent-foreground: 0 0% 98%;
-        --sidebar-border: 0 0% 12%;
+        --sidebar-border: 0 0% 14%;
         --sidebar-ring: 0 0% 100%;
     }
     /* --- Forest Theme (Green) --- */

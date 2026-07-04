@@ -258,7 +258,7 @@ export default function PlaylistDownloader() {
                                         placeholder="Paste YouTube Playlist URL here..."
                                         value={url}
                                         onChange={(e) => setUrl(e.target.value)}
-                                        className="h-11 pl-11 pr-5 rounded-xl bg-card/40 hover:bg-card/60 border-border/60 hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary backdrop-blur-md text-xs sm:text-sm w-full transition-all duration-300 shadow-inner"
+                                        className="h-11 pl-11 pr-5 rounded-xl bg-card/40 hover:bg-card/60 border-border hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary backdrop-blur-md text-xs sm:text-sm w-full transition-all duration-300 shadow-inner"
                                     />
                                 </div>
                                 <Button

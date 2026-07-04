@@ -148,7 +148,7 @@ const Notifications = () => {
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors duration-300" />
                                 <Input
                                     placeholder="Search notifications..."
-                                    className="pl-11 h-11 bg-card/40 border-border/40 rounded-xl focus-visible:ring-primary/40 focus-visible:border-primary/50 placeholder:text-muted-foreground/40 transition-all"
+                                    className="pl-11 h-11 bg-card/40 border-border rounded-xl focus-visible:ring-primary/40 focus-visible:border-primary/50 placeholder:text-muted-foreground/40 transition-all"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
@@ -158,7 +158,7 @@ const Notifications = () => {
                                     <DropdownMenuTrigger asChild>
                                         <Button
                                             variant="outline"
-                                            className="h-11 px-4 rounded-xl border-border/40 bg-card/40 hover:border-primary/40 hover:bg-primary/10 font-medium text-sm gap-2 transition-all"
+                                            className="h-11 px-4 rounded-xl border-border bg-card/40 hover:border-primary/40 hover:bg-primary/10 font-medium text-sm gap-2 transition-all"
                                         >
                                             <Filter className="w-4 h-4 text-muted-foreground" />
                                             {filterPlatform || "All Platforms"}
@@ -178,7 +178,7 @@ const Notifications = () => {
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="h-11 w-11 rounded-xl border-border/40 bg-card/40 hover:border-primary/40 hover:bg-primary/10 transition-all"
+                                    className="h-11 w-11 rounded-xl border-border bg-card/40 hover:border-primary/40 hover:bg-primary/10 transition-all"
                                     onClick={fetchNotifications}
                                     title="Refresh"
                                 >
