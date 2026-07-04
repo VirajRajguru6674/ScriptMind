@@ -1945,6 +1945,7 @@ app.all('/api/download', authenticateToken, async (req, res) => {
     }
 
     const userId = req.user.id;
+    let cookieData = null;
 
     try {
         const [rows] = await pool.execute('SELECT plan, role FROM users WHERE id = ?', [userId]);
@@ -1967,7 +1968,7 @@ app.all('/api/download', authenticateToken, async (req, res) => {
         const fullPath = path.join(os.tmpdir(), outputName);
         const ytDlp = require('yt-dlp-exec');
 
-        const cookieData = getSecureCookies();
+        cookieData = getSecureCookies();
 
         // Stealth Download Strategy
         const attemptDownload = async (playerClient) => {
@@ -2023,7 +2024,8 @@ app.all('/api/download', authenticateToken, async (req, res) => {
 
                     const stream = ytdl(videoId, {
                         quality: quality === 'mp3' ? 'highestaudio' : 'highest',
-                        filter: quality === 'mp3' ? 'audioonly' : 'videoandaudio'
+                        filter: quality === 'mp3' ? 'audioonly' : 'videoandaudio',
+                        ...getYoutubeOptions()
                     });
 
                     stream.pipe(res);
