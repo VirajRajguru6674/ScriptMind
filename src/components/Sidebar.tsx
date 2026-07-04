@@ -52,12 +52,12 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
 
     const SidebarContent = () => (
         <div className="flex h-full flex-col bg-sidebar-background">
-            <div className="flex h-18 items-center px-6 border-b border-sidebar-border/50">
+            <div className="flex h-22 items-center px-6 border-b border-sidebar-border/50">
                 <Link to="/" className="flex items-center w-full">
                     <img 
                         src="/custom-logo.png" 
                         alt="Logo" 
-                        className="h-10 w-auto max-w-full object-contain transition-transform duration-300 hover:scale-[1.02]" 
+                        className="h-14 w-auto max-w-full object-contain transition-transform duration-300 hover:scale-[1.02]" 
                     />
                 </Link>
             </div>
