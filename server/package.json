@@ -21,7 +21,7 @@
         "mysql2": "3.9.8",
         "nodemailer": "^8.0.1",
         "youtube-transcript": "^1.2.1",
-        "yt-dlp-exec": "^1.0.2"
+        "yt-dlp-exec": "latest"
     },
     "devDependencies": {
         "nodemon": "^3.0.2"
