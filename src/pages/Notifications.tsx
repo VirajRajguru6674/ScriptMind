@@ -215,8 +215,8 @@ const Notifications = () => {
                                         <div
                                             key={n.id}
                                             className={cn(
-                                                "group relative rounded-2xl border border-border/40 bg-card/30 backdrop-blur-sm p-5 flex gap-4 items-start transition-all duration-200 hover:border-primary/30 hover:bg-card/60 hover:shadow-lg hover:shadow-primary/5",
-                                                n.status === 'unread' ? "border-primary/20 bg-primary/5" : ""
+                                                "group relative rounded-xl border border-border/30 bg-transparent p-3 flex gap-3 items-start transition-all duration-200 hover:border-border/60 hover:bg-muted/30",
+                                                n.status === 'unread' ? "border-primary/20" : ""
                                             )}
                                         >
                                             {/* Unread dot */}
@@ -226,31 +226,26 @@ const Notifications = () => {
 
                                             {/* Icon */}
                                             <div className={cn(
-                                                "size-11 rounded-xl flex items-center justify-center shrink-0 shadow-sm",
+                                                "size-8 rounded-lg flex items-center justify-center shrink-0",
                                                 n.type === 'success' ? "bg-green-500/10 text-green-500" :
                                                 n.type === 'warning' ? "bg-amber-500/10 text-amber-500" :
                                                 n.type === 'error' ? "bg-red-500/10 text-red-500" :
                                                 "bg-primary/10 text-primary"
                                             )}>
-                                                {n.type === 'success' ? <Check className="w-5 h-5" /> : <Bell className="w-5 h-5" />}
+                                                {n.type === 'success' ? <Check className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
                                             </div>
 
                                             {/* Content */}
-                                            <div className="flex-1 min-w-0 space-y-2">
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div className="min-w-0">
-                                                        <h4 className="font-bold text-base text-foreground group-hover:text-primary transition-colors truncate">
+                                            <div className="flex-1 min-w-0 space-y-1">
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <div className="min-w-0 flex items-center gap-3 flex-wrap">
+                                                        <h4 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors truncate">
                                                             {n.title}
                                                         </h4>
-                                                        <div className="flex flex-wrap items-center gap-3 mt-0.5">
-                                                            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                                                                <Calendar className="w-3 h-3" />
-                                                                {format(new Date(n.created_at), 'PPP')}
-                                                            </div>
-                                                            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                                                                <Clock className="w-3 h-3 text-primary/60" />
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-[10px] text-muted-foreground/50 uppercase tracking-wide">
                                                                 {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
-                                                            </div>
+                                                            </span>
                                                         </div>
                                                     </div>
 
@@ -277,13 +272,13 @@ const Notifications = () => {
                                                     </DropdownMenu>
                                                 </div>
 
-                                                {/* Message bubble */}
-                                                <div className="p-3.5 rounded-xl bg-background/60 border border-border/30 text-sm text-muted-foreground leading-relaxed">
+                                                {/* Message + tags inline */}
+                                                <p className="text-xs text-muted-foreground/70 leading-relaxed">
                                                     {n.message}
-                                                </div>
+                                                </p>
 
                                                 {/* Tags */}
-                                                <div className="flex items-center gap-2 pt-1">
+                                                <div className="flex items-center gap-1.5">
                                                     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50 border border-border/40">
                                                         {getPlatformIcon(n.platform)}
                                                         <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{n.platform || 'system'}</span>
