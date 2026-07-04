@@ -145,7 +145,7 @@ const Notifications = () => {
                     {/* Page content */}
                     <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
                         {/* Search & Filters */}
-                        <div className="flex flex-col sm:flex-row gap-3 max-w-4xl">
+                        <div className="flex flex-col sm:flex-row gap-3 w-full">
                             <div className="relative flex-1 group">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors duration-300" />
                                 <Input
@@ -190,7 +190,7 @@ const Notifications = () => {
                         </div>
 
                         {/* Notifications list section */}
-                        <div className="max-w-4xl space-y-4">
+                        <div className="w-full space-y-4">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest">System Logs</h2>
                                 <Badge className="bg-primary/15 text-primary border border-primary/20 rounded-full text-[10px] font-black uppercase tracking-widest px-2.5">
