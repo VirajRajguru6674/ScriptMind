@@ -210,77 +210,52 @@ const Notifications = () => {
                                     <p className="text-sm mt-1">Try adjusting your search or filters.</p>
                                 </div>
                             ) : (
-                                <div className="space-y-2">
+                                <div className="divide-y divide-border/30">
                                     {filteredNotifications.map((n) => (
                                         <div
                                             key={n.id}
-                                            className={cn(
-                                                "group relative flex gap-4 items-center rounded-2xl border px-4 py-3.5 transition-all duration-200 overflow-hidden",
-                                                "hover:shadow-md hover:shadow-primary/5 hover:-translate-y-[1px]",
-                                                n.status === 'unread'
-                                                    ? "border-primary/25 bg-primary/5 hover:bg-primary/8"
-                                                    : "border-border/30 bg-card/20 hover:bg-card/50 hover:border-border/50"
-                                            )}
+                                            className="group relative flex gap-3 items-center px-2 py-3 transition-all duration-150 hover:bg-muted/20 rounded-xl"
                                         >
-                                            {/* Left accent bar */}
-                                            <div className={cn(
-                                                "absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl transition-opacity",
-                                                n.type === 'success' ? "bg-gradient-to-b from-emerald-400 to-green-600" :
-                                                n.type === 'warning' ? "bg-gradient-to-b from-amber-400 to-orange-500" :
-                                                n.type === 'error'   ? "bg-gradient-to-b from-red-400 to-rose-600" :
-                                                "bg-gradient-to-b from-primary to-purple-600",
-                                                n.status === 'unread' ? "opacity-100" : "opacity-30 group-hover:opacity-70"
-                                            )} />
-
                                             {/* Icon */}
                                             <div className={cn(
-                                                "size-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm ring-1",
-                                                n.type === 'success' ? "bg-gradient-to-br from-emerald-500/20 to-green-600/10 text-emerald-400 ring-emerald-500/20" :
-                                                n.type === 'warning' ? "bg-gradient-to-br from-amber-500/20 to-orange-500/10 text-amber-400 ring-amber-500/20" :
-                                                n.type === 'error'   ? "bg-gradient-to-br from-red-500/20 to-rose-600/10 text-red-400 ring-red-500/20" :
-                                                "bg-gradient-to-br from-primary/20 to-purple-600/10 text-primary ring-primary/20"
+                                                "size-8 rounded-lg flex items-center justify-center shrink-0",
+                                                n.type === 'success' ? "bg-emerald-500/10 text-emerald-400" :
+                                                n.type === 'warning' ? "bg-amber-500/10 text-amber-400" :
+                                                n.type === 'error'   ? "bg-red-500/10 text-red-400" :
+                                                "bg-muted text-muted-foreground"
                                             )}>
                                                 {n.type === 'success' ? <Check className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
                                             </div>
 
                                             {/* Content */}
                                             <div className="flex-1 min-w-0">
-                                                {/* Title row */}
-                                                <div className="flex items-center gap-2 flex-wrap">
+                                                <div className="flex items-center gap-2">
                                                     {n.status === 'unread' && (
-                                                        <span className="size-1.5 rounded-full bg-primary shrink-0 shadow-[0_0_5px_hsl(var(--primary))]" />
+                                                        <span className="size-1.5 rounded-full bg-primary shrink-0" />
                                                     )}
-                                                    <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                                                    <span className="font-medium text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1">
                                                         {n.title}
                                                     </span>
-                                                    <span className="text-[10px] text-muted-foreground/40 shrink-0">
+                                                    <span className="text-[10px] text-muted-foreground/40 shrink-0 ml-auto">
                                                         {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
                                                     </span>
                                                 </div>
 
-                                                {/* Message */}
-                                                <p className="text-xs text-muted-foreground/60 mt-0.5 line-clamp-1">
+                                                <p className="text-xs text-muted-foreground/55 mt-0.5 line-clamp-1">
                                                     {n.message}
                                                 </p>
 
-                                                {/* Pills */}
-                                                <div className="flex items-center gap-1.5 mt-1.5">
-                                                    <span className={cn(
-                                                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border",
-                                                        n.type === 'success' ? "text-emerald-400 border-emerald-500/25 bg-emerald-500/10" :
-                                                        n.type === 'warning' ? "text-amber-400 border-amber-500/25 bg-amber-500/10" :
-                                                        n.type === 'error'   ? "text-red-400 border-red-500/25 bg-red-500/10" :
-                                                        "text-primary border-primary/25 bg-primary/10"
-                                                    )}>
+                                                <div className="flex items-center gap-1.5 mt-1">
+                                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60 bg-muted/50">
                                                         {getPlatformIcon(n.platform)}
                                                         {n.platform || 'system'}
                                                     </span>
                                                     <span className={cn(
-                                                        "inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border",
-                                                        n.type === 'success' ? "text-emerald-400 border-emerald-500/25 bg-emerald-500/10" :
-                                                        n.type === 'warning' ? "text-amber-400 border-amber-500/25 bg-amber-500/10" :
-                                                        n.type === 'error'   ? "text-red-400 border-red-500/25 bg-red-500/10" :
-                                                        "text-blue-400 border-blue-400/25 bg-blue-400/10"
+                                                        "inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider",
+                                                        n.type === 'success' ? "text-emerald-400 bg-emerald-500/8" :
+                                                        n.type === 'warning' ? "text-amber-400 bg-amber-500/8" :
+                                                        n.type === 'error'   ? "text-red-400 bg-red-500/8" :
+                                                        "text-muted-foreground/50 bg-muted/50"
                                                     )}>
                                                         {n.type}
                                                     </span>
