@@ -1251,6 +1251,35 @@ function parseNetscapeCookies(fileContent) {
     return cookies.join('; ');
 }
 
+// Helper: Parse Netscape format to JSON Cookie array objects (required by @distube/ytdl-core new agent format)
+function parseNetscapeToCookieObjects(fileContent) {
+    if (!fileContent.includes('\t')) {
+        try {
+            return JSON.parse(fileContent);
+        } catch (e) {
+            return [];
+        }
+    }
+    const cookies = [];
+    const lines = fileContent.split(/\r?\n/);
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const parts = trimmed.split('\t');
+        if (parts.length >= 7) {
+            cookies.push({
+                name: parts[5],
+                value: parts[6],
+                domain: parts[0],
+                path: parts[2],
+                secure: parts[3] === 'TRUE',
+                expirationDate: parseInt(parts[4], 10)
+            });
+        }
+    }
+    return cookies;
+}
+
 // Secure Cookie Helper for Production (Render-safe)
 const getSecureCookies = () => {
     try {
@@ -1306,9 +1335,12 @@ function getYoutubeOptions() {
 
         // Basic validation to ensure it's not empty
         if (cookieData && cookieData.length > 10) {
-            const parsedCookie = parseNetscapeCookies(cookieData);
-            console.log(`🍪 [Auth] Loading YouTube cookies from ${sourceName}...`);
-            options.requestOptions.headers.Cookie = parsedCookie;
+            const cookieObjects = parseNetscapeToCookieObjects(cookieData);
+            if (cookieObjects && cookieObjects.length > 0) {
+                console.log(`🍪 [Auth] Creating ytdl agent with cookies from ${sourceName}...`);
+                const ytdl = require('@distube/ytdl-core');
+                options.agent = ytdl.createAgent(cookieObjects);
+            }
         } else {
             console.warn('⚠️ [Auth] YouTube cookies are empty or not configured. YouTube might block requests with 429.');
         }
