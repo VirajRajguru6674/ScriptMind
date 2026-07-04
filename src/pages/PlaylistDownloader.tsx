@@ -234,36 +234,37 @@ export default function PlaylistDownloader() {
                 <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
                     <div className="max-w-6xl mx-auto space-y-8 pb-12">
                         {/* Premium Interactive Hero Card */}
-                        <div className="relative rounded-3xl overflow-hidden border border-border/40 bg-gradient-to-b from-card/60 to-card/25 backdrop-blur-xl p-8 sm:p-12 text-center space-y-6 shadow-2xl shadow-primary/5">
+                        <div className="relative rounded-3xl overflow-hidden border border-border/40 bg-gradient-to-b from-card/60 to-card/25 backdrop-blur-xl p-6 sm:p-8 text-left space-y-4 shadow-xl shadow-primary/5">
                             <div className="absolute -top-24 -left-20 w-80 h-80 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
                             <div className="absolute -bottom-24 -right-20 w-80 h-80 bg-purple-600/10 rounded-full blur-[100px] pointer-events-none" />
                             
-                            <div className="inline-flex p-4 bg-gradient-to-tr from-primary to-purple-600 rounded-3xl text-white shadow-xl shadow-primary/20 mb-2 transition-transform duration-300 hover:scale-105">
-                                <Youtube className="w-8 h-8" />
-                            </div>
-                            
-                            <div className="space-y-2">
-                                <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-foreground">
-                                    Playlist Downloader
-                                </h1>
-                                <p className="text-muted-foreground text-sm sm:text-lg max-w-lg mx-auto leading-relaxed">
+                            <div className="space-y-1.5 z-10 relative">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="flex p-2 bg-gradient-to-tr from-primary to-purple-600 rounded-xl text-white shadow-md shadow-primary/10">
+                                        <Youtube className="w-5 h-5" />
+                                    </div>
+                                    <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">
+                                        Playlist Downloader
+                                    </h1>
+                                </div>
+                                <p className="text-muted-foreground text-xs sm:text-sm max-w-xl leading-relaxed">
                                     Download entire YouTube playlists seamlessly in high resolution. Auto-resilient download fallbacks included.
                                 </p>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto pt-4 w-full">
+                            <div className="flex flex-col sm:flex-row gap-3 max-w-3xl pt-2 w-full z-10 relative">
                                 <Input
                                     placeholder="Paste YouTube Playlist URL here..."
                                     value={url}
                                     onChange={(e) => setUrl(e.target.value)}
-                                    className="h-13 px-6 rounded-2xl bg-secondary/20 border-border/50 focus-visible:ring-primary backdrop-blur-md text-sm sm:text-base"
+                                    className="h-11 px-5 rounded-xl bg-secondary/20 border-border/50 focus-visible:ring-primary backdrop-blur-md text-xs sm:text-sm"
                                 />
                                 <Button
                                     onClick={handleFetchPlaylist}
                                     disabled={isLoading}
-                                    className="h-13 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/10 transition-all duration-300 shrink-0"
+                                    className="h-11 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold text-xs sm:text-sm shadow-md shadow-primary/10 transition-all duration-300 shrink-0"
                                 >
-                                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Fetch Playlist"}
+                                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Fetch Playlist"}
                                 </Button>
                             </div>
                         </div>
