@@ -1636,6 +1636,15 @@ app.post('/api/alerts/read', async (req, res) => {
     }
 });
 
+app.delete('/api/alerts', async (req, res) => {
+    try {
+        await pool.query('DELETE FROM notifications');
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.post('/api/chat', authenticateToken, async (req, res) => {
     const { messages, context, videoTitle } = req.body;
     const userId = req.user.id;

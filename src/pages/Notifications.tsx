@@ -77,6 +77,15 @@ const Notifications = () => {
         }
     };
 
+    const clearAll = async () => {
+        try {
+            await fetch(`${API_BASE_URL}/alerts`, { method: 'DELETE' });
+            fetchNotifications();
+        } catch (error) {
+            console.error('Failed to clear notifications', error);
+        }
+    };
+
     const getPlatformIcon = (platform: string) => {
         const p = (platform || 'system').toLowerCase();
         if (p.includes('teams')) return <MessageSquare className="w-3.5 h-3.5 text-blue-500" />;
@@ -128,10 +137,21 @@ const Notifications = () => {
                                         onClick={() => markAsRead()}
                                         variant="outline"
                                         size="sm"
-                                        className="hidden sm:flex rounded-xl border-border/60 hover:border-primary/40 hover:bg-primary/10 hover:text-primary text-muted-foreground text-xs font-semibold gap-1.5 h-8 px-3 transition-all"
+                                        className="hidden sm:flex rounded-xl border-border hover:border-primary/40 hover:bg-primary/10 hover:text-primary text-muted-foreground text-xs font-semibold gap-1.5 h-8 px-3 transition-all"
                                     >
                                         <Check className="w-3.5 h-3.5" />
                                         Mark all read
+                                    </Button>
+                                )}
+                                {notifications.length > 0 && (
+                                    <Button
+                                        onClick={clearAll}
+                                        variant="outline"
+                                        size="sm"
+                                        className="rounded-xl border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive text-xs font-semibold gap-1.5 h-8 px-3 transition-all"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                        Clear all
                                     </Button>
                                 )}
                                 <NotificationPanel />
