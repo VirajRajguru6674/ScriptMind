@@ -1248,6 +1248,28 @@ function parseNetscapeCookies(fileContent) {
     return cookies.join('; ');
 }
 
+// Secure Cookie Helper for Production (Render-safe)
+const getSecureCookies = () => {
+    try {
+        // Option A: Base64 Env Var (Most Secure for Render)
+        if (process.env.YOUTUBE_COOKIES_BASE64) {
+            const cookiesContent = Buffer.from(process.env.YOUTUBE_COOKIES_BASE64, 'base64').toString();
+            const tempCookiesPath = path.join(os.tmpdir(), `cookies_render_${Date.now()}.txt`);
+            fs.writeFileSync(tempCookiesPath, cookiesContent);
+            return { path: tempCookiesPath, isTemp: true };
+        }
+
+        // Option B: Local File Fallback
+        const localPath = getCookiesPath();
+        if (fs.existsSync(localPath) && fs.statSync(localPath).size > 0) {
+            return { path: localPath, isTemp: false };
+        }
+    } catch (e) {
+        console.error("Cookie Helper Error:", e.message);
+    }
+    return null;
+};
+
 // Helper: Load Cookies for YouTube (Bypass 429)
 function getYoutubeOptions() {
     const options = {
@@ -1900,27 +1922,7 @@ app.get('/api/playlist-info', async (req, res) => {
     }
 });
 
-// Secure Cookie Helper for Production (Render-safe)
-const getSecureCookies = () => {
-    try {
-        // Option A: Base64 Env Var (Most Secure for Render)
-        if (process.env.YOUTUBE_COOKIES_BASE64) {
-            const cookiesContent = Buffer.from(process.env.YOUTUBE_COOKIES_BASE64, 'base64').toString();
-            const tempCookiesPath = path.join(os.tmpdir(), `cookies_render_${Date.now()}.txt`);
-            fs.writeFileSync(tempCookiesPath, cookiesContent);
-            return { path: tempCookiesPath, isTemp: true };
-        }
 
-        // Option B: Local File Fallback
-        const localPath = getCookiesPath();
-        if (fs.existsSync(localPath) && fs.statSync(localPath).size > 0) {
-            return { path: localPath, isTemp: false };
-        }
-    } catch (e) {
-        console.error("Cookie Helper Error:", e.message);
-    }
-    return null;
-};
 
 app.all('/api/download', authenticateToken, async (req, res) => {
     const videoId = req.body.videoId || req.query.videoId;
