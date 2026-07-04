@@ -38,6 +38,7 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
         toggleFavorite,
         deleteHistoryItem,
     } = useNotesHistory();
+    const { loadHistoryItem, reset } = useNotes();
     const { theme } = useTheme();
     const [open, setOpen] = useState(false);
 
