@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { NotificationPanel } from "@/components/NotificationPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
 import API_BASE_URL from "@/lib/api";
 
 // Sample pricing data
@@ -217,35 +218,85 @@ const Pricing = () => {
                                 <p className="text-muted-foreground text-lg max-w-2xl">Select the perfect subscription for your learning journey.</p>
                             </div>
 
-                            <Tabs value={category} onValueChange={(v) => setCategory(v as any)} className="w-full max-w-[400px]">
-                                <TabsList className="grid w-full grid-cols-2 h-14 p-1.5 bg-secondary/50 rounded-2xl">
-                                    <TabsTrigger value="individuals" className="rounded-xl font-bold text-base data-[state=active]:bg-background data-[state=active]:shadow-lg transition-all">Individuals</TabsTrigger>
-                                    <TabsTrigger value="organizations" className="rounded-xl font-bold text-base data-[state=active]:bg-background data-[state=active]:shadow-lg transition-all">Organizations</TabsTrigger>
-                                </TabsList>
-                            </Tabs>
+                            <div className="flex bg-secondary/60 border border-border/40 p-1.5 rounded-2xl w-full max-w-[400px] shadow-sm">
+                                <button
+                                    onClick={() => setCategory("individuals")}
+                                    className={cn(
+                                        "flex-1 py-2.5 text-center rounded-xl font-bold text-sm sm:text-base transition-all duration-200",
+                                        category === "individuals"
+                                            ? "bg-background text-foreground shadow-md"
+                                            : "text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    Individuals
+                                </button>
+                                <button
+                                    onClick={() => setCategory("organizations")}
+                                    className={cn(
+                                        "flex-1 py-2.5 text-center rounded-xl font-bold text-sm sm:text-base transition-all duration-200",
+                                        category === "organizations"
+                                            ? "bg-background text-foreground shadow-md"
+                                            : "text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    Organizations
+                                </button>
+                            </div>
 
                             {/* Sub Tabs based on category */}
                             <div className="flex items-center gap-4">
                                 {category === "individuals" ? (
-                                    <Tabs value={individualInterval} onValueChange={(v) => setIndividualInterval(v as any)}>
-                                        <TabsList className="h-11 p-1 bg-secondary/30 rounded-xl">
-                                            <TabsTrigger value="monthly" className="px-6 rounded-lg font-bold text-sm">Monthly</TabsTrigger>
-                                            <TabsTrigger value="yearly" className="px-6 rounded-lg font-bold text-sm flex gap-2">
-                                                Yearly
-                                                <Badge className="bg-green-500/10 text-green-500 border-0 text-[10px] h-4">Save 20%</Badge>
-                                            </TabsTrigger>
-                                        </TabsList>
-                                    </Tabs>
+                                    <div className="flex bg-secondary/50 border border-border/20 p-1 rounded-xl shadow-inner">
+                                        <button
+                                            onClick={() => setIndividualInterval("monthly")}
+                                            className={cn(
+                                                "px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all",
+                                                individualInterval === "monthly"
+                                                    ? "bg-background text-foreground shadow-sm"
+                                                    : "text-muted-foreground hover:text-foreground"
+                                            )}
+                                        >
+                                            Monthly
+                                        </button>
+                                        <button
+                                            onClick={() => setIndividualInterval("yearly")}
+                                            className={cn(
+                                                "px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-2 transition-all",
+                                                individualInterval === "yearly"
+                                                    ? "bg-background text-foreground shadow-sm"
+                                                    : "text-muted-foreground hover:text-foreground"
+                                            )}
+                                        >
+                                            Yearly
+                                            <Badge className="bg-green-500/10 text-green-500 border-0 text-[10px] h-4 px-1.5">Save 20%</Badge>
+                                        </button>
+                                    </div>
                                 ) : (
-                                    <Tabs value={orgInterval} onValueChange={(v) => setOrgInterval(v as any)}>
-                                        <TabsList className="h-11 p-1 bg-secondary/30 rounded-xl">
-                                            <TabsTrigger value="quarterly" className="px-6 rounded-lg font-bold text-sm">Quarterly</TabsTrigger>
-                                            <TabsTrigger value="yearly" className="px-6 rounded-lg font-bold text-sm flex gap-2">
-                                                Yearly
-                                                <Badge className="bg-green-500/10 text-green-500 border-0 text-[10px] h-4">Best Value</Badge>
-                                            </TabsTrigger>
-                                        </TabsList>
-                                    </Tabs>
+                                    <div className="flex bg-secondary/50 border border-border/20 p-1 rounded-xl shadow-inner">
+                                        <button
+                                            onClick={() => setOrgInterval("quarterly")}
+                                            className={cn(
+                                                "px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all",
+                                                orgInterval === "quarterly"
+                                                    ? "bg-background text-foreground shadow-sm"
+                                                    : "text-muted-foreground hover:text-foreground"
+                                            )}
+                                        >
+                                            Quarterly
+                                        </button>
+                                        <button
+                                            onClick={() => setOrgInterval("yearly")}
+                                            className={cn(
+                                                "px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-2 transition-all",
+                                                orgInterval === "yearly"
+                                                    ? "bg-background text-foreground shadow-sm"
+                                                    : "text-muted-foreground hover:text-foreground"
+                                            )}
+                                        >
+                                            Yearly
+                                            <Badge className="bg-green-500/10 text-green-500 border-0 text-[10px] h-4 px-1.5">Best Value</Badge>
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         </div>
