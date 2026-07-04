@@ -153,6 +153,8 @@ const EyeBall = ({
 
 // --- Main Login Component ---
 
+let lastProcessedGithubCode: string | null = null;
+
 const Login = () => {
     const { login, googleLogin, githubLogin } = useAuth();
     const navigate = useNavigate();
@@ -306,13 +308,11 @@ const Login = () => {
         window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
     };
 
-    const hasCalledGithubLogin = useRef(false);
-
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-        if (code && !hasCalledGithubLogin.current) {
-            hasCalledGithubLogin.current = true;
+        if (code && lastProcessedGithubCode !== code) {
+            lastProcessedGithubCode = code;
             setIsLoading(true);
             const redirectUri = window.location.origin + "/login";
             githubLogin(code, redirectUri).then(() => {
