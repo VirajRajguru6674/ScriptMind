@@ -143,17 +143,6 @@ const Notifications = () => {
                                         Mark all read
                                     </Button>
                                 )}
-                                {notifications.length > 0 && (
-                                    <Button
-                                        onClick={clearAll}
-                                        variant="outline"
-                                        size="sm"
-                                        className="rounded-xl border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive text-xs font-semibold gap-1.5 h-8 px-3 transition-all"
-                                    >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                        Clear all
-                                    </Button>
-                                )}
                                 <NotificationPanel />
                                 <ThemeToggle />
                             </div>
@@ -198,12 +187,22 @@ const Notifications = () => {
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="h-11 w-11 rounded-xl border-border bg-card/40 hover:border-primary/40 hover:bg-primary/10 transition-all"
+                                    className="h-11 w-11 rounded-xl border-border bg-card/40 hover:border-primary/40 hover:bg-primary/10 transition-all shrink-0"
                                     onClick={fetchNotifications}
                                     title="Refresh"
                                 >
                                     <Clock className="w-4 h-4" />
                                 </Button>
+                                {notifications.length > 0 && (
+                                    <Button
+                                        onClick={clearAll}
+                                        variant="outline"
+                                        className="h-11 px-4 rounded-xl border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive text-xs font-semibold gap-1.5 transition-all shrink-0"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                        Clear all
+                                    </Button>
+                                )}
                             </div>
                         </div>
 
