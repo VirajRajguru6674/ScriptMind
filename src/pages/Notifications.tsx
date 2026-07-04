@@ -138,7 +138,6 @@ const Notifications = () => {
                                         Mark all read
                                     </Button>
                                 )}
-                                <NotificationPanel />
                                 <ThemeToggle />
                             </div>
                         </div>
