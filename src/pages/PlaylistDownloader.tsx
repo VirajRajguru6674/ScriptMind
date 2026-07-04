@@ -5,7 +5,7 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Youtube, Download, Loader2, ListVideo, Check, CheckSquare, Square, MoreVertical, Settings2, DownloadCloud } from 'lucide-react';
+import { Youtube, Download, Loader2, ListVideo, Check, CheckSquare, Square, MoreVertical, Settings2, DownloadCloud, Link2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -247,12 +247,15 @@ export default function PlaylistDownloader() {
                             </div>
 
                             <div className="flex flex-col sm:flex-row gap-3 max-w-3xl pt-2 w-full">
-                                <Input
-                                    placeholder="Paste YouTube Playlist URL here..."
-                                    value={url}
-                                    onChange={(e) => setUrl(e.target.value)}
-                                    className="h-11 px-5 rounded-xl bg-secondary/20 border-border/50 focus-visible:ring-primary backdrop-blur-md text-xs sm:text-sm"
-                                />
+                                <div className="relative flex-1">
+                                    <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/60" />
+                                    <Input
+                                        placeholder="Paste YouTube Playlist URL here..."
+                                        value={url}
+                                        onChange={(e) => setUrl(e.target.value)}
+                                        className="h-11 pl-11 pr-5 rounded-xl bg-secondary/20 border-border/50 focus-visible:ring-primary backdrop-blur-md text-xs sm:text-sm w-full"
+                                    />
+                                </div>
                                 <Button
                                     onClick={handleFetchPlaylist}
                                     disabled={isLoading}
@@ -402,12 +405,17 @@ export default function PlaylistDownloader() {
                         )}
 
                         {!videos.length && !isLoading && (
-                            <div className="relative rounded-3xl border border-dashed border-border/60 bg-card/10 backdrop-blur-sm p-16 text-center max-w-xl mx-auto space-y-4 animate-in fade-in duration-500">
-                                <div className="inline-flex p-4 bg-secondary/40 rounded-2xl text-muted-foreground mb-2">
-                                    <ListVideo className="w-12 h-12 stroke-1" />
+                            <div className="relative rounded-3xl border border-border/40 bg-gradient-to-b from-card/30 to-card/10 backdrop-blur-md p-8 text-left max-w-2xl space-y-4 animate-in fade-in duration-500 overflow-hidden">
+                                <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+                                <div className="flex p-3 bg-secondary/50 rounded-2xl text-muted-foreground w-fit">
+                                    <ListVideo className="w-6 h-6 stroke-1.5" />
                                 </div>
-                                <h3 className="font-extrabold text-lg tracking-tight">No Playlist Loaded</h3>
-                                <p className="text-muted-foreground text-sm max-w-xs mx-auto">Enter a valid YouTube playlist URL above and click Fetch to retrieve videos.</p>
+                                <div className="space-y-1">
+                                    <h3 className="font-extrabold text-lg text-foreground">Get Started</h3>
+                                    <p className="text-muted-foreground text-sm leading-relaxed max-w-md">
+                                        Paste a YouTube playlist link in the input bar above and click <span className="text-primary font-bold">Fetch Playlist</span> to load all videos. You can then download individual videos or select multiple for bulk download.
+                                    </p>
+                                </div>
                             </div>
                         )}
                     </div>
