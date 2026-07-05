@@ -125,6 +125,15 @@
         --sidebar-border: 0 0% 14%;
         --sidebar-ring: 0 0% 100%;
     }
+    /* --- Default Theme (Indigo) --- */
+    .theme-default {
+        --primary: 250 80% 54%;
+        --ring: 250 80% 54%;
+    }
+    .dark.theme-default {
+        --primary: 270 100% 60%;
+        --ring: 270 100% 60%;
+    }
     /* --- Forest Theme (Green) --- */
     .theme-forest {
         --background: 40 24% 96%;

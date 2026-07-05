@@ -766,20 +766,20 @@ const Settings = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Dark theme</p>
-                        <div className="rounded-xl overflow-hidden border border-border/50 shadow-lg bg-[#0c0c0f] p-4 min-h-[160px]">
+                        <div className={`dark rounded-xl overflow-hidden border border-border/50 shadow-lg bg-background p-4 min-h-[160px] text-foreground transition-all duration-300 theme-${pendingVariant}`}>
                           <div className="space-y-2">
                             <div className="inline-flex px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[8px] text-primary">
                               The Second Brain for YouTube
                             </div>
                             <h2 className="text-sm font-black text-white leading-tight">
-                              Learn <span className="text-primary">Faster.</span>
+                              Understand <span className="text-primary">YouTube Videos.</span>
                             </h2>
                             <p className="text-[7px] text-zinc-400 leading-tight">
-                              Stop scrubbing through hours of video...
+                              Paste a YouTube link below and get easy-to-read notes instantly.
                             </p>
                             <div className="rounded-lg bg-black/30 p-2 border border-white/5 mt-2">
                               <div className="h-5 rounded bg-white/10 text-[7px] text-zinc-500 flex items-center px-2">
-                                Paste YouTube URL here
+                                Paste YouTube Playlist/Video URL here...
                               </div>
                               <div className="flex gap-1.5 mt-2">
                                 <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[7px]">60s Processing</span>
@@ -792,20 +792,20 @@ const Settings = () => {
                       </div>
                       <div className="space-y-2">
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Light theme</p>
-                        <div className="rounded-xl overflow-hidden border border-border/50 shadow-lg bg-[#f8fafc] p-4 min-h-[160px]">
+                        <div className={`rounded-xl overflow-hidden border border-border/50 shadow-lg bg-[#f8fafc] p-4 min-h-[160px] text-zinc-900 transition-all duration-300 theme-${pendingVariant}`}>
                           <div className="space-y-2">
                             <div className="inline-flex px-2 py-0.5 rounded-full bg-zinc-200/80 border border-zinc-300 text-[8px] text-primary">
                               The Second Brain for YouTube
                             </div>
                             <h2 className="text-sm font-black text-zinc-900 leading-tight">
-                              Learn <span className="text-primary">Faster.</span>
+                              Understand <span className="text-primary">YouTube Videos.</span>
                             </h2>
                             <p className="text-[7px] text-zinc-600 leading-tight">
-                              Stop scrubbing through hours of video...
+                              Paste a YouTube link below and get easy-to-read notes instantly.
                             </p>
                             <div className="rounded-lg bg-white border border-zinc-200 p-2 shadow-sm mt-2">
                               <div className="h-5 rounded bg-zinc-100 text-[7px] text-zinc-500 flex items-center px-2 border border-zinc-200">
-                                Paste YouTube URL here
+                                Paste YouTube Playlist/Video URL here...
                               </div>
                               <div className="flex gap-1.5 mt-2">
                                 <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[7px] border border-primary/20">60s Processing</span>
