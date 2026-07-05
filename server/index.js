@@ -169,7 +169,14 @@ async function sendNotifications(title, message, videoUrl, customRecipient = nul
 // Helper: Get Random API Key (Rotation)
 // Helper: Execute with Key Rotation (Retry Logic)
 const executeWithRotation = async (keyName, operation) => {
-    const keys = process.env[keyName + 'S'] ? process.env[keyName + 'S'].split(',') : [process.env[keyName]];
+    const pluralVal = process.env[keyName + 'S'];
+    const singularVal = process.env[keyName];
+    let keys = [];
+    if (pluralVal) {
+        keys = pluralVal.split(',');
+    } else if (singularVal) {
+        keys = singularVal.split(',');
+    }
     const validKeys = keys.map(k => k?.trim()).filter(k => k);
 
     if (validKeys.length === 0) {
