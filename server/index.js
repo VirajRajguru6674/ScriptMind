@@ -240,7 +240,7 @@ const callGroqWithFallback = async (key, payload, extraAxiosConfig = {}) => {
         console.warn(`[Groq] Primary model ${primaryModel} failed: ${errorData?.error?.message || error.message}`);
 
         if (status === 429 || code === 'rate_limit_exceeded' || type === 'tokens' || type === 'requests' || error.message.includes('429')) {
-            const fallbackModels = ['llama-3.1-8b-instant', 'qwen-2.5-coder-32b', 'llama-3.2-11b-vision-preview', 'llama-3.2-3b-preview'];
+            const fallbackModels = ['openai/gpt-oss-20b', 'qwen/qwen3.6-27b', 'qwen/qwen3-32b', 'meta-llama/llama-4-scout-17b-16e-instruct'];
             for (const fallbackModel of fallbackModels) {
                 if (fallbackModel === primaryModel) continue;
                 try {
