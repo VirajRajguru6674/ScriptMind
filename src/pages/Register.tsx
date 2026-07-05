@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Mail, Sparkles, Youtube, BookOpen, Brain, Zap, User, UserPlus, Github } from "lucide-react";
+import { Eye, EyeOff, Mail, Sparkles, Youtube, BookOpen, Brain, Zap, User, UserPlus, Github, Lock } from "lucide-react";
 import { useGoogleLogin } from '@react-oauth/google';
 
 // --- Internal Animated Components (Mirrored from Login) ---
@@ -161,9 +161,11 @@ const Register = () => {
     const [error, setError] = useState("");
 
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
 
     const [mouseX, setMouseX] = useState<number>(0);
     const [mouseY, setMouseY] = useState<number>(0);
@@ -249,6 +251,12 @@ const Register = () => {
         e.preventDefault();
         setIsLoading(true);
         setError("");
+        if (password !== confirmPassword) {
+            setError("Passwords do not match.");
+            toast({ title: "Error", description: "Passwords do not match.", variant: "destructive" });
+            setIsLoading(false);
+            return;
+        }
         try {
             await register(username, email, password);
             toast({ title: "Welcome to ScriptMind!", description: "Account created successfully." });
@@ -411,23 +419,31 @@ const Register = () => {
             </div>
 
             {/* Register Form Section - Right Side */}
-            <div className="flex-1 flex items-center justify-center p-8 bg-[#0F1115] relative">
-                <div className="absolute inset-0 bg-grid-white/[0.02] pointer-events-none" />
+            <div className="flex-1 flex items-center justify-center p-4 sm:p-8 relative min-h-screen overflow-y-auto">
+                {/* Generated Background Image */}
+                <div 
+                    className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-85"
+                    style={{ backgroundImage: `url('/login-bg.png')` }}
+                />
+                {/* Hex/Grid overlay texture for depth */}
+                <div className="absolute inset-0 bg-black/45 backdrop-blur-[3px] pointer-events-none" />
 
-                <div className="w-full max-w-[440px] relative z-10 space-y-12 animate-in fade-in slide-in-from-right-8 duration-700">
+                {/* Form Card (Glassmorphism card exactly like mockup) */}
+                <div className="w-full max-w-[430px] bg-black/70 backdrop-blur-xl border border-white/10 p-6 sm:p-10 rounded-[28px] shadow-2xl relative z-10 space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
 
-                    <div className="space-y-4">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black text-primary uppercase tracking-widest leading-none">
-                            <UserPlus className="size-3" /> Get Started
+                    <div className="space-y-4 text-center">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-[10px] font-black text-primary uppercase tracking-widest leading-none">
+                            <UserPlus className="size-3 text-primary animate-pulse" /> Get Started
                         </div>
-                        <h1 className="text-5xl font-black tracking-tight text-white">Join the <span className="text-primary">genius</span> squad.</h1>
-                        <p className="text-muted-foreground text-lg leading-relaxed">Create an account to start summarizing and learning like never before.</p>
+                        <h1 className="text-4xl sm:text-5xl font-black tracking-widest text-white uppercase mt-2">Sign Up</h1>
+                        <p className="text-muted-foreground text-sm font-medium">Create Account</p>
                     </div>
 
                     <form onSubmit={handleRegister} className="space-y-6">
                         <div className="space-y-3 group">
                             <Label htmlFor="username" className="text-xs font-bold uppercase tracking-widest text-muted-foreground transition-colors group-focus-within:text-primary">Full Name</Label>
                             <div className="relative">
+                                <User className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-muted-foreground/45 transition-colors group-focus-within:text-primary" />
                                 <Input
                                     id="username"
                                     type="text"
@@ -437,15 +453,15 @@ const Register = () => {
                                     onBlur={() => setIsTyping(false)}
                                     required
                                     placeholder="Erik Richards"
-                                    className="h-14 bg-[#16181D] border-white/5 rounded-2xl focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-muted-foreground/30 px-6 transition-all"
+                                    className="h-14 bg-white/5 border-white/10 rounded-2xl focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-muted-foreground/30 pl-14 pr-6 transition-all"
                                 />
-                                <User className="absolute right-5 top-1/2 -translate-y-1/2 size-5 text-muted-foreground/30" />
                             </div>
                         </div>
 
                         <div className="space-y-3 group">
                             <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-muted-foreground transition-colors group-focus-within:text-primary">Email Address</Label>
                             <div className="relative">
+                                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-muted-foreground/45 transition-colors group-focus-within:text-primary" />
                                 <Input
                                     id="email"
                                     type="email"
@@ -455,15 +471,15 @@ const Register = () => {
                                     onBlur={() => setIsTyping(false)}
                                     required
                                     placeholder="name@company.com"
-                                    className="h-14 bg-[#16181D] border-white/5 rounded-2xl focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-muted-foreground/30 px-6 transition-all"
+                                    className="h-14 bg-white/5 border-white/10 rounded-2xl focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-muted-foreground/30 pl-14 pr-6 transition-all"
                                 />
-                                <Mail className="absolute right-5 top-1/2 -translate-y-1/2 size-5 text-muted-foreground/30" />
                             </div>
                         </div>
 
                         <div className="space-y-3 group">
                             <Label htmlFor="password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground transition-colors group-focus-within:text-primary">Choose Password</Label>
                             <div className="relative">
+                                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-muted-foreground/45 transition-colors group-focus-within:text-primary" />
                                 <Input
                                     id="password"
                                     type={showPassword ? "text" : "password"}
@@ -471,10 +487,29 @@ const Register = () => {
                                     onChange={e => setPassword(e.target.value)}
                                     required
                                     placeholder="••••••••••••"
-                                    className="h-14 bg-[#16181D] border-white/5 rounded-2xl focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-muted-foreground/30 px-6 pr-14 transition-all"
+                                    className="h-14 bg-white/5 border-white/10 rounded-2xl focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-muted-foreground/30 pl-14 pr-14 transition-all"
                                 />
                                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground/30 hover:text-primary transition-colors">
                                     {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3 group">
+                            <Label htmlFor="confirmPassword" className="text-xs font-bold uppercase tracking-widest text-muted-foreground transition-colors group-focus-within:text-primary">Confirm Password</Label>
+                            <div className="relative">
+                                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-muted-foreground/45 transition-colors group-focus-within:text-primary" />
+                                <Input
+                                    id="confirmPassword"
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    value={confirmPassword}
+                                    onChange={e => setConfirmPassword(e.target.value)}
+                                    required
+                                    placeholder="••••••••••••"
+                                    className="h-14 bg-white/5 border-white/10 rounded-2xl focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-muted-foreground/30 pl-14 pr-14 transition-all"
+                                />
+                                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground/30 hover:text-primary transition-colors">
+                                    {showConfirmPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                                 </button>
                             </div>
                         </div>
@@ -485,32 +520,33 @@ const Register = () => {
                                 {error}
                             </div>
                         )}
-                        <Button type="submit" className="w-full h-14 rounded-2xl text-lg font-black bg-primary hover:bg-primary/90 text-white shadow-[0_10px_30px_rgba(var(--primary),0.3)] hover:shadow-[0_15px_40px_rgba(var(--primary),0.4)] transition-all active:scale-[0.98] group" disabled={isLoading}>
+
+                        <Button type="submit" className="w-full h-14 rounded-2xl text-base font-black bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white shadow-[0_10px_30px_rgba(168,85,247,0.3)] hover:shadow-[0_15px_40px_rgba(168,85,247,0.4)] transition-all active:scale-[0.98] group border-0" disabled={isLoading}>
                             {isLoading ? (
                                 <div className="flex items-center gap-3">
                                     <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                     Creating account...
                                 </div>
                             ) : (
-                                <div className="flex items-center justify-center gap-2">
-                                    Create Free Account <Zap className="size-4 text-yellow-300 group-hover:scale-125 transition-transform" />
+                                <div className="flex items-center justify-center gap-2 tracking-wider">
+                                    Create Account <Zap className="size-4 text-yellow-300 group-hover:scale-125 transition-transform" />
                                 </div>
                             )}
                         </Button>
 
-                        <div className="relative flex items-center justify-center my-8">
+                        <div className="relative flex items-center justify-center my-6">
                             <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t border-white/5"></span>
+                                <span className="w-full border-t border-white/10"></span>
                             </div>
-                            <span className="relative px-3 bg-[#0F1115] text-[10px] font-bold text-muted-foreground uppercase tracking-widest">or continue with</span>
+                            <span className="relative px-4 bg-[#111317] rounded-full border border-white/10 text-[10px] font-black text-muted-foreground/80 uppercase tracking-widest z-10">or register with</span>
                         </div>
 
                         <div className="flex items-center justify-center gap-4 w-full">
                             <Button
                                 type="button"
                                 onClick={() => loginWithGoogle()}
-                                className="size-12 rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 flex items-center justify-center transition-all active:scale-95 shadow-sm"
-                                title="Login with Google"
+                                className="size-12 rounded-full bg-white hover:bg-white/95 flex items-center justify-center transition-all active:scale-95 shadow-md border-0"
+                                title="Register with Google"
                             >
                                 <svg className="size-5" viewBox="0 0 24 24">
                                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -523,22 +559,22 @@ const Register = () => {
                             <Button
                                 type="button"
                                 onClick={handleGithubLogin}
-                                className="size-12 rounded-2xl bg-[#24292F] hover:bg-[#24292F]/90 text-white border border-white/10 flex items-center justify-center transition-all active:scale-95 shadow-sm"
-                                title="Login with GitHub"
+                                className="size-12 rounded-full bg-[#18191D] hover:bg-[#24292F] text-white border border-white/10 flex items-center justify-center transition-all active:scale-95 shadow-md"
+                                title="Register with GitHub"
                             >
                                 <Github className="size-5" />
                             </Button>
                         </div>
                     </form>
 
-                    <div className="pt-8 border-t border-white/5 text-center">
+                    <div className="pt-6 border-t border-white/10 text-center">
                         <p className="text-muted-foreground text-sm font-medium">
                             Already have an account? <Link to="/login" className="text-white font-black hover:text-primary hover:underline transition-all">Sign in here</Link>
                         </p>
                     </div>
                 </div>
             </div>
-        </div >
+        </div>
     );
 };
 

@@ -28,14 +28,14 @@ export const UserMenu = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate("/login")}
-                    className="text-foreground hover:text-primary transition-colors"
+                    className="text-foreground hover:text-primary hover:bg-primary/10 transition-all"
                 >
                     Login
                 </Button>
                 <Button
                     size="sm"
                     onClick={() => navigate("/register")}
-                    className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-md border-0"
+                    className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-md border-0 transition-all"
                 >
                     Sign Up
                 </Button>
