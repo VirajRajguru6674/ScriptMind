@@ -207,6 +207,52 @@ const executeWithRotation = async (keyName, operation) => {
     throw lastError || new Error(`All keys for ${keyName} failed.`);
 };
 
+// Helper: Call Groq with model rate-limit fallback
+const callGroqWithFallback = async (key, payload, extraAxiosConfig = {}) => {
+    const primaryModel = payload.model || 'llama-3.3-70b-versatile';
+    try {
+        const res = await axios.post('https://api.groq.com/openai/v1/chat/completions', payload, {
+            ...extraAxiosConfig,
+            headers: {
+                ...(extraAxiosConfig.headers || {}),
+                'Authorization': `Bearer ${key}`
+            }
+        });
+        return res;
+    } catch (error) {
+        const errorData = error.response?.data;
+        const code = errorData?.error?.code;
+        const type = errorData?.error?.type;
+        const status = error.response?.status;
+
+        console.warn(`[Groq] Primary model ${primaryModel} failed: ${errorData?.error?.message || error.message}`);
+
+        if (status === 429 || code === 'rate_limit_exceeded' || type === 'tokens' || type === 'requests' || error.message.includes('429')) {
+            const fallbackModels = ['mixtral-8x7b-32768', 'llama-3.1-8b-instant', 'gemma2-9b-it'];
+            for (const fallbackModel of fallbackModels) {
+                if (fallbackModel === primaryModel) continue;
+                try {
+                    console.log(`[Groq] Rate limit reached. Falling back to model: ${fallbackModel}`);
+                    const res = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                        ...payload,
+                        model: fallbackModel
+                    }, {
+                        ...extraAxiosConfig,
+                        headers: {
+                            ...(extraAxiosConfig.headers || {}),
+                            'Authorization': `Bearer ${key}`
+                        }
+                    });
+                    return res;
+                } catch (fallbackError) {
+                    console.warn(`[Groq] Fallback model ${fallbackModel} also failed:`, fallbackError.response?.data || fallbackError.message);
+                }
+            }
+        }
+        throw error;
+    }
+};
+
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'scriptmind-secret-123';
 
@@ -1571,7 +1617,7 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
 
                 console.log(`[Groq] Sending request to ${MODEL} (Payload: ${Math.round(transcriptToUse.length / 1024)} KB)`);
 
-                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                const groqRes = await callGroqWithFallback(key, {
                     model: MODEL,
                     messages: [
                         { role: 'system', content: systemPrompt },
@@ -1580,7 +1626,7 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
                     max_tokens: MAX_OUTPUT_TOKENS,
                     temperature: 0.5, // Slightly higher for more descriptive writing
                     top_p: 1
-                }, { headers: { 'Authorization': `Bearer ${key}` }, timeout: 120000 }); // 2 min timeout for huge notes
+                }, { timeout: 120000 });
 
                 let result = groqRes.data.choices[0].message.content;
                 if (userPrefs.ai_language === 'hi') result = cleanHindiText(result, 'hi');
@@ -1687,7 +1733,7 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
         const truncatedContext = context ? context.substring(0, 15000) : "No specific notes available.";
 
         const reply = await executeWithRotation('GROQ_API_KEY', async (key) => {
-            const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+            const groqRes = await callGroqWithFallback(key, {
                 model: 'llama-3.3-70b-versatile',
                 messages: [
                     {
@@ -1706,7 +1752,7 @@ ${truncatedContext}`
                     },
                     ...messages
                 ]
-            }, { headers: { 'Authorization': `Bearer ${key}` }, timeout: 60000 });
+            }, { timeout: 60000 });
             return groqRes.data.choices[0].message.content;
         });
         res.json({ reply });
@@ -1789,12 +1835,12 @@ app.post('/api/tools', authenticateToken, async (req, res) => {
 
     try {
         const contentRaw = await executeWithRotation('GROQ_API_KEY', async (key) => {
-            const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+            const groqRes = await callGroqWithFallback(key, {
                 model: 'llama-3.3-70b-versatile',
                 messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
                 temperature: 0.7,
                 max_tokens: 4000
-            }, { headers: { 'Authorization': `Bearer ${key}` } });
+            });
             return groqRes.data.choices[0].message.content;
         });
 
@@ -1823,7 +1869,7 @@ app.post('/api/recommendations', async (req, res) => {
     const { videoTitle, notes } = req.body;
     try {
         let recommendations = await executeWithRotation('GROQ_API_KEY', async (key) => {
-            const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+            const groqRes = await callGroqWithFallback(key, {
                 model: 'llama-3.3-70b-versatile',
                 messages: [
                     {
@@ -1839,7 +1885,7 @@ RULES:
                     },
                     { role: 'user', content: `Current Video: "${videoTitle}"\nContext: ${notes?.substring(0, 5000)}` }
                 ]
-            }, { headers: { 'Authorization': `Bearer ${key}` } });
+            });
 
             let content = groqRes.data.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '').trim();
             const parsed = JSON.parse(content);
