@@ -27,22 +27,10 @@ export function GenerationLoader() {
 
     return (
         <div className="flex flex-col items-center justify-center p-8 w-full max-w-md mx-auto animate-in fade-in duration-700">
-            <div className="relative mb-12 flex items-center justify-center">
-                {/* Clean dark-purple circle disk matching the style of the reference image */}
-                <div className="w-24 h-24 rounded-full bg-[#181124] border border-white/5 flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
-                    {/* Spinning thick purple arc with rounded caps */}
-                    <svg className="animate-spin w-11 h-11 text-primary" viewBox="0 0 50 50">
-                        <circle
-                            cx="25"
-                            cy="25"
-                            r="20"
-                            stroke="currentColor"
-                            strokeWidth="4.5"
-                            strokeDasharray="90 35"
-                            strokeLinecap="round"
-                            fill="transparent"
-                        />
-                    </svg>
+            <div className="relative mb-12">
+                <div className="absolute inset-0 animate-ping rounded-full bg-primary/20 scale-150"></div>
+                <div className="relative bg-primary/10 p-6 rounded-full">
+                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
                 </div>
             </div>
 
