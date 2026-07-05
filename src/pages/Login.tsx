@@ -455,21 +455,21 @@ const Login = () => {
                 <div className="absolute inset-0 bg-black/45 backdrop-blur-[3px] pointer-events-none" />
 
                 {/* Form Card (Glassmorphism card exactly like mockup) */}
-                <div className="w-full max-w-[430px] bg-black/70 backdrop-blur-xl border border-white/10 px-6 py-5 sm:px-10 sm:py-8 rounded-[28px] shadow-2xl relative z-10 space-y-5 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <div className="w-full max-w-[410px] bg-black/70 backdrop-blur-xl border border-white/10 px-6 py-6 sm:px-8 sm:py-7 rounded-[24px] shadow-2xl relative z-10 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
 
-                    <div className="space-y-3 text-center">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-[10px] font-black text-primary uppercase tracking-widest leading-none">
-                            <Zap className="size-3 text-primary animate-pulse" /> Secure Access
+                    <div className="space-y-2.5 text-center">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-primary/20 border border-primary/30 text-[9px] font-black text-primary uppercase tracking-widest leading-none">
+                            <Zap className="size-2.5 text-primary animate-pulse" /> Secure Access
                         </div>
-                        <h1 className="text-4xl sm:text-5xl font-black tracking-widest text-white uppercase mt-2">Login</h1>
-                        <p className="text-muted-foreground text-sm font-medium">Let's build your <span className="text-primary font-bold">knowledge.</span></p>
+                        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-widest text-white uppercase mt-1">Login</h1>
+                        <p className="text-muted-foreground text-xs font-medium">Let's build your <span className="text-primary font-bold">knowledge.</span></p>
                     </div>
 
-                    <form onSubmit={handleLogin} className="space-y-5">
-                        <div className="space-y-2 group">
-                            <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-muted-foreground transition-colors group-focus-within:text-primary">Email Address</Label>
+                    <form onSubmit={handleLogin} className="space-y-4">
+                        <div className="space-y-1.5 group">
+                            <Label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground transition-colors group-focus-within:text-primary">Email Address</Label>
                             <div className="relative">
-                                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-muted-foreground/45 transition-colors group-focus-within:text-primary" />
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 size-4.5 text-muted-foreground/45 transition-colors group-focus-within:text-primary" />
                                 <Input
                                     id="email"
                                     type="email"
@@ -479,15 +479,15 @@ const Login = () => {
                                     onBlur={() => setIsTyping(false)}
                                     required
                                     placeholder="admin@scriptmind.com"
-                                    className="h-14 bg-white/5 border-white/10 rounded-2xl focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-muted-foreground/30 pl-14 pr-6 transition-all"
+                                    className="h-12 bg-white/5 border-white/10 rounded-xl focus:border-primary/50 focus:ring-primary/20 text-white text-sm placeholder:text-muted-foreground/30 pl-12 pr-6 transition-all"
                                 />
                             </div>
                         </div>
 
-                        <div className="space-y-2 group">
-                            <Label htmlFor="password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground transition-colors group-focus-within:text-primary">Password</Label>
+                        <div className="space-y-1.5 group">
+                            <Label htmlFor="password" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground transition-colors group-focus-within:text-primary">Password</Label>
                             <div className="relative">
-                                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-muted-foreground/45 transition-colors group-focus-within:text-primary" />
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 size-4.5 text-muted-foreground/45 transition-colors group-focus-within:text-primary" />
                                 <Input
                                     id="password"
                                     type={showPassword ? "text" : "password"}
@@ -495,30 +495,30 @@ const Login = () => {
                                     onChange={e => setPassword(e.target.value)}
                                     required
                                     placeholder="••••••••••••"
-                                    className="h-14 bg-white/5 border-white/10 rounded-2xl focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-muted-foreground/30 pl-14 pr-14 transition-all"
+                                    className="h-12 bg-white/5 border-white/10 rounded-xl focus:border-primary/50 focus:ring-primary/20 text-white text-sm placeholder:text-muted-foreground/30 pl-12 pr-12 transition-all"
                                 />
-                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground/30 hover:text-primary transition-colors">
-                                    {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/30 hover:text-primary transition-colors">
+                                    {showPassword ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
                                 </button>
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between pb-2">
-                            <div className="flex items-center space-x-3">
-                                <Checkbox id="remember" className="rounded-md border-white/10 data-[state=checked]:bg-primary" />
-                                <Label htmlFor="remember" className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-white transition-colors">Keep me signed in</Label>
+                        <div className="flex items-center justify-between pb-1">
+                            <div className="flex items-center space-x-2">
+                                <Checkbox id="remember" className="rounded-md border-white/10 data-[state=checked]:bg-primary size-4" />
+                                <Label htmlFor="remember" className="text-xs font-semibold text-muted-foreground cursor-pointer hover:text-white transition-colors">Keep me signed in</Label>
                             </div>
-                            <Link to="/forgot-password" className="text-sm font-bold text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline">Reset Password</Link>
+                            <Link to="/forgot-password" className="text-xs font-bold text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline">Reset Password</Link>
                         </div>
 
                         {error && (
-                            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl text-xs font-semibold flex items-center gap-3 animate-shake">
+                            <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-xs font-semibold flex items-center gap-2.5 animate-shake">
                                 <div className="size-1.5 rounded-full bg-red-500 animate-ping" />
                                 {error}
                             </div>
                         )}
 
-                        <Button type="submit" className="w-full h-14 rounded-2xl text-base font-black bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white shadow-[0_10px_30px_rgba(168,85,247,0.3)] hover:shadow-[0_15px_40px_rgba(168,85,247,0.4)] transition-all active:scale-[0.98] group border-0" disabled={isLoading}>
+                        <Button type="submit" className="w-full h-12 rounded-xl text-sm font-black bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white shadow-[0_8px_24px_rgba(168,85,247,0.3)] hover:shadow-[0_12px_32px_rgba(168,85,247,0.4)] transition-all active:scale-[0.98] group border-0" disabled={isLoading}>
                             {isLoading ? (
                                 <div className="flex items-center gap-3">
                                     <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -531,11 +531,11 @@ const Login = () => {
                             )}
                         </Button>
 
-                        <div className="relative flex items-center justify-center my-4">
+                        <div className="relative flex items-center justify-center my-3.5">
                             <div className="absolute inset-0 flex items-center">
                                 <span className="w-full border-t border-white/10"></span>
                             </div>
-                            <span className="relative px-4 bg-[#111317] rounded-full border border-white/10 text-[10px] font-black text-muted-foreground/80 uppercase tracking-widest z-10">or login with</span>
+                            <span className="relative px-3.5 bg-[#111317] rounded-full border border-white/10 text-[9px] font-black text-muted-foreground/80 uppercase tracking-widest z-10">or login with</span>
                         </div>
 
                         <div className="flex items-center justify-center gap-4 w-full">
