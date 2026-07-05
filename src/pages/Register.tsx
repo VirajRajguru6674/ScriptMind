@@ -429,9 +429,9 @@ const Register = () => {
                 <div className="absolute inset-0 bg-black/45 backdrop-blur-[3px] pointer-events-none" />
 
                 {/* Form Card (Glassmorphism card exactly like mockup) */}
-                <div className="w-full max-w-[430px] bg-black/70 backdrop-blur-xl border border-white/10 p-6 sm:p-10 rounded-[28px] shadow-2xl relative z-10 space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <div className="w-full max-w-[430px] bg-black/70 backdrop-blur-xl border border-white/10 px-6 py-5 sm:px-10 sm:py-8 rounded-[28px] shadow-2xl relative z-10 space-y-5 animate-in fade-in slide-in-from-bottom-8 duration-700">
 
-                    <div className="space-y-4 text-center">
+                    <div className="space-y-3 text-center">
                         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-[10px] font-black text-primary uppercase tracking-widest leading-none">
                             <UserPlus className="size-3 text-primary animate-pulse" /> Get Started
                         </div>
@@ -439,8 +439,8 @@ const Register = () => {
                         <p className="text-muted-foreground text-sm font-medium">Create Account</p>
                     </div>
 
-                    <form onSubmit={handleRegister} className="space-y-6">
-                        <div className="space-y-3 group">
+                    <form onSubmit={handleRegister} className="space-y-5">
+                        <div className="space-y-2 group">
                             <Label htmlFor="username" className="text-xs font-bold uppercase tracking-widest text-muted-foreground transition-colors group-focus-within:text-primary">Full Name</Label>
                             <div className="relative">
                                 <User className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-muted-foreground/45 transition-colors group-focus-within:text-primary" />
@@ -458,7 +458,7 @@ const Register = () => {
                             </div>
                         </div>
 
-                        <div className="space-y-3 group">
+                        <div className="space-y-2 group">
                             <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-muted-foreground transition-colors group-focus-within:text-primary">Email Address</Label>
                             <div className="relative">
                                 <Mail className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-muted-foreground/45 transition-colors group-focus-within:text-primary" />
@@ -476,7 +476,7 @@ const Register = () => {
                             </div>
                         </div>
 
-                        <div className="space-y-3 group">
+                        <div className="space-y-2 group">
                             <Label htmlFor="password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground transition-colors group-focus-within:text-primary">Choose Password</Label>
                             <div className="relative">
                                 <Lock className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-muted-foreground/45 transition-colors group-focus-within:text-primary" />
@@ -495,7 +495,7 @@ const Register = () => {
                             </div>
                         </div>
 
-                        <div className="space-y-3 group">
+                        <div className="space-y-2 group">
                             <Label htmlFor="confirmPassword" className="text-xs font-bold uppercase tracking-widest text-muted-foreground transition-colors group-focus-within:text-primary">Confirm Password</Label>
                             <div className="relative">
                                 <Lock className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-muted-foreground/45 transition-colors group-focus-within:text-primary" />
@@ -534,7 +534,7 @@ const Register = () => {
                             )}
                         </Button>
 
-                        <div className="relative flex items-center justify-center my-6">
+                        <div className="relative flex items-center justify-center my-4">
                             <div className="absolute inset-0 flex items-center">
                                 <span className="w-full border-t border-white/10"></span>
                             </div>

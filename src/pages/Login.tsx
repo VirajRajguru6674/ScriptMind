@@ -455,18 +455,18 @@ const Login = () => {
                 <div className="absolute inset-0 bg-black/45 backdrop-blur-[3px] pointer-events-none" />
 
                 {/* Form Card (Glassmorphism card exactly like mockup) */}
-                <div className="w-full max-w-[430px] bg-black/70 backdrop-blur-xl border border-white/10 p-6 sm:p-10 rounded-[28px] shadow-2xl relative z-10 space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <div className="w-full max-w-[430px] bg-black/70 backdrop-blur-xl border border-white/10 px-6 py-5 sm:px-10 sm:py-8 rounded-[28px] shadow-2xl relative z-10 space-y-5 animate-in fade-in slide-in-from-bottom-8 duration-700">
 
-                    <div className="space-y-4 text-center">
+                    <div className="space-y-3 text-center">
                         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-[10px] font-black text-primary uppercase tracking-widest leading-none">
                             <Zap className="size-3 text-primary animate-pulse" /> Secure Access
                         </div>
-                        <h1 className="text-4xl sm:text-5xl font-black tracking-widest text-white uppercase mt-2">Sign In</h1>
+                        <h1 className="text-4xl sm:text-5xl font-black tracking-widest text-white uppercase mt-2">Login</h1>
                         <p className="text-muted-foreground text-sm font-medium">Let's build your <span className="text-primary font-bold">knowledge.</span></p>
                     </div>
 
-                    <form onSubmit={handleLogin} className="space-y-6">
-                        <div className="space-y-3 group">
+                    <form onSubmit={handleLogin} className="space-y-5">
+                        <div className="space-y-2 group">
                             <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-muted-foreground transition-colors group-focus-within:text-primary">Email Address</Label>
                             <div className="relative">
                                 <Mail className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-muted-foreground/45 transition-colors group-focus-within:text-primary" />
@@ -484,7 +484,7 @@ const Login = () => {
                             </div>
                         </div>
 
-                        <div className="space-y-3 group">
+                        <div className="space-y-2 group">
                             <Label htmlFor="password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground transition-colors group-focus-within:text-primary">Password</Label>
                             <div className="relative">
                                 <Lock className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-muted-foreground/45 transition-colors group-focus-within:text-primary" />
@@ -526,16 +526,16 @@ const Login = () => {
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-center gap-2 tracking-wider">
-                                    Sign In to ScriptMind <Zap className="size-4 text-yellow-300 group-hover:scale-125 transition-transform" />
+                                    Login to ScriptMind <Zap className="size-4 text-yellow-300 group-hover:scale-125 transition-transform" />
                                 </div>
                             )}
                         </Button>
 
-                        <div className="relative flex items-center justify-center my-6">
+                        <div className="relative flex items-center justify-center my-4">
                             <div className="absolute inset-0 flex items-center">
                                 <span className="w-full border-t border-white/10"></span>
                             </div>
-                            <span className="relative px-4 bg-[#111317] rounded-full border border-white/10 text-[10px] font-black text-muted-foreground/80 uppercase tracking-widest z-10">or sign in with</span>
+                            <span className="relative px-4 bg-[#111317] rounded-full border border-white/10 text-[10px] font-black text-muted-foreground/80 uppercase tracking-widest z-10">or login with</span>
                         </div>
 
                         <div className="flex items-center justify-center gap-4 w-full">
