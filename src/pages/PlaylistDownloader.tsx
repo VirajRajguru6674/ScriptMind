@@ -253,7 +253,7 @@ export default function PlaylistDownloader() {
                         <div className="space-y-4 text-left">
                             <div className="flex flex-col sm:flex-row gap-3 max-w-3xl w-full">
                                 <div className="relative flex-1 group">
-                                    <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
+                                    <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors duration-300 z-10 pointer-events-none" />
                                     <Input
                                         placeholder="Paste YouTube Playlist URL here..."
                                         value={url}
