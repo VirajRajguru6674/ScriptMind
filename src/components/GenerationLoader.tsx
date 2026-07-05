@@ -93,7 +93,7 @@ export function GenerationLoader() {
             {/* --- STEPPERS SECTION --- */}
             <div className="relative w-full max-w-sm space-y-6">
                 {/* Dynamic Flowing Gradient Connector Line */}
-                <div className="absolute left-[20px] top-6 bottom-6 w-[2px] bg-white/5 rounded-full pointer-events-none overflow-hidden">
+                <div className="absolute left-[33px] top-[34px] bottom-[34px] w-[2px] bg-white/5 rounded-full pointer-events-none overflow-hidden">
                     <div 
                         className="w-full bg-gradient-to-b from-primary via-purple-500 to-indigo-600 transition-all duration-1000 ease-in-out shadow-[0_0_8px_rgba(168,85,247,0.5)]" 
                         style={{ height: `${(currentStep / (steps.length - 1)) * 100}%` }}
