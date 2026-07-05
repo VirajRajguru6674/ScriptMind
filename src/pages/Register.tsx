@@ -431,11 +431,10 @@ const Register = () => {
                 {/* Form Card (Glassmorphism card exactly like mockup) */}
                 <div className="w-full max-w-[410px] bg-black/70 backdrop-blur-xl border border-white/10 px-6 py-6 sm:px-8 sm:py-7 rounded-[24px] shadow-2xl relative z-10 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
 
-                    <div className="space-y-2.5 text-center">
-                        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-primary/20 border border-primary/30 text-[9px] font-black text-primary uppercase tracking-widest leading-none">
-                            <UserPlus className="size-2.5 text-primary animate-pulse" /> Get Started
-                        </div>
-                        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-widest text-white uppercase mt-1">Sign Up</h1>
+                    <div className="space-y-2 text-center">
+                        <h1 className="text-3xl sm:text-4xl font-black font-heading tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-purple-300 drop-shadow-[0_0_20px_rgba(168,85,247,0.2)] uppercase">
+                            Sign Up
+                        </h1>
                         <p className="text-muted-foreground text-xs font-medium">Create Account</p>
                     </div>
 
