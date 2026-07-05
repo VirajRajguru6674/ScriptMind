@@ -168,6 +168,9 @@ async function sendNotifications(title, message, videoUrl, customRecipient = nul
 
 // Helper: Get Random API Key (Rotation)
 // Helper: Execute with Key Rotation (Retry Logic)
+// Global trackers for round-robin key selection
+const keyIndexTrackers = {};
+
 const executeWithRotation = async (keyName, operation) => {
     const pluralVal = process.env[keyName + 'S'];
     const singularVal = process.env[keyName];
@@ -184,14 +187,23 @@ const executeWithRotation = async (keyName, operation) => {
         throw new Error(`No API keys configured for ${keyName}`);
     }
 
-    // Shuffle to distribute load
-    for (let i = validKeys.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [validKeys[i], validKeys[j]] = [validKeys[j], validKeys[i]];
+    // Initialize round-robin index tracker if not present
+    if (keyIndexTrackers[keyName] === undefined) {
+        keyIndexTrackers[keyName] = 0;
+    }
+
+    // Get the current round-robin index and increment it
+    const startIdx = keyIndexTrackers[keyName] % validKeys.length;
+    keyIndexTrackers[keyName] = (keyIndexTrackers[keyName] + 1) % validKeys.length;
+
+    // Rearrange the keys starting from the current index, followed by the rest
+    const orderedKeys = [];
+    for (let i = 0; i < validKeys.length; i++) {
+        orderedKeys.push(validKeys[(startIdx + i) % validKeys.length]);
     }
 
     let lastError;
-    for (const key of validKeys) {
+    for (const key of orderedKeys) {
         try {
             return await operation(key);
         } catch (error) {
