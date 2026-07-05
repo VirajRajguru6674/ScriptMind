@@ -573,8 +573,9 @@ const Login = () => {
 
                 {/* --- MOBILE VIEW --- */}
                 <div className="block lg:hidden w-full max-w-[410px] space-y-6 relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                    <div className="flex justify-center">
-                        <img src="/logo-dark.png" alt="ScriptMind Logo" className="w-20 h-20 object-contain rounded-2xl shadow-[0_0_25px_rgba(168,85,247,0.25)]" />
+                    <div className="flex flex-col items-center justify-center space-y-1 select-none">
+                        <span className="font-black text-3xl tracking-wider text-white font-heading">Script<span className="text-primary">Mind</span></span>
+                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mt-0.5">AI Genius Learning</span>
                     </div>
 
                     <div className="w-full bg-black/70 backdrop-blur-xl border border-white/10 px-6 py-6 sm:px-8 sm:py-7 rounded-[24px] shadow-2xl space-y-4">
