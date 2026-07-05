@@ -460,7 +460,7 @@ const Login = () => {
                 {/* --- DESKTOP VIEW --- */}
                 <div className="hidden lg:block w-full max-w-[440px] relative z-10 space-y-12 animate-in fade-in slide-in-from-right-8 duration-700">
                     <div className="space-y-4">
-                        <h1 className="text-5xl font-black font-heading tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-purple-300 drop-shadow-[0_0_20px_rgba(168,85,247,0.2)] uppercase">
+                        <h1 className="text-4xl font-black font-heading tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-purple-300 drop-shadow-[0_0_20px_rgba(168,85,247,0.2)] uppercase">
                             Login
                         </h1>
                         <p className="text-muted-foreground text-lg leading-relaxed">Let's build your <span className="text-primary font-bold">knowledge.</span></p>
@@ -583,7 +583,7 @@ const Login = () => {
 
                     <div className="w-full bg-black/70 backdrop-blur-xl border border-white/10 px-6 py-6 sm:px-8 sm:py-7 rounded-[24px] shadow-2xl space-y-4">
                         <div className="space-y-2 text-center">
-                            <h1 className="text-3xl sm:text-4xl font-black font-heading tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-purple-300 drop-shadow-[0_0_20px_rgba(168,85,247,0.2)] uppercase">
+                            <h1 className="text-2xl sm:text-3xl font-black font-heading tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-purple-300 drop-shadow-[0_0_20px_rgba(168,85,247,0.2)] uppercase">
                                 Login
                             </h1>
                             <p className="text-muted-foreground text-xs font-medium">Let's build your <span className="text-primary font-bold">knowledge.</span></p>
