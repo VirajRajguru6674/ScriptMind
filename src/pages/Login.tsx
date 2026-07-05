@@ -459,7 +459,8 @@ const Login = () => {
 
                 {/* --- DESKTOP VIEW --- */}
                 <div className="hidden lg:block w-full max-w-[440px] relative z-10 space-y-12 animate-in fade-in slide-in-from-right-8 duration-700">
-                    <div className="space-y-4">
+                    <div className="space-y-4 flex flex-col items-start">
+                        <img src="/logo-dark.png" alt="ScriptMind Logo" className="w-14 h-14 object-contain mb-2 rounded-2xl shadow-[0_0_20px_rgba(168,85,247,0.15)]" />
                         <h1 className="text-5xl font-black font-heading tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-purple-300 drop-shadow-[0_0_20px_rgba(168,85,247,0.2)] uppercase">
                             Login
                         </h1>
@@ -573,7 +574,8 @@ const Login = () => {
 
                 {/* --- MOBILE VIEW --- */}
                 <div className="block lg:hidden w-full max-w-[410px] bg-black/70 backdrop-blur-xl border border-white/10 px-6 py-6 sm:px-8 sm:py-7 rounded-[24px] shadow-2xl relative z-10 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                    <div className="space-y-2 text-center">
+                    <div className="space-y-2 text-center flex flex-col items-center">
+                        <img src="/logo-dark.png" alt="ScriptMind Logo" className="w-12 h-12 object-contain mb-1 rounded-xl shadow-[0_0_15px_rgba(168,85,247,0.15)]" />
                         <h1 className="text-3xl sm:text-4xl font-black font-heading tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-purple-300 drop-shadow-[0_0_20px_rgba(168,85,247,0.2)] uppercase">
                             Login
                         </h1>
