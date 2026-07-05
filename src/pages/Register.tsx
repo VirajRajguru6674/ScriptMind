@@ -574,14 +574,18 @@ const Register = () => {
                 </div>
 
                 {/* --- MOBILE VIEW --- */}
-                <div className="block lg:hidden w-full max-w-[410px] bg-black/70 backdrop-blur-xl border border-white/10 px-6 py-6 sm:px-8 sm:py-7 rounded-[24px] shadow-2xl relative z-10 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                    <div className="space-y-2 text-center flex flex-col items-center">
-                        <img src="/logo-dark.png" alt="ScriptMind Logo" className="w-20 h-20 object-contain mb-2 rounded-2xl shadow-[0_0_20px_rgba(168,85,247,0.2)]" />
-                        <h1 className="text-3xl sm:text-4xl font-black font-heading tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-purple-300 drop-shadow-[0_0_20px_rgba(168,85,247,0.2)] uppercase">
-                            Sign Up
-                        </h1>
-                        <p className="text-muted-foreground text-xs font-medium">Create Account</p>
+                <div className="block lg:hidden w-full max-w-[410px] space-y-6 relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                    <div className="flex justify-center">
+                        <img src="/logo-dark.png" alt="ScriptMind Logo" className="w-20 h-20 object-contain rounded-2xl shadow-[0_0_25px_rgba(168,85,247,0.25)]" />
                     </div>
+
+                    <div className="w-full bg-black/70 backdrop-blur-xl border border-white/10 px-6 py-6 sm:px-8 sm:py-7 rounded-[24px] shadow-2xl space-y-4">
+                        <div className="space-y-2 text-center">
+                            <h1 className="text-3xl sm:text-4xl font-black font-heading tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-purple-300 drop-shadow-[0_0_20px_rgba(168,85,247,0.2)] uppercase">
+                                Sign Up
+                            </h1>
+                            <p className="text-muted-foreground text-xs font-medium">Create Account</p>
+                        </div>
 
                     <form onSubmit={handleRegister} className="space-y-4">
                         <div className="space-y-1.5 group">
@@ -719,6 +723,7 @@ const Register = () => {
                 </div>
             </div>
         </div>
+    </div>
     );
 };
 
