@@ -364,8 +364,63 @@ const checkPlanLimits = async (req, res, next) => {
     }
 };
 
+// Ensure yt-dlp binary exists (robust programmatic fallback for Render deployment)
+async function ensureYtDlpBinary() {
+    try {
+        console.log("🔍 [YtDlp-Init] Checking yt-dlp binary status...");
+        let YOUTUBE_DL_PATH, YOUTUBE_DL_DIR, YOUTUBE_DL_FILE;
+        try {
+            const constants = require('yt-dlp-exec/src/constants');
+            YOUTUBE_DL_PATH = constants.YOUTUBE_DL_PATH;
+            YOUTUBE_DL_DIR = constants.YOUTUBE_DL_DIR;
+            YOUTUBE_DL_FILE = constants.YOUTUBE_DL_FILE;
+        } catch (e) {
+            console.error("⚠️ [YtDlp-Init] Could not load yt-dlp-exec constants. Using defaults.", e.message);
+            YOUTUBE_DL_DIR = path.join(__dirname, 'node_modules', 'yt-dlp-exec', 'bin');
+            YOUTUBE_DL_FILE = process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp';
+            YOUTUBE_DL_PATH = path.join(YOUTUBE_DL_DIR, YOUTUBE_DL_FILE);
+        }
+
+        console.log(`🔍 [YtDlp-Init] Binary path: ${YOUTUBE_DL_PATH}`);
+
+        if (!fs.existsSync(YOUTUBE_DL_PATH)) {
+            console.log(`⚠️ [YtDlp-Init] Binary not found. Downloading...`);
+            if (!fs.existsSync(YOUTUBE_DL_DIR)) {
+                fs.mkdirSync(YOUTUBE_DL_DIR, { recursive: true });
+            }
+
+            const downloadUrl = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${YOUTUBE_DL_FILE}`;
+            console.log(`📥 [YtDlp-Init] Downloading from: ${downloadUrl}`);
+
+            const response = await axios({
+                method: 'get',
+                url: downloadUrl,
+                responseType: 'arraybuffer',
+                maxRedirects: 5
+            });
+
+            fs.writeFileSync(YOUTUBE_DL_PATH, response.data, { mode: 0o755 });
+            console.log(`✅ [YtDlp-Init] Downloaded and saved successfully to ${YOUTUBE_DL_PATH}`);
+        } else {
+            console.log(`✅ [YtDlp-Init] Binary already exists.`);
+            if (process.platform !== 'win32') {
+                try {
+                    fs.chmodSync(YOUTUBE_DL_PATH, 0o755);
+                } catch (chmodErr) {
+                    console.warn(`⚠️ [YtDlp-Init] Failed to ensure executable permissions: ${chmodErr.message}`);
+                }
+            }
+        }
+    } catch (err) {
+        console.error("❌ [YtDlp-Init] Failed to ensure yt-dlp binary:", err.message);
+    }
+}
+
 // Ensure DB columns exist (Migration) & Seed Admin
 async function initializeDatabase() {
+    // First, ensure yt-dlp binary exists
+    await ensureYtDlpBinary();
+
     let conn;
     try {
         console.log("📡 DB Initialization: Attempting connection...");
