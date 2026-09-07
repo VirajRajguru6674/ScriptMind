@@ -2210,26 +2210,18 @@ app.all('/api/download', authenticateToken, async (req, res) => {
         const h = quality === 'mp3' ? null : quality.replace('p', '');
         const formatSelector = quality === 'mp3'
             ? 'bestaudio/best'
-            : `best[height<=${h}][vcodec!=none][acodec!=none]/best[vcodec!=none][acodec!=none]/best[height<=${h}]/best`;
+            : `best[height<=${h}][ext=mp4]/best[ext=mp4]/best[height<=${h}]/best`;
 
         console.log(`🚀 [Instant-Download] Requesting direct stream for ${videoId} (${quality})...`);
         try {
             const streamUrlRaw = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, {
                 getUrl: true,
                 format: formatSelector,
-                noCheckCertificates: true,
-                preferFreeFormats: true,
-                extractorArgs: 'youtube:player-client=android',
-                userAgent: getYoutubeUserAgent(),
-                addHeader: [
-                    'Accept-Language:en-US,en;q=0.9',
-                    'Referer:https://www.youtube.com/watch?v=' + videoId
-                ]
+                extractorArgs: 'youtube:player-client=android'
             });
 
-            const lines = (streamUrlRaw || '').trim().split('\n').map(l => l.trim()).filter(Boolean);
-            if (lines.length === 1 && lines[0].startsWith('http')) {
-                const directUrl = lines[0];
+            const directUrl = (streamUrlRaw || '').trim().split('\n')[0];
+            if (directUrl && directUrl.startsWith('http')) {
                 console.log(`⚡ [Instant-Download] Direct URL resolved in seconds. Piping stream for ${outputName}`);
                 res.setHeader('Content-Disposition', `attachment; filename="${outputName}"`);
                 res.setHeader('Content-Type', quality === 'mp3' ? 'audio/mpeg' : 'video/mp4');
@@ -2243,21 +2235,11 @@ app.all('/api/download', authenticateToken, async (req, res) => {
                     res.setHeader('Content-Length', streamRes.headers['content-length']);
                 }
 
-                req.on('close', () => {
-                    if (streamRes.data && !streamRes.data.destroyed) {
-                        streamRes.data.destroy();
-                    }
-                });
-
                 streamRes.data.pipe(res);
 
-                await new Promise((resolve) => {
+                await new Promise((resolve, reject) => {
                     streamRes.data.on('end', resolve);
-                    streamRes.data.on('error', (err) => {
-                        console.warn("Stream pipe error:", err.message);
-                        resolve();
-                    });
-                    req.on('close', resolve);
+                    streamRes.data.on('error', reject);
                 });
 
                 await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
