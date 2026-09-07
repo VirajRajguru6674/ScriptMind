@@ -2071,9 +2071,7 @@ app.get('/api/video-formats', async (req, res) => {
                 ]
             };
             if (playerClient) {
-                opts.extractorArgs = `youtube:player-client=${playerClient};player_skip=webpage,configs`;
-            } else {
-                opts.extractorArgs = `youtube:player_skip=webpage,configs`;
+                opts.extractorArgs = `youtube:player-client=${playerClient}`;
             }
             if (useCookies && cookieData) {
                 opts.cookies = cookieData.path;
@@ -2286,9 +2284,7 @@ app.all('/api/download', authenticateToken, async (req, res) => {
             };
 
             if (playerClient) {
-                dlpOptions.extractorArgs = `youtube:player-client=${playerClient};player_skip=webpage,configs`;
-            } else {
-                dlpOptions.extractorArgs = `youtube:player_skip=webpage,configs`;
+                dlpOptions.extractorArgs = `youtube:player-client=${playerClient}`;
             }
 
             if (ffmpegPath) {
@@ -2305,7 +2301,7 @@ app.all('/api/download', authenticateToken, async (req, res) => {
                 dlpOptions.audioFormat = 'mp3';
             } else {
                 const h = quality.replace('p', '');
-                dlpOptions.format = `bestvideo[height<=${h}]+bestaudio/best[height<=${h}][ext=mp4]/best[height<=${h}]/best[ext=mp4]/best`;
+                dlpOptions.format = `bestvideo[height<=${h}]+bestaudio/best[height<=${h}]/best`;
                 dlpOptions.mergeOutputFormat = 'mp4';
             }
 
@@ -2357,7 +2353,7 @@ app.all('/api/download', authenticateToken, async (req, res) => {
                                 const streamUrlRaw = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, {
                                     getUrl: true,
                                     format: formatSelector,
-                                    extractorArgs: 'youtube:player-client=android;player_skip=webpage,configs'
+                                    extractorArgs: 'youtube:player-client=android'
                                 });
                                 const directUrl = (streamUrlRaw || '').trim().split('\n')[0];
                                 if (!directUrl || !directUrl.startsWith('http')) {
