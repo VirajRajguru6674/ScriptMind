@@ -364,6 +364,22 @@ const checkPlanLimits = async (req, res, next) => {
     }
 };
 
+// Helper: Resolve and verify FFmpeg binary for merging adaptive YouTube streams
+function getFfmpegPath() {
+    try {
+        const ffmpegStatic = require('ffmpeg-static');
+        if (ffmpegStatic && fs.existsSync(ffmpegStatic)) {
+            if (process.platform !== 'win32') {
+                try { fs.chmodSync(ffmpegStatic, 0o755); } catch (e) { }
+            }
+            return ffmpegStatic;
+        }
+    } catch (e) {
+        console.warn("⚠️ [FFmpeg] Failed to load ffmpeg-static:", e.message);
+    }
+    return null;
+}
+
 // Ensure yt-dlp binary exists (robust programmatic fallback for Render deployment)
 async function ensureYtDlpBinary() {
     try {
@@ -410,6 +426,14 @@ async function ensureYtDlpBinary() {
                     console.warn(`⚠️ [YtDlp-Init] Failed to ensure executable permissions: ${chmodErr.message}`);
                 }
             }
+        }
+
+        // Also verify FFmpeg status
+        const ffmpeg = getFfmpegPath();
+        if (ffmpeg) {
+            console.log(`✅ [FFmpeg-Init] FFmpeg binary verified at: ${ffmpeg}`);
+        } else {
+            console.warn(`⚠️ [FFmpeg-Init] FFmpeg binary could not be resolved from ffmpeg-static.`);
         }
     } catch (err) {
         console.error("❌ [YtDlp-Init] Failed to ensure yt-dlp binary:", err.message);
@@ -2036,23 +2060,19 @@ app.get('/api/video-formats', async (req, res) => {
         const ytDlp = require('yt-dlp-exec');
         console.log(`🔍 Fetching formats for: ${videoId}`);
         const getBaseOptions = (playerClient, useCookies) => {
-            let extractorArgs = `youtube:player-client=${playerClient};formats=missing_pot;skip=hls,dash`;
-            if (playerClient === 'tv') {
-                extractorArgs += ';player_skip=webpage,configs';
-            }
             const opts = {
                 dumpSingleJson: true,
                 noCheckCertificates: true,
                 preferFreeFormats: true,
-                jsRuntime: 'node',
-                extractorArgs,
                 userAgent: getYoutubeUserAgent(),
-                remoteComponents: 'ejs:github',
                 addHeader: [
                     'Accept-Language:en-US,en;q=0.9',
                     'Referer:https://www.youtube.com/watch?v=' + videoId
                 ]
             };
+            if (playerClient) {
+                opts.extractorArgs = `youtube:player-client=${playerClient}`;
+            }
             if (useCookies && cookieData) {
                 opts.cookies = cookieData.path;
             }
@@ -2061,34 +2081,37 @@ app.get('/api/video-formats', async (req, res) => {
 
         let info;
         try {
-            console.log(`🔍 [yt-dlp] Attempt 1: Fetching formats (TV client + cookies) for: ${videoId}`);
-            info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, getBaseOptions('tv', true));
+            console.log(`🔍 [yt-dlp] Attempt 1: Fetching formats (Android client, NO cookies) for: ${videoId}`);
+            info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, getBaseOptions('android', false));
         } catch (err1) {
-            console.warn(`⚠️ Attempt 1 failed: ${err1.message}. Retrying Attempt 2...`);
+            console.warn(`⚠️ Attempt 1 failed: ${err1.message}. Retrying Attempt 2 (Default client)...`);
             try {
-                console.log(`🔍 [yt-dlp] Attempt 2: Fetching formats (iOS client, NO cookies) for: ${videoId}`);
-                info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, getBaseOptions('ios', false));
+                info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, getBaseOptions(null, false));
             } catch (err2) {
-                console.warn(`⚠️ Attempt 2 failed: ${err2.message}. Retrying Attempt 3...`);
+                console.warn(`⚠️ Attempt 2 failed: ${err2.message}. Retrying Attempt 3 (android,web)...`);
                 try {
-                    console.log(`🔍 [yt-dlp] Attempt 3: Fetching formats (Android client, NO cookies) for: ${videoId}`);
-                    info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, getBaseOptions('android', false));
+                    info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, getBaseOptions('android,web', false));
                 } catch (err3) {
-                    console.warn(`⚠️ Attempt 3 failed: ${err3.message}. Retrying Attempt 4...`);
+                    console.warn(`⚠️ Attempt 3 failed: ${err3.message}. Retrying with cookies...`);
                     try {
-                        console.log(`🔍 [yt-dlp] Attempt 4: Fetching formats (iOS client + cookies) for: ${videoId}`);
-                        info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, getBaseOptions('ios,web', true));
+                        info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, getBaseOptions('web,android', true));
                     } catch (err4) {
-                        console.warn(`⚠️ Attempt 4 failed: ${err4.message}. Retrying Attempt 5...`);
+                        console.warn(`⚠️ Attempt 4 failed: ${err4.message}. Trying ytdl-core fallback...`);
                         try {
-                            console.log(`🔍 [yt-dlp] Attempt 5: Fetching formats (Android client + cookies) for: ${videoId}`);
-                            info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, getBaseOptions('android,web,tv_embedded', true));
+                            const ytdl = require('@distube/ytdl-core');
+                            const ytdlOptions = getYoutubeOptions();
+                            const ytdlInfo = await ytdl.getInfo(videoId, ytdlOptions);
+                            info = {
+                                formats: ytdlInfo.formats.map(f => ({
+                                    height: f.height,
+                                    format_note: f.qualityLabel
+                                }))
+                            };
                         } catch (err5) {
-                            console.warn(`⚠️ Attempt 5 failed: ${err5.message}. Trying ytdl-core fallback...`);
+                            console.warn(`⚠️ Attempt 5 (ytdl-core + cookies) failed: ${err5.message}. Trying ytdl-core without cookies...`);
                             try {
                                 const ytdl = require('@distube/ytdl-core');
-                                const ytdlOptions = getYoutubeOptions();
-                                const ytdlInfo = await ytdl.getInfo(videoId, ytdlOptions);
+                                const ytdlInfo = await ytdl.getInfo(videoId);
                                 info = {
                                     formats: ytdlInfo.formats.map(f => ({
                                         height: f.height,
@@ -2096,20 +2119,8 @@ app.get('/api/video-formats', async (req, res) => {
                                     }))
                                 };
                             } catch (err6) {
-                                console.warn(`⚠️ Attempt 6 (ytdl-core + cookies) failed: ${err6.message}. Trying ytdl-core without cookies...`);
-                                try {
-                                    const ytdl = require('@distube/ytdl-core');
-                                    const ytdlInfo = await ytdl.getInfo(videoId);
-                                    info = {
-                                        formats: ytdlInfo.formats.map(f => ({
-                                            height: f.height,
-                                            format_note: f.qualityLabel
-                                        }))
-                                    };
-                                } catch (err7) {
-                                    console.error(`❌ All 7 format fetching attempts failed: ${err7.message}`);
-                                    throw new Error("Could not fetch formats from any source");
-                                }
+                                console.error(`❌ All format fetching attempts failed: ${err6.message}`);
+                                throw new Error("Could not fetch formats from any source");
                             }
                         }
                     }
@@ -2230,125 +2241,154 @@ app.all('/api/download', authenticateToken, async (req, res) => {
         const outputName = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${quality}.${quality === 'mp3' ? 'mp3' : 'mp4'}`;
         const fullPath = path.join(os.tmpdir(), outputName);
         const ytDlp = require('yt-dlp-exec');
+        const ffmpegPath = getFfmpegPath();
 
         cookieData = getSecureCookies();
 
+        // Helper: Find actual output file if yt-dlp appended .mkv or other extension
+        const findActualOutputFile = (targetPath) => {
+            if (fs.existsSync(targetPath) && fs.statSync(targetPath).size > 0) return targetPath;
+            const dir = path.dirname(targetPath);
+            const baseName = path.basename(targetPath);
+            const candidates = [
+                `${targetPath}.mkv`,
+                `${targetPath}.webm`,
+                path.join(dir, `${path.parse(baseName).name}.mkv`),
+                path.join(dir, `${path.parse(baseName).name}.webm`)
+            ];
+            for (const cand of candidates) {
+                if (fs.existsSync(cand) && fs.statSync(cand).size > 0) {
+                    try {
+                        fs.renameSync(cand, targetPath);
+                        console.log(`🔄 [yt-dlp] Renamed output container from ${cand} to ${targetPath}`);
+                        return targetPath;
+                    } catch (e) {
+                        return cand;
+                    }
+                }
+            }
+            return null;
+        };
+
         // Stealth Download Strategy
         const attemptDownload = async (playerClient, useCookies) => {
-            let extractorArgs = `youtube:player-client=${playerClient};formats=missing_pot`;
-            if (playerClient === 'tv') {
-                extractorArgs += ';player_skip=webpage,configs';
-            }
             const dlpOptions = {
                 output: fullPath,
                 noCheckCertificates: true,
                 preferFreeFormats: true,
-                jsRuntime: 'node',
-                extractorArgs,
                 userAgent: getYoutubeUserAgent(),
-                remoteComponents: 'ejs:github',
                 addHeader: [
                     'Accept-Language:en-US,en;q=0.9',
                     'Referer:https://www.youtube.com/watch?v=' + videoId
                 ]
             };
 
-            if (useCookies && cookieData) dlpOptions.cookies = cookieData.path;
+            if (playerClient) {
+                dlpOptions.extractorArgs = `youtube:player-client=${playerClient}`;
+            }
+
+            if (ffmpegPath) {
+                dlpOptions.ffmpegLocation = ffmpegPath;
+            }
+
+            if (useCookies && cookieData) {
+                dlpOptions.cookies = cookieData.path;
+            }
 
             if (quality === 'mp3') {
                 dlpOptions.format = 'bestaudio/best';
                 dlpOptions.extractAudio = true;
                 dlpOptions.audioFormat = 'mp3';
             } else {
-                // Prioritize single-file pre-merged MP4 formats to bypass missing FFmpeg binary issues on Render, then fallback to merge
                 const h = quality.replace('p', '');
-                dlpOptions.format = `best[height<=${h}][ext=mp4]/best[ext=mp4]/bestvideo[height<=${h}][ext=mp4]+bestaudio[ext=m4a]/best`;
+                dlpOptions.format = `bestvideo[height<=${h}]+bestaudio/best[height<=${h}]/best`;
+                dlpOptions.mergeOutputFormat = 'mp4';
             }
 
-            console.log(`🎬 [${playerClient}] Downloading ${videoId} (${quality}) [Cookies: ${!!(useCookies && cookieData)}]...`);
+            console.log(`🎬 [${playerClient || 'default'}] Downloading ${videoId} (${quality}) [Cookies: ${!!(useCookies && cookieData)}]...`);
             await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpOptions);
 
-            if (!fs.existsSync(fullPath)) {
-                throw new Error(`Output file was not created at ${fullPath}. This could be due to a missing ffmpeg binary for merging formats.`);
+            const resolvedFile = findActualOutputFile(fullPath);
+            if (!resolvedFile) {
+                throw new Error(`Output file was not created at ${fullPath}.`);
             }
+            return resolvedFile;
         };
 
         let downloadSuccess = false;
+        let finalFilePath = fullPath;
         
         try {
-            // Attempt 1: Fast direct stream using ytdl-core WITH cookies (Instant start!)
+            // Attempt 1: Android Client WITHOUT cookies (Proven against SABR, 429 & botguard)
+            console.log(`🔍 [yt-dlp] Attempt 1: Android client (no cookies)...`);
             try {
-                const ytdl = require('@distube/ytdl-core');
-                console.log(`🚀 [ytdl-core] Streaming ${videoId} directly with cookies...`);
-                
-                res.setHeader('Content-Disposition', `attachment; filename="${outputName}"`);
-                res.setHeader('Content-Type', quality === 'mp3' ? 'audio/mpeg' : 'video/mp4');
-
-                const stream = ytdl(videoId, {
-                    quality: quality === 'mp3' ? 'highestaudio' : 'highest',
-                    filter: quality === 'mp3' ? 'audioonly' : 'videoandaudio',
-                    ...getYoutubeOptions()
-                });
-
-                stream.pipe(res);
-
-                await new Promise((resolve, reject) => {
-                    stream.on('end', () => {
-                        console.log("✅ Direct stream finished");
-                        resolve();
-                    });
-                    stream.on('error', (err) => {
-                        console.error("❌ Stream error:", err.message);
-                        reject(err);
-                    });
-                });
-
-                await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
-                logAction(userId, 'DOWNLOAD_VIDEO', { videoId, quality, title });
-                return; // Direct streaming succeeded, request complete!
-            } catch (e_ytdl) {
-                console.warn(`⚠️ ytdl-core direct stream failed (${e_ytdl.message}). Falling back to yt-dlp...`);
-                if (res.headersSent) {
-                    throw e_ytdl; // If headers are already sent, we cannot retry
-                }
-                res.removeHeader('Content-Disposition');
-                res.removeHeader('Content-Type');
-            }
-
-            // Fallback Attempt 2: TV Client WITH cookies (No PO Token required, bypasses GVS challenges)
-            console.log(`🔍 [yt-dlp] Fallback Attempt 2: TV client + cookies`);
-            try {
-                await attemptDownload('tv', true);
+                finalFilePath = await attemptDownload('android', false);
                 downloadSuccess = true;
-            } catch (e) {
-                console.warn(`⚠️ Attempt 2 failed (${e.message}), trying iOS client WITHOUT cookies...`);
+            } catch (err1) {
+                console.warn(`⚠️ Attempt 1 failed (${err1.message}). Retrying Attempt 2 (Default client)...`);
                 try {
-                    // Attempt 3: iOS Client WITHOUT cookies (pure iOS, avoids webpage download)
-                    await attemptDownload('ios', false);
+                    // Attempt 2: Default client WITHOUT cookies
+                    finalFilePath = await attemptDownload(null, false);
                     downloadSuccess = true;
-                } catch (e2) {
-                    console.warn(`⚠️ Attempt 3 failed (${e2.message}), trying Android client WITHOUT cookies...`);
+                } catch (err2) {
+                    console.warn(`⚠️ Attempt 2 failed (${err2.message}). Retrying Attempt 3 (android,web)...`);
                     try {
-                        // Attempt 4: Android Client WITHOUT cookies (pure Android, avoids webpage download)
-                        await attemptDownload('android', false);
+                        // Attempt 3: Android + Web combo WITHOUT cookies
+                        finalFilePath = await attemptDownload('android,web', false);
                         downloadSuccess = true;
-                    } catch (e3) {
-                        console.warn(`⚠️ Attempt 4 failed (${e3.message}). Attempting iOS client WITH cookies...`);
+                    } catch (err3) {
+                        console.warn(`⚠️ Attempt 3 failed (${err3.message}). Retrying Attempt 4 (with cookies)...`);
                         try {
-                            // Attempt 5: iOS Client WITH cookies (Authentication fallback)
-                            await attemptDownload('ios,web', true);
+                            // Attempt 4: Web + Android WITH cookies (if configured)
+                            finalFilePath = await attemptDownload('web,android', true);
                             downloadSuccess = true;
-                        } catch (e4) {
-                            console.warn(`⚠️ Attempt 5 failed (${e4.message}). Attempting primary client WITH cookies...`);
+                        } catch (err4) {
+                            console.warn(`⚠️ Attempt 4 failed (${err4.message}). Retrying Attempt 5 (Direct Stream URL Pipe)...`);
                             try {
-                                // Attempt 6: Web Embedded WITH cookies (Last resort yt-dlp attempt)
-                                await attemptDownload('web_embedded,android,tv_embedded', true);
-                                downloadSuccess = true;
-                            } catch (e5) {
-                                console.warn(`⚠️ Attempt 6 failed (${e5.message}). Attempting ytdl-core fallback without cookies...`);
+                                // Attempt 5: Direct Stream URL extraction and in-memory pipe
+                                const h = quality === 'mp3' ? null : quality.replace('p', '');
+                                const formatSelector = quality === 'mp3'
+                                    ? 'bestaudio/best'
+                                    : `best[height<=${h}][ext=mp4]/best[height<=${h}]/best[ext=mp4]/best`;
+                                const streamUrlRaw = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, {
+                                    getUrl: true,
+                                    format: formatSelector,
+                                    extractorArgs: 'youtube:player-client=android'
+                                });
+                                const directUrl = (streamUrlRaw || '').trim().split('\n')[0];
+                                if (!directUrl || !directUrl.startsWith('http')) {
+                                    throw new Error("Could not extract direct stream URL");
+                                }
+
+                                console.log(`🚀 [Direct-Stream] Piping stream directly for ${outputName}`);
+                                res.setHeader('Content-Disposition', `attachment; filename="${outputName}"`);
+                                res.setHeader('Content-Type', quality === 'mp3' ? 'audio/mpeg' : 'video/mp4');
+
+                                const streamRes = await axios.get(directUrl, {
+                                    responseType: 'stream',
+                                    headers: { 'User-Agent': getYoutubeUserAgent() }
+                                });
+
+                                if (streamRes.headers['content-length']) {
+                                    res.setHeader('Content-Length', streamRes.headers['content-length']);
+                                }
+
+                                streamRes.data.pipe(res);
+
+                                await new Promise((resolve, reject) => {
+                                    streamRes.data.on('end', resolve);
+                                    streamRes.data.on('error', reject);
+                                });
+
+                                await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
+                                logAction(userId, 'DOWNLOAD_VIDEO', { videoId, quality, title });
+                                return; // Direct stream pipe complete!
+                            } catch (err5) {
+                                console.warn(`⚠️ Attempt 5 failed (${err5.message}). Retrying Attempt 6 (ytdl-core fallback)...`);
                                 try {
+                                    // Attempt 6: ytdl-core fallback
                                     const ytdl = require('@distube/ytdl-core');
-                                    console.log(`🚀 [ytdl-core] Streaming ${videoId} directly without cookies...`);
+                                    console.log(`🚀 [ytdl-core] Streaming ${videoId} directly...`);
                                     
                                     res.setHeader('Content-Disposition', `attachment; filename="${outputName}"`);
                                     res.setHeader('Content-Type', quality === 'mp3' ? 'audio/mpeg' : 'video/mp4');
@@ -2361,22 +2401,16 @@ app.all('/api/download', authenticateToken, async (req, res) => {
                                     stream.pipe(res);
 
                                     await new Promise((resolve, reject) => {
-                                        stream.on('end', () => {
-                                            console.log("✅ Direct stream finished");
-                                            resolve();
-                                        });
-                                        stream.on('error', (err) => {
-                                            console.error("❌ Stream error:", err.message);
-                                            reject(err);
-                                        });
+                                        stream.on('end', resolve);
+                                        stream.on('error', reject);
                                     });
 
                                     await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
                                     logAction(userId, 'DOWNLOAD_VIDEO', { videoId, quality, title });
                                     return;
-                                } catch (e6) {
-                                    console.error("❌ All download methods failed.");
-                                    throw new Error(`Download failed after multiple attempts. YouTube might be blocking our server IP. Error: ${e6.message}`);
+                                } catch (err6) {
+                                    console.error("❌ All 6 download methods failed:", err6.message);
+                                    throw new Error(`Download failed after multiple attempts. Error: ${err6.message || err1.message}`);
                                 }
                             }
                         }
@@ -2388,9 +2422,9 @@ app.all('/api/download', authenticateToken, async (req, res) => {
                 await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
                 logAction(userId, 'DOWNLOAD_VIDEO', { videoId, quality, title });
 
-                res.download(fullPath, outputName, (err) => {
+                res.download(finalFilePath, outputName, (err) => {
                     if (err) console.error("Send file error:", err);
-                    try { if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath); } catch (e) { }
+                    try { if (fs.existsSync(finalFilePath)) fs.unlinkSync(finalFilePath); } catch (e) { }
                 });
             }
         } catch (innerError) {
