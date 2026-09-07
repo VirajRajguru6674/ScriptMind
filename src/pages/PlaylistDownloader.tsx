@@ -6,7 +6,8 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Youtube, Download, Loader2, ListVideo, Check, CheckSquare, Square, MoreVertical, Settings2, DownloadCloud, Link2 } from 'lucide-react';
+import { Youtube, Download, Loader2, ListVideo, Check, CheckSquare, Square, MoreVertical, Settings2, DownloadCloud, Link2, FileArchive, Archive } from 'lucide-react';
+import JSZip from 'jszip';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -64,6 +65,9 @@ export default function PlaylistDownloader() {
     const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({});
     const [downloadedVideos, setDownloadedVideos] = useState<Set<string>>(new Set());
     const [allowedQualities, setAllowedQualities] = useState<{ value: string; label: string }[]>(FALLBACK_RESOLUTIONS);
+    const [isBulkDownloading, setIsBulkDownloading] = useState(false);
+    const [bulkStatus, setBulkStatus] = useState('');
+    const [bulkProgress, setBulkProgress] = useState(0);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -126,6 +130,9 @@ export default function PlaylistDownloader() {
                 setSelectedVideos([]);
                 setDownloadedVideos(new Set());
                 setVideoFormats({});
+                setIsBulkDownloading(false);
+                setBulkStatus('');
+                setBulkProgress(0);
                 toast({ title: "Success!", description: `Found ${data.videos.length} videos in playlist.` });
             } else {
                 throw new Error(data.error);
@@ -137,47 +144,63 @@ export default function PlaylistDownloader() {
         }
     };
 
+    const sanitizeFilename = (rawName: string): string => {
+        return rawName
+            .replace(/[/\\?%*:|"<>]/g, '_')
+            .replace(/\s+/g, ' ')
+            .trim() || 'video';
+    };
+
+    const fetchVideoBlob = (videoId: string, title: string, qualityToUse: string, onProgress?: (pct: number) => void): Promise<Blob> => {
+        const token = localStorage.getItem('token');
+        return new Promise<Blob>((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `${API_BASE_URL}/download`);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader('x-action-type', 'download');
+            if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+            xhr.responseType = 'blob';
+            xhr.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const pct = Math.round((e.loaded / e.total) * 100);
+                    onProgress?.(pct);
+                }
+            };
+            xhr.onload = async () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve(xhr.response as Blob);
+                } else {
+                    try {
+                        const text = await xhr.response.text();
+                        const errorData = JSON.parse(text);
+                        reject(new Error(errorData.error || "Download failed"));
+                    } catch (e) {
+                        reject(new Error("Download failed"));
+                    }
+                }
+            };
+            xhr.onerror = () => reject(new Error("Network connection error during download"));
+            xhr.send(JSON.stringify({ videoId, quality: qualityToUse, title }));
+        });
+    };
+
     const handleDownload = async (videoId: string, title: string, selectedQuality?: string) => {
         const qualityToUse = selectedQuality ?? quality;
         setIsDownloading(videoId);
         setDownloadProgress((p) => ({ ...p, [videoId]: 0 }));
         try {
-            const token = localStorage.getItem('token');
-            const blob = await new Promise<Blob>((resolve, reject) => {
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', `${API_BASE_URL}/download`);
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                xhr.setRequestHeader('x-action-type', 'download');
-                if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-                xhr.responseType = 'blob';
-                xhr.onprogress = (e) => {
-                    if (e.lengthComputable) {
-                        const pct = Math.round((e.loaded / e.total) * 100);
-                        setDownloadProgress((prev) => ({ ...prev, [videoId]: pct }));
-                    } else {
-                        setDownloadProgress((prev) => ({ ...prev, [videoId]: prev[videoId] ?? 0 }));
-                    }
-                };
-                xhr.onload = async () => {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        resolve(xhr.response as Blob);
-                    } else {
-                        try {
-                            const text = await xhr.response.text();
-                            const errorData = JSON.parse(text);
-                            reject(new Error(errorData.error || "Download failed"));
-                        } catch (e) {
-                            reject(new Error("Download failed"));
-                        }
-                    }
-                };
-                xhr.onerror = () => reject(new Error("Download failed"));
-                xhr.send(JSON.stringify({ videoId, quality: qualityToUse, title }));
+            const blob = await fetchVideoBlob(videoId, title, qualityToUse, (pct) => {
+                setDownloadProgress((prev) => ({ ...prev, [videoId]: pct }));
             });
             const downloadUrl = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = downloadUrl;
-            a.download = `${title}.${qualityToUse === 'mp3' ? 'mp3' : 'mp4'}`;
+            const ext = qualityToUse === 'mp3' ? 'mp3' : 'mp4';
+            let clean = sanitizeFilename(title);
+            if (clean.toLowerCase().endsWith(`.${ext}`)) {
+                clean = clean.slice(0, -(ext.length + 1));
+            }
+            a.download = `${clean}.${ext}`;
             document.body.appendChild(a);
             a.click();
             a.remove();
@@ -201,14 +224,127 @@ export default function PlaylistDownloader() {
     };
 
     const handleBulkDownload = async () => {
-        if (selectedVideos.length === 0) return;
-        toast({ title: "Bulk Download", description: `Queued ${selectedVideos.length} downloads...` });
+        if (selectedVideos.length === 0 || isBulkDownloading) return;
 
-        for (const id of selectedVideos) {
-            const video = videos.find(v => v.id === id);
-            if (video) {
-                await handleDownload(id, video.title, quality);
+        setIsBulkDownloading(true);
+        setBulkProgress(0);
+        setBulkStatus(`Preparing ZIP package for ${selectedVideos.length} item(s)...`);
+        toast({ 
+            title: "Starting ZIP Download", 
+            description: `Fetching ${selectedVideos.length} items and packing them into a single ZIP file...` 
+        });
+
+        const zip = new JSZip();
+        const usedNames = new Set<string>();
+        const ext = quality === 'mp3' ? 'mp3' : 'mp4';
+        let successCount = 0;
+
+        try {
+            for (let i = 0; i < selectedVideos.length; i++) {
+                const id = selectedVideos[i];
+                const video = videos.find(v => v.id === id);
+                const title = video ? video.title : `Video_${id}`;
+
+                setBulkStatus(`Downloading ${i + 1}/${selectedVideos.length}: ${title.length > 32 ? title.slice(0, 32) + '...' : title}`);
+                setIsDownloading(id);
+                setDownloadProgress((p) => ({ ...p, [id]: 0 }));
+
+                try {
+                    const blob = await fetchVideoBlob(id, title, quality, (pct) => {
+                        setDownloadProgress((prev) => ({ ...prev, [id]: pct }));
+                        // Calculate smooth overall progress
+                        const overallPct = Math.round(((i + (pct / 100)) / selectedVideos.length) * 90);
+                        setBulkProgress(overallPct);
+                    });
+
+                    // Avoid duplicate names inside the ZIP archive
+                    let clean = sanitizeFilename(title);
+                    if (clean.toLowerCase().endsWith(`.${ext}`)) {
+                        clean = clean.slice(0, -(ext.length + 1));
+                    }
+                    let filename = `${clean}.${ext}`;
+                    let counter = 1;
+                    while (usedNames.has(filename.toLowerCase())) {
+                        filename = `${clean}_${counter}.${ext}`;
+                        counter++;
+                    }
+                    usedNames.add(filename.toLowerCase());
+
+                    zip.file(filename, blob);
+                    setDownloadedVideos(prev => new Set(prev).add(id));
+                    successCount++;
+                } catch (videoErr: any) {
+                    console.error(`Failed to download ${title}:`, videoErr);
+                    toast({
+                        variant: "destructive",
+                        title: "Skipped Video",
+                        description: `Could not download "${title.slice(0, 35)}...". Continuing with remaining items.`
+                    });
+                } finally {
+                    setIsDownloading(null);
+                    setDownloadProgress((p) => {
+                        const next = { ...p };
+                        delete next[id];
+                        return next;
+                    });
+                }
             }
+
+            if (successCount === 0) {
+                toast({
+                    variant: "destructive",
+                    title: "ZIP Download Failed",
+                    description: "None of the selected videos could be downloaded."
+                });
+                return;
+            }
+
+            setBulkStatus(`Packing ${successCount} videos into ZIP archive...`);
+            setBulkProgress(92);
+
+            // STORE compression writes directly without CPU-heavy compression of pre-compressed video/audio
+            const zipBlob = await zip.generateAsync(
+                { type: 'blob', compression: 'STORE' },
+                (metadata) => {
+                    const pct = Math.round(90 + (metadata.percent / 100) * 10);
+                    setBulkProgress(pct);
+                    setBulkStatus(`Packing ZIP (${Math.round(metadata.percent)}%)...`);
+                }
+            );
+
+            setBulkProgress(100);
+            setBulkStatus("Starting ZIP download...");
+
+            const downloadUrl = window.URL.createObjectURL(zipBlob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+
+            const playlistId = url.split('list=')[1]?.split('&')[0];
+            const timestamp = new Date().toISOString().slice(0, 10);
+            a.download = playlistId 
+                ? `Playlist_${playlistId}_${quality}.zip` 
+                : `Playlist_${quality}_${timestamp}.zip`;
+
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+
+            toast({
+                title: "ZIP Downloaded Successfully!",
+                description: `Saved ${successCount} file(s) into ${a.download}`,
+            });
+        } catch (error: any) {
+            console.error("Bulk ZIP error:", error);
+            toast({
+                variant: "destructive",
+                title: "Bulk Download Error",
+                description: error.message || "Failed to create ZIP package."
+            });
+        } finally {
+            setIsBulkDownloading(false);
+            setBulkStatus('');
+            setBulkProgress(0);
         }
     };
 
@@ -303,15 +439,51 @@ export default function PlaylistDownloader() {
                                         </Select>
 
                                         <Button
-                                            disabled={selectedVideos.length === 0 || !!isDownloading}
+                                            disabled={selectedVideos.length === 0 || !!isDownloading || isBulkDownloading}
                                             onClick={handleBulkDownload}
                                             className="w-full sm:w-auto gap-2 bg-foreground text-background hover:bg-foreground/90 rounded-xl h-11 px-6 font-extrabold transition-all duration-300 shadow-md"
                                         >
-                                            <DownloadCloud className="w-4 h-4" />
-                                            Bulk Download
+                                            {isBulkDownloading ? (
+                                                <>
+                                                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                                                    <span className="truncate max-w-[160px]">{bulkStatus || "Creating ZIP..."}</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FileArchive className="w-4 h-4 text-primary" />
+                                                    Download ZIP ({selectedVideos.length})
+                                                </>
+                                            )}
                                         </Button>
                                     </div>
                                 </div>
+
+                                {/* Active Bulk ZIP Progress Banner */}
+                                {isBulkDownloading && (
+                                    <div className="bg-card/90 border border-primary/40 p-4 sm:p-5 rounded-3xl shadow-lg backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-3 duration-300">
+                                        <div className="flex items-center gap-3.5 w-full sm:w-auto">
+                                            <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shrink-0">
+                                                <FileArchive className="w-5 h-5 animate-pulse" />
+                                            </div>
+                                            <div className="space-y-0.5 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-black uppercase tracking-wider text-primary">Bulk ZIP Mode</span>
+                                                    <span className="text-[11px] text-muted-foreground">• Fast compression into single archive</span>
+                                                </div>
+                                                <p className="text-sm font-extrabold text-foreground truncate max-w-[280px] sm:max-w-md">
+                                                    {bulkStatus}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="w-full sm:w-72 space-y-1.5 shrink-0">
+                                            <div className="flex justify-between text-xs font-bold">
+                                                <span className="text-muted-foreground">ZIP Archive Progress</span>
+                                                <span className="text-primary font-extrabold">{bulkProgress}%</span>
+                                            </div>
+                                            <Progress value={bulkProgress} className="h-2 bg-secondary" />
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Responsive Card Grid */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -382,7 +554,7 @@ export default function PlaylistDownloader() {
                                                                     variant="secondary"
                                                                     size="sm"
                                                                     className="h-8 gap-1.5 px-3 rounded-lg bg-secondary/50 hover:bg-primary hover:text-primary-foreground transition-all duration-300 font-extrabold text-xs shadow-sm hover:shadow-md"
-                                                                    disabled={!!isDownloading}
+                                                                    disabled={!!isDownloading || isBulkDownloading}
                                                                 >
                                                                     <Download className="w-3.5 h-3.5" />
                                                                     Download
