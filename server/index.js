@@ -1611,10 +1611,17 @@ app.post('/api/process-video', authenticateToken, checkPlanLimits, async (req, r
             try {
                 console.log(`[Process] Attempting yt-dlp fallback for ${videoId}...`);
                 const ytDlp = require('yt-dlp-exec');
-                const info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, {
+                const dlpMetaArgs = {
                     dumpSingleJson: true,
                     noCheckCertificates: true,
-                });
+                    extractorArgs: 'youtube:player-skip=webpage,configs;player-client=android'
+                };
+                const secureCookiesMeta = getSecureCookies();
+                if (secureCookiesMeta?.path) dlpMetaArgs.cookies = secureCookiesMeta.path;
+                const info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpMetaArgs);
+                if (secureCookiesMeta?.isTemp && fs.existsSync(secureCookiesMeta.path)) {
+                    try { fs.unlinkSync(secureCookiesMeta.path); } catch (e) {}
+                }
                 videoInfo = {
                     id: videoId,
                     title: info.title,
@@ -2008,7 +2015,7 @@ app.get('/api/allowed-qualities', authenticateToken, async (req, res) => {
         const [rows] = await pool.execute('SELECT plan, role FROM users WHERE id = ?', [userId]);
         const userRecord = rows[0];
         const plan = userRecord?.plan || (req.user.role === 'admin' ? 'expert' : 'free');
-        
+
         const allowed = {
             'free': [
                 { value: '144p', label: '144p' },
@@ -2055,21 +2062,29 @@ app.get('/api/video-formats', async (req, res) => {
     const { videoId } = req.query;
     if (!videoId) return res.status(400).json({ error: 'videoId required' });
 
+    let secureCookies = null;
     try {
         const ytDlp = require('yt-dlp-exec');
         console.log(`🔍 [Video-Formats] Fetching formats for: ${videoId}`);
 
-        const info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, {
+        secureCookies = getSecureCookies();
+        const dlpArgs = {
             dumpSingleJson: true,
             noCheckCertificates: true,
             preferFreeFormats: true,
-            extractorArgs: 'youtube:player-client=android',
+            extractorArgs: 'youtube:player-skip=webpage,configs;player-client=android',
             userAgent: getYoutubeUserAgent(),
             addHeader: [
                 'Accept-Language:en-US,en;q=0.9',
                 'Referer:https://www.youtube.com/watch?v=' + videoId
             ]
-        });
+        };
+
+        if (secureCookies?.path) {
+            dlpArgs.cookies = secureCookies.path;
+        }
+
+        const info = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpArgs);
 
         const formats = info?.formats || [];
         const heights = new Set();
@@ -2089,22 +2104,36 @@ app.get('/api/video-formats', async (req, res) => {
             .filter(h => heightToValue[h])
             .sort((a, b) => a - b)
             .map(h => ({ value: heightToValue[h], label: heightToLabel[h], height: h }));
-        qualities.push({ value: 'mp3', label: 'Audio Only (MP3)' });
 
+        const standardQualities = [
+            { value: '144p', label: '144p', height: 144 },
+            { value: '360p', label: '360p', height: 360 },
+            { value: '720p', label: '720p', height: 720 },
+            { value: '1080p', label: '1080p', height: 1080 },
+            { value: 'mp3', label: 'Audio Only (MP3)' }
+        ];
+
+        // If only 1 resolution was found (e.g. android client defaults), expose standard resolutions so user can choose
         if (qualities.length <= 1) {
-            throw new Error("No video formats found");
+            return res.json({ qualities: standardQualities });
         }
 
+        qualities.push({ value: 'mp3', label: 'Audio Only (MP3)' });
         res.json({ qualities });
     } catch (error) {
         console.error('Video formats error (yt-dlp):', error.message);
         const fallbacks = [
+            { value: '144p', label: '144p' },
             { value: '360p', label: '360p' },
             { value: '720p', label: '720p' },
             { value: '1080p', label: '1080p' },
             { value: 'mp3', label: 'Audio Only (MP3)' },
         ];
         return res.status(200).json({ qualities: fallbacks, isFallback: true, error: error.message });
+    } finally {
+        if (secureCookies?.isTemp && fs.existsSync(secureCookies.path)) {
+            try { fs.unlinkSync(secureCookies.path); } catch (e) {}
+        }
     }
 });
 
@@ -2206,62 +2235,79 @@ app.all('/api/download', authenticateToken, async (req, res) => {
             return null;
         };
 
-        // Step 1: Direct In-Memory Stream (Instant response in ~2-3 seconds, no server disk wait!)
+        // Step 1: Direct In-Memory Stream for Video (Instant response in ~2-3 seconds, no server disk wait!)
+        // Note: For MP3, skip straight to Step 2 FFmpeg extraction to guarantee a 100% genuine MP3 audio stream
+        let secureCookies = getSecureCookies();
+        const cookieOption = secureCookies?.path ? { cookies: secureCookies.path } : {};
+
         const h = quality === 'mp3' ? null : quality.replace('p', '');
-        const formatSelector = quality === 'mp3'
-            ? 'bestaudio/best'
-            : `best[height<=${h}][ext=mp4]/best[ext=mp4]/best[height<=${h}]/best`;
 
-        console.log(`🚀 [Instant-Download] Requesting direct stream for ${videoId} (${quality})...`);
-        try {
-            const streamUrlRaw = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, {
-                getUrl: true,
-                format: formatSelector,
-                extractorArgs: 'youtube:player-client=android'
-            });
-
-            const directUrl = (streamUrlRaw || '').trim().split('\n')[0];
-            if (directUrl && directUrl.startsWith('http')) {
-                console.log(`⚡ [Instant-Download] Direct URL resolved in seconds. Piping stream for ${outputName}`);
-                res.setHeader('Content-Disposition', `attachment; filename="${outputName}"`);
-                res.setHeader('Content-Type', quality === 'mp3' ? 'audio/mpeg' : 'video/mp4');
-
-                const streamRes = await axios.get(directUrl, {
-                    responseType: 'stream',
-                    headers: { 'User-Agent': getYoutubeUserAgent() }
+        if (quality !== 'mp3') {
+            const formatSelector = `best[height<=${h}][ext=mp4]/best[ext=mp4]/best[height<=${h}]/best`;
+            console.log(`🚀 [Instant-Download] Requesting direct stream for ${videoId} (${quality})...`);
+            try {
+                const streamUrlRaw = await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, {
+                    getUrl: true,
+                    format: formatSelector,
+                    noCheckCertificates: true,
+                    preferFreeFormats: true,
+                    extractorArgs: 'youtube:player-skip=webpage,configs;player-client=android',
+                    userAgent: getYoutubeUserAgent(),
+                    addHeader: [
+                        'Accept-Language:en-US,en;q=0.9',
+                        'Referer:https://www.youtube.com/watch?v=' + videoId
+                    ],
+                    ...cookieOption
                 });
 
-                if (streamRes.headers['content-length']) {
-                    res.setHeader('Content-Length', streamRes.headers['content-length']);
+                const directUrl = (streamUrlRaw || '').trim().split('\n')[0];
+                if (directUrl && directUrl.startsWith('http')) {
+                    console.log(`⚡ [Instant-Download] Direct URL resolved in seconds. Piping stream for ${outputName}`);
+                    res.setHeader('Content-Disposition', `attachment; filename="${outputName}"`);
+                    res.setHeader('Content-Type', 'video/mp4');
+
+                    const streamRes = await axios.get(directUrl, {
+                        responseType: 'stream',
+                        headers: { 'User-Agent': getYoutubeUserAgent() }
+                    });
+
+                    if (streamRes.headers['content-length']) {
+                        res.setHeader('Content-Length', streamRes.headers['content-length']);
+                    }
+
+                    streamRes.data.pipe(res);
+
+                    await new Promise((resolve, reject) => {
+                        streamRes.data.on('end', resolve);
+                        streamRes.data.on('error', reject);
+                    });
+
+                    if (secureCookies?.isTemp && fs.existsSync(secureCookies.path)) {
+                        try { fs.unlinkSync(secureCookies.path); } catch (e) {}
+                    }
+
+                    await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
+                    logAction(userId, 'DOWNLOAD_VIDEO', { videoId, quality, title });
+                    return; // Instant streaming finished!
                 }
-
-                streamRes.data.pipe(res);
-
-                await new Promise((resolve, reject) => {
-                    streamRes.data.on('end', resolve);
-                    streamRes.data.on('error', reject);
-                });
-
-                await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
-                logAction(userId, 'DOWNLOAD_VIDEO', { videoId, quality, title });
-                return; // Instant streaming finished!
+            } catch (streamErr) {
+                console.warn(`⚠️ Instant stream extraction failed (${streamErr.message}). Falling back to FFmpeg file merge...`);
             }
-        } catch (streamErr) {
-            console.warn(`⚠️ Instant stream extraction failed (${streamErr.message}). Falling back to FFmpeg file merge...`);
         }
 
-        // Step 2: Fallback to local FFmpeg file download & merge if direct single stream was not available
+        // Step 2: Fallback to FFmpeg file download & merge (or MP3 audio conversion)
         console.log(`🎬 [Merge-Fallback] Downloading & merging ${videoId} (${quality}) with FFmpeg...`);
         const dlpOptions = {
             output: fullPath,
             noCheckCertificates: true,
             preferFreeFormats: true,
-            extractorArgs: 'youtube:player-client=android',
+            extractorArgs: 'youtube:player-skip=webpage,configs;player-client=android',
             userAgent: getYoutubeUserAgent(),
             addHeader: [
                 'Accept-Language:en-US,en;q=0.9',
                 'Referer:https://www.youtube.com/watch?v=' + videoId
-            ]
+            ],
+            ...cookieOption
         };
 
         if (ffmpegPath) {
@@ -2279,6 +2325,10 @@ app.all('/api/download', authenticateToken, async (req, res) => {
 
         await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpOptions);
 
+        if (secureCookies?.isTemp && fs.existsSync(secureCookies.path)) {
+            try { fs.unlinkSync(secureCookies.path); } catch (e) {}
+        }
+
         const resolvedFile = findActualOutputFile(fullPath);
         if (!resolvedFile) {
             throw new Error(`Output file was not created at ${fullPath}.`);
@@ -2292,6 +2342,9 @@ app.all('/api/download', authenticateToken, async (req, res) => {
             try { if (fs.existsSync(resolvedFile)) fs.unlinkSync(resolvedFile); } catch (e) { }
         });
     } catch (error) {
+        if (secureCookies?.isTemp && fs.existsSync(secureCookies.path)) {
+            try { fs.unlinkSync(secureCookies.path); } catch (e) {}
+        }
         console.error("🏁 Download Error:", error.message);
         if (!res.headersSent) {
             res.status(500).json({
