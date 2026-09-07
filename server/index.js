@@ -2144,7 +2144,7 @@ app.get('/api/video-formats', async (req, res) => {
         return res.status(200).json({ qualities: fallbacks, isFallback: true, error: error.message });
     } finally {
         if (secureCookies?.isTemp && fs.existsSync(secureCookies.path)) {
-            try { fs.unlinkSync(secureCookies.path); } catch (e) {}
+            try { fs.unlinkSync(secureCookies.path); } catch (e) { }
         }
     }
 });
@@ -2319,7 +2319,7 @@ app.all('/api/download', authenticateToken, async (req, res) => {
                 });
 
                 if (secureCookies?.isTemp && fs.existsSync(secureCookies.path)) {
-                    try { fs.unlinkSync(secureCookies.path); } catch (e) {}
+                    try { fs.unlinkSync(secureCookies.path); } catch (e) { }
                 }
 
                 await pool.execute('UPDATE users SET downloads_count = downloads_count + 1 WHERE id = ?', [userId]);
@@ -2386,7 +2386,7 @@ app.all('/api/download', authenticateToken, async (req, res) => {
         }
 
         if (secureCookies?.isTemp && fs.existsSync(secureCookies.path)) {
-            try { fs.unlinkSync(secureCookies.path); } catch (e) {}
+            try { fs.unlinkSync(secureCookies.path); } catch (e) { }
         }
 
         if (!downloadSuccess) {
@@ -2407,7 +2407,7 @@ app.all('/api/download', authenticateToken, async (req, res) => {
         });
     } catch (error) {
         if (secureCookies?.isTemp && fs.existsSync(secureCookies.path)) {
-            try { fs.unlinkSync(secureCookies.path); } catch (e) {}
+            try { fs.unlinkSync(secureCookies.path); } catch (e) { }
         }
         console.error("🏁 Download Error:", error.message);
         if (!res.headersSent) {
