@@ -390,16 +390,16 @@ export default function PlaylistDownloader() {
                             <Button
                                 onClick={handleFetchPlaylist}
                                 disabled={isLoading || isZipDownloading || !url.trim()}
-                                className="h-11 px-6 rounded-xl bg-gradient-to-r from-primary via-primary/95 to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-primary-foreground font-black text-xs sm:text-sm shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 shrink-0 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+                                className="h-11 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs sm:text-sm shadow-sm hover:shadow transition-all duration-200 shrink-0 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 gap-2"
                             >
                                 {isLoading ? (
                                     <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        <Loader2 className="w-4 h-4 animate-spin" />
                                         Loading...
                                     </>
                                 ) : (
                                     <>
-                                        <PlaySquare className="w-4 h-4 mr-2" />
+                                        <PlaySquare className="w-4 h-4" />
                                         Fetch Playlist
                                     </>
                                 )}
@@ -557,7 +557,7 @@ export default function PlaylistDownloader() {
                                             <Button
                                                 disabled={selectedVideos.length === 0 || !!isDownloading || isZipDownloading}
                                                 onClick={handleBulkZipDownload}
-                                                className="h-9 px-4 rounded-xl bg-gradient-to-r from-primary via-primary/95 to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-primary-foreground font-black text-xs shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 gap-1.5 shrink-0 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+                                                className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-sm hover:shadow transition-all duration-200 gap-1.5 shrink-0 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
                                             >
                                                 {isZipDownloading ? (
                                                     <Loader2 className="w-3.5 h-3.5 animate-spin" />

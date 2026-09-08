@@ -404,7 +404,7 @@ export default function Admin() {
                                 <Button 
                                     size="sm" 
                                     onClick={handleExportReport}
-                                    className="rounded-xl h-9 px-4 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-primary-foreground font-black text-xs shadow-md shadow-primary/20 gap-2"
+                                    className="rounded-xl h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-sm gap-2 transition-all"
                                 >
                                     <Download className="w-3.5 h-3.5" />
                                     <span>Export CSV</span>
@@ -1051,7 +1051,7 @@ export default function Admin() {
                                 <div className="flex justify-end pt-2">
                                     <Button
                                         onClick={handlePricingUpdate}
-                                        className="h-11 px-6 rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-primary-foreground font-black text-xs sm:text-sm shadow-md shadow-primary/20 gap-2"
+                                        className="h-11 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs sm:text-sm shadow-sm gap-2 transition-all"
                                     >
                                         <CheckCircle className="size-4" />
                                         Save All Pricing Configurations
@@ -1116,7 +1116,7 @@ export default function Admin() {
 
                                             <Button
                                                 onClick={sendAnnouncement}
-                                                className="w-full h-11 rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-primary-foreground font-black text-xs sm:text-sm shadow-md shadow-primary/20 gap-2"
+                                                className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs sm:text-sm shadow-sm gap-2 transition-all"
                                             >
                                                 <BellRing className="size-4" />
                                                 Broadcast Notification to Users
