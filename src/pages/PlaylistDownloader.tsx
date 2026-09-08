@@ -363,90 +363,76 @@ export default function PlaylistDownloader() {
                 </header>
 
                 <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
-                    <div className="max-w-7xl mx-auto space-y-6 pb-16">
+                    <div className="max-w-7xl mx-auto space-y-5 pb-16">
                         
-                        {/* URL Search Hero Card */}
-                        <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-card via-card to-card/60 p-6 sm:p-8 shadow-xl backdrop-blur-xl">
-                            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-                            <div className="relative space-y-4 max-w-3xl">
-                                <div className="space-y-1">
-                                    <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-                                        Download Full YouTube Playlists in One ZIP
-                                    </h2>
-                                    <p className="text-xs sm:text-sm text-muted-foreground">
-                                        Paste any public or unlisted playlist link. Select videos individually or all at once, choose resolution, and download them packaged in a single high-speed ZIP file.
-                                    </p>
-                                </div>
-
-                                <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                                    <div className="relative flex-1 group">
-                                        <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors duration-200 z-10 pointer-events-none" />
-                                        <Input
-                                            placeholder="Paste YouTube Playlist URL (e.g. https://www.youtube.com/playlist?list=...)"
-                                            value={url}
-                                            onChange={(e) => setUrl(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && handleFetchPlaylist()}
-                                            className="h-12 pl-11 pr-10 rounded-2xl bg-background/60 hover:bg-background/80 border-border/80 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 text-xs sm:text-sm w-full transition-all duration-200 shadow-inner"
-                                        />
-                                        {url && (
-                                            <button
-                                                onClick={() => setUrl('')}
-                                                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-full transition-colors"
-                                            >
-                                                <X className="w-3.5 h-3.5" />
-                                            </button>
-                                        )}
-                                    </div>
-                                    <Button
-                                        onClick={handleFetchPlaylist}
-                                        disabled={isLoading || isZipDownloading || !url.trim()}
-                                        className="h-12 px-7 rounded-2xl bg-gradient-to-r from-primary via-primary/95 to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-primary-foreground font-black text-xs sm:text-sm shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 transition-all duration-300 shrink-0 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+                        {/* Compact URL Input Bar */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                            <div className="relative flex-1 group">
+                                <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors duration-200 z-10 pointer-events-none" />
+                                <Input
+                                    placeholder="Paste YouTube Playlist URL (e.g. https://www.youtube.com/playlist?list=...)"
+                                    value={url}
+                                    onChange={(e) => setUrl(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleFetchPlaylist()}
+                                    className="h-11 pl-11 pr-10 rounded-xl bg-card/60 hover:bg-card/90 border-border/80 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 text-xs sm:text-sm w-full transition-all duration-200 shadow-sm"
+                                />
+                                {url && (
+                                    <button
+                                        onClick={() => setUrl('')}
+                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-full transition-colors"
                                     >
-                                        {isLoading ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                Loading Videos...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <PlaySquare className="w-4 h-4 mr-2" />
-                                                Fetch Playlist
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                )}
                             </div>
+                            <Button
+                                onClick={handleFetchPlaylist}
+                                disabled={isLoading || isZipDownloading || !url.trim()}
+                                className="h-11 px-6 rounded-xl bg-gradient-to-r from-primary via-primary/95 to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-primary-foreground font-black text-xs sm:text-sm shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 shrink-0 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Loading...
+                                    </>
+                                ) : (
+                                    <>
+                                        <PlaySquare className="w-4 h-4 mr-2" />
+                                        Fetch Playlist
+                                    </>
+                                )}
+                            </Button>
                         </div>
 
                         {/* ZIP Packaging Active Banner */}
                         {isZipDownloading && (
-                            <div className="bg-gradient-to-r from-primary/15 via-purple-500/10 to-primary/15 border border-primary/40 p-5 sm:p-6 rounded-3xl shadow-2xl backdrop-blur-xl space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                            <div className="bg-gradient-to-r from-primary/15 via-purple-500/10 to-primary/15 border border-primary/40 p-4 sm:p-5 rounded-2xl shadow-xl backdrop-blur-xl space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
                                 <div className="flex items-center justify-between gap-4">
-                                    <div className="flex items-center gap-3.5">
-                                        <div className="size-11 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary animate-pulse shadow-md shadow-primary/10">
-                                            <Archive className="w-6 h-6" />
+                                    <div className="flex items-center gap-3">
+                                        <div className="size-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary animate-pulse shadow-sm">
+                                            <Archive className="w-5 h-5" />
                                         </div>
                                         <div>
-                                            <h4 className="font-black text-sm sm:text-base text-foreground flex items-center gap-2">
+                                            <h4 className="font-black text-xs sm:text-sm text-foreground flex items-center gap-2">
                                                 Packaging {selectedVideos.length} Videos into ZIP
-                                                <span className="text-[10px] bg-primary text-primary-foreground px-2.5 py-0.5 rounded-full font-extrabold shadow-sm">
+                                                <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-extrabold shadow-sm">
                                                     {quality.toUpperCase()}
                                                 </span>
                                             </h4>
-                                            <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                                            <p className="text-[11px] text-muted-foreground font-medium mt-0.5">
                                                 {zipStatusMessage || 'Downloading and streaming files into one compressed folder...'}
                                             </p>
                                         </div>
                                     </div>
-                                    <span className="text-sm font-black text-primary bg-primary/10 border border-primary/20 px-3.5 py-1.5 rounded-xl shrink-0">
+                                    <span className="text-xs font-black text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-lg shrink-0">
                                         {zipProgress > 0 ? `${zipProgress}%` : "Packaging..."}
                                     </span>
                                 </div>
-                                <Progress value={zipProgress > 0 ? zipProgress : undefined} className="h-2.5 bg-primary/20 rounded-full" />
+                                <Progress value={zipProgress > 0 ? zipProgress : undefined} className="h-2 bg-primary/20 rounded-full" />
                                 <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                                     <span className="flex items-center gap-1.5">
                                         <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
-                                        Saving into a single ZIP archive to download all videos at once.
+                                        All videos will be saved into one single ZIP folder on your computer.
                                     </span>
                                     <span className="font-semibold">{selectedVideos.length} selected</span>
                                 </div>
@@ -455,20 +441,20 @@ export default function PlaylistDownloader() {
 
                         {/* Playlist Content & Controls */}
                         {videos.length > 0 && (
-                            <div className="space-y-6 animate-in fade-in duration-500">
+                            <div className="space-y-5 animate-in fade-in duration-500">
                                 
                                 {/* Sticky Control Toolbar */}
-                                <div className="sticky top-20 z-40 rounded-3xl border border-border/80 bg-card/90 p-4 sm:p-5 shadow-2xl backdrop-blur-2xl transition-all duration-200">
-                                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                                <div className="sticky top-20 z-40 rounded-2xl border border-border/80 bg-card/90 p-3 sm:p-4 shadow-xl backdrop-blur-2xl transition-all duration-200">
+                                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                                         
                                         {/* Left: Quick Select Controls */}
-                                        <div className="flex flex-wrap items-center gap-2.5">
+                                        <div className="flex flex-wrap items-center gap-2">
                                             <Button
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={handleToggleSelectAll}
                                                 disabled={isZipDownloading}
-                                                className="h-10 px-4 rounded-xl border-border/80 hover:border-primary/50 hover:bg-primary/10 text-xs font-bold gap-2 transition-all duration-200"
+                                                className="h-9 px-3.5 rounded-xl border-border/80 hover:border-primary/50 hover:bg-primary/10 text-xs font-bold gap-2 transition-all duration-200"
                                             >
                                                 {isAllSelected ? (
                                                     <>
@@ -489,7 +475,7 @@ export default function PlaylistDownloader() {
                                                     size="sm"
                                                     onClick={handleClearSelection}
                                                     disabled={isZipDownloading}
-                                                    className="h-10 px-3 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary/60 gap-1.5"
+                                                    className="h-9 px-3 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary/60 gap-1.5"
                                                 >
                                                     <X className="w-3.5 h-3.5" />
                                                     Clear ({selectedVideos.length})
@@ -497,13 +483,13 @@ export default function PlaylistDownloader() {
                                             )}
 
                                             {videos.length > 10 && (
-                                                <div className="hidden sm:flex items-center gap-1.5 pl-1 border-l border-border/60">
+                                                <div className="hidden sm:flex items-center gap-1 pl-1 border-l border-border/60">
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
                                                         onClick={() => handleSelectFirstN(5)}
                                                         disabled={isZipDownloading}
-                                                        className="h-8 px-2.5 rounded-lg text-[11px] font-bold text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                                        className="h-7 px-2 rounded-lg text-[11px] font-bold text-muted-foreground hover:text-primary hover:bg-primary/10"
                                                     >
                                                         First 5
                                                     </Button>
@@ -512,34 +498,34 @@ export default function PlaylistDownloader() {
                                                         size="sm"
                                                         onClick={() => handleSelectFirstN(10)}
                                                         disabled={isZipDownloading}
-                                                        className="h-8 px-2.5 rounded-lg text-[11px] font-bold text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                                        className="h-7 px-2 rounded-lg text-[11px] font-bold text-muted-foreground hover:text-primary hover:bg-primary/10"
                                                     >
                                                         First 10
                                                     </Button>
                                                 </div>
                                             )}
 
-                                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-xs font-black text-primary">
+                                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-primary/10 border border-primary/20 text-xs font-bold text-primary">
                                                 <Layers className="w-3.5 h-3.5" />
-                                                <span>{selectedVideos.length} of {videos.length} selected</span>
+                                                <span>{selectedVideos.length} / {videos.length} selected</span>
                                             </div>
                                         </div>
 
                                         {/* Right: Search + Resolution + Grand Download ZIP CTA */}
-                                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
                                             {/* Search in playlist */}
-                                            <div className="relative min-w-[180px] sm:w-[220px]">
-                                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                                            <div className="relative min-w-[170px] sm:w-[200px]">
+                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
                                                 <Input
                                                     placeholder="Filter videos..."
                                                     value={searchQuery}
                                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                                    className="h-10 pl-9 pr-8 text-xs rounded-xl bg-background/70 border-border/80 focus-visible:ring-1 focus-visible:ring-primary"
+                                                    className="h-9 pl-8 pr-7 text-xs rounded-xl bg-background/70 border-border/80 focus-visible:ring-1 focus-visible:ring-primary"
                                                 />
                                                 {searchQuery && (
                                                     <button 
                                                         onClick={() => setSearchQuery('')}
-                                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
                                                     >
                                                         <X className="w-3 h-3" />
                                                     </button>
@@ -552,7 +538,7 @@ export default function PlaylistDownloader() {
                                                 onValueChange={setQuality}
                                                 disabled={isZipDownloading}
                                             >
-                                                <SelectTrigger className="h-10 min-w-[130px] rounded-xl bg-background/70 border-border/80 text-xs font-bold focus:ring-1 focus:ring-primary">
+                                                <SelectTrigger className="h-9 min-w-[120px] rounded-xl bg-background/70 border-border/80 text-xs font-bold focus:ring-1 focus:ring-primary">
                                                     <Settings2 className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
                                                     <SelectValue placeholder="Quality" />
                                                 </SelectTrigger>
@@ -569,12 +555,12 @@ export default function PlaylistDownloader() {
                                             <Button
                                                 disabled={selectedVideos.length === 0 || !!isDownloading || isZipDownloading}
                                                 onClick={handleBulkZipDownload}
-                                                className="h-10 px-5 rounded-xl bg-gradient-to-r from-primary via-primary/95 to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-primary-foreground font-black text-xs sm:text-sm shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 gap-2 shrink-0 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+                                                className="h-9 px-4 rounded-xl bg-gradient-to-r from-primary via-primary/95 to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-primary-foreground font-black text-xs shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 gap-1.5 shrink-0 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
                                             >
                                                 {isZipDownloading ? (
-                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                                 ) : (
-                                                    <Archive className="w-4 h-4" />
+                                                    <Archive className="w-3.5 h-3.5" />
                                                 )}
                                                 {isZipDownloading
                                                     ? `Packaging (${selectedVideos.length})...`
@@ -607,8 +593,8 @@ export default function PlaylistDownloader() {
                                 )}
 
                                 {/* Card Grid */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                                    {filteredVideos.map((v, index) => {
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+                                    {filteredVideos.map((v) => {
                                         const isSelected = selectedVideos.includes(v.id);
                                         const isDone = downloadedVideos.has(v.id);
                                         const isCurrentDownloading = isDownloading === v.id;
@@ -640,26 +626,23 @@ export default function PlaylistDownloader() {
                                                             loading="lazy"
                                                         />
 
-                                                        {/* Subtle dark gradient overlay on top for contrast */}
-                                                        <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/60 to-transparent pointer-events-none" />
-
-                                                        {/* Video Index Pill (Top-Left, non-intrusive) */}
-                                                        <div className="absolute top-2.5 left-2.5 z-10">
-                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-black/70 backdrop-blur-md text-white/90 border border-white/10 shadow-sm">
+                                                        {/* Video Index Pill (Bottom-Left duration style so it NEVER covers thumbnail text) */}
+                                                        <div className="absolute bottom-2 left-2 z-10">
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-black/75 backdrop-blur-md text-white/90 border border-white/10 shadow-sm">
                                                                 #{originalIndex}
                                                             </span>
                                                         </div>
 
                                                         {/* Selection Checkbox Badge (Top-Right, clean glass aesthetic) */}
-                                                        <div className="absolute top-2.5 right-2.5 z-20">
+                                                        <div className="absolute top-2 right-2 z-20">
                                                             <div className={cn(
-                                                                "size-7 rounded-full flex items-center justify-center transition-all duration-200 backdrop-blur-md border shadow-md",
+                                                                "size-6 rounded-full flex items-center justify-center transition-all duration-200 backdrop-blur-md border shadow-md",
                                                                 isSelected 
                                                                     ? "bg-primary border-primary text-primary-foreground scale-105 shadow-primary/30" 
                                                                     : "bg-black/50 border-white/30 text-white/40 group-hover:text-white/80 group-hover:border-white/60 group-hover:scale-105"
                                                             )}>
                                                                 <Check className={cn(
-                                                                    "w-4 h-4 stroke-[3px] transition-transform duration-200",
+                                                                    "w-3.5 h-3.5 stroke-[3px] transition-transform duration-200",
                                                                     isSelected ? "scale-100 opacity-100" : "scale-75 opacity-0 group-hover:opacity-60"
                                                                 )} />
                                                             </div>
@@ -680,7 +663,7 @@ export default function PlaylistDownloader() {
 
                                                         {/* Checkmark overlay for completed video */}
                                                         {isDone && !isCurrentDownloading && (
-                                                            <div className="absolute bottom-2.5 right-2.5 z-10 flex items-center gap-1 bg-emerald-500/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-md shadow-md">
+                                                            <div className="absolute bottom-2 right-2 z-10 flex items-center gap-1 bg-emerald-500/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-md shadow-md">
                                                                 <CheckCircle className="w-3 h-3" />
                                                                 Saved
                                                             </div>
@@ -688,7 +671,7 @@ export default function PlaylistDownloader() {
                                                     </div>
 
                                                     {/* Video Details & Actions */}
-                                                    <div className="p-4 flex flex-col justify-between flex-1 gap-3">
+                                                    <div className="p-3.5 flex flex-col justify-between flex-1 gap-2.5">
                                                         <div className="space-y-1">
                                                             <h4 
                                                                 title={v.title}
@@ -706,7 +689,7 @@ export default function PlaylistDownloader() {
 
                                                         {/* Footer action bar */}
                                                         <div 
-                                                            className="flex items-center justify-between pt-2.5 border-t border-border/40 mt-auto"
+                                                            className="flex items-center justify-between pt-2 border-t border-border/40 mt-auto"
                                                             onClick={(e) => e.stopPropagation()} // Prevent card selection when interacting with download
                                                         >
                                                             <span className={cn(
