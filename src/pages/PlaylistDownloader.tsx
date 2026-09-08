@@ -362,51 +362,80 @@ export default function PlaylistDownloader() {
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
-                    <div className="max-w-7xl mx-auto space-y-5 pb-16">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 relative">
+                    {/* Ambient Glow Background Effect */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[650px] h-[220px] bg-gradient-to-b from-primary/15 via-purple-500/10 to-transparent blur-[120px] pointer-events-none rounded-full" />
+
+                    <div className="max-w-7xl mx-auto space-y-6 pb-16 relative z-10">
                         
-                        {/* Compact URL Input Bar */}
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                            <div className="relative flex-1 group">
-                                <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors duration-200 z-10 pointer-events-none" />
-                                <Input
-                                    placeholder="Paste YouTube Playlist URL (e.g. https://www.youtube.com/playlist?list=...)"
+                        {/* Hero Title Section */}
+                        <div className="text-center space-y-2 pt-2 pb-1 max-w-2xl mx-auto">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[11px] font-bold text-primary shadow-sm backdrop-blur-md">
+                                <Sparkles className="w-3.5 h-3.5" />
+                                <span>Batch YouTube Downloader • Fast ZIP Export</span>
+                            </div>
+                            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+                                Download Full Playlists in One Click
+                            </h2>
+                            <p className="text-xs sm:text-sm text-muted-foreground font-medium">
+                                Paste any YouTube playlist link below to download individual videos or package all of them into a high-speed ZIP archive.
+                            </p>
+                        </div>
+
+                        {/* Ultra-Stylish Command Capsule URL Input Bar */}
+                        <div className="max-w-3xl mx-auto">
+                            <div className="relative flex items-center p-1.5 sm:p-2 rounded-2xl bg-card/80 hover:bg-card/95 border border-border/80 hover:border-primary/40 focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/15 shadow-2xl backdrop-blur-2xl transition-all duration-300">
+                                
+                                {/* YouTube Icon Badge */}
+                                <div className="size-10 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center shrink-0 ml-1">
+                                    <Youtube className="w-5 h-5 fill-red-500/20" />
+                                </div>
+
+                                {/* Main URL Input */}
+                                <input
+                                    type="text"
+                                    placeholder="Paste YouTube playlist URL (e.g. https://www.youtube.com/playlist?list=...)"
                                     value={url}
                                     onChange={(e) => setUrl(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleFetchPlaylist()}
-                                    className="h-11 pl-11 pr-10 rounded-xl bg-card/60 hover:bg-card/90 border-border/80 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 text-xs sm:text-sm w-full transition-all duration-200 shadow-sm"
+                                    className="flex-1 min-w-0 bg-transparent px-3.5 py-2 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 border-none outline-none focus:outline-none focus:ring-0 font-medium"
                                 />
+
+                                {/* Clear Input Button */}
                                 {url && (
                                     <button
                                         onClick={() => setUrl('')}
-                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-full transition-colors"
+                                        className="text-muted-foreground hover:text-foreground p-1.5 mr-1 rounded-lg hover:bg-secondary/60 transition-colors"
+                                        title="Clear URL"
                                     >
-                                        <X className="w-3.5 h-3.5" />
+                                        <X className="w-4 h-4" />
                                     </button>
                                 )}
+
+                                {/* Action Button */}
+                                <Button
+                                    onClick={handleFetchPlaylist}
+                                    disabled={isLoading || isZipDownloading || !url.trim()}
+                                    className="h-10 px-5 rounded-xl bg-gradient-to-r from-primary via-primary/95 to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-primary-foreground font-black text-xs sm:text-sm shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 transition-all duration-300 shrink-0 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            Fetching...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <PlaySquare className="w-4 h-4 mr-1.5" />
+                                            Fetch Playlist
+                                        </>
+                                    )}
+                                </Button>
                             </div>
-                            <Button
-                                onClick={handleFetchPlaylist}
-                                disabled={isLoading || isZipDownloading || !url.trim()}
-                                className="h-11 px-6 rounded-xl bg-gradient-to-r from-primary via-primary/95 to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-primary-foreground font-black text-xs sm:text-sm shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 shrink-0 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        Loading...
-                                    </>
-                                ) : (
-                                    <>
-                                        <PlaySquare className="w-4 h-4 mr-2" />
-                                        Fetch Playlist
-                                    </>
-                                )}
-                            </Button>
                         </div>
 
                         {/* ZIP Packaging Active Banner */}
                         {isZipDownloading && (
-                            <div className="bg-gradient-to-r from-primary/15 via-purple-500/10 to-primary/15 border border-primary/40 p-4 sm:p-5 rounded-2xl shadow-xl backdrop-blur-xl space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
+                            <div className="max-w-3xl mx-auto bg-gradient-to-r from-primary/15 via-purple-500/10 to-primary/15 border border-primary/40 p-4 sm:p-5 rounded-2xl shadow-xl backdrop-blur-xl space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="flex items-center gap-3">
                                         <div className="size-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary animate-pulse shadow-sm">
