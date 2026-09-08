@@ -54,23 +54,40 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
 
     const SidebarContent = () => (
         <div className="flex h-full flex-col bg-sidebar-background">
-            <div className="flex h-20 items-center px-6 border-b border-sidebar-border/50">
+            <div className="flex h-16 items-center px-6 border-b border-sidebar-border/50">
                 <Link to="/" className="flex items-center gap-3 w-full group">
-                    <div className="size-10 rounded-xl bg-gradient-to-tr from-primary to-purple-500 p-0.5 shadow-md shadow-primary/20 group-hover:scale-105 transition-transform duration-300 shrink-0">
-                        <div className="w-full h-full rounded-[10px] bg-sidebar-background flex items-center justify-center overflow-hidden">
-                            <img 
-                                src="/logo.png" 
-                                alt="ScriptMind Logo" 
-                                className="w-full h-full object-cover" 
+                    <div className="relative size-9 rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 border border-primary/30 flex items-center justify-center text-primary shadow-sm shadow-primary/20 transition-all duration-300 group-hover:scale-105 group-hover:border-primary/50 group-hover:shadow-md group-hover:shadow-primary/30 shrink-0 overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/30 via-transparent to-transparent opacity-60 pointer-events-none" />
+                        <svg 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            className="w-5 h-5 relative z-10 text-primary transition-transform duration-300 group-hover:scale-110"
+                        >
+                            <path 
+                                d="M17.5 7C17.5 5.067 15.709 3.5 13.5 3.5H9.5C6.73858 3.5 4.5 5.73858 4.5 8.5C4.5 11.2614 6.73858 13.5 9.5 13.5H14.5C17.2614 13.5 19.5 15.7386 19.5 18.5C19.5 21.2614 17.2614 23.5 14.5 23.5H10.5C8.291 23.5 6.5 21.933 6.5 20" 
+                                stroke="currentColor" 
+                                strokeWidth="2.75" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
                             />
-                        </div>
+                            <circle cx="17.5" cy="7" r="1.5" fill="currentColor" />
+                            <circle cx="6.5" cy="20" r="1.5" fill="currentColor" />
+                            <path 
+                                d="M12 11.5L12 15.5" 
+                                stroke="currentColor" 
+                                strokeWidth="1.5" 
+                                strokeLinecap="round" 
+                                opacity="0.6" 
+                            />
+                        </svg>
                     </div>
                     <div className="flex flex-col">
-                        <span className="font-black text-lg tracking-tight text-foreground leading-tight">
-                            Script<span className="text-primary">Mind</span>
+                        <span className="font-black text-lg tracking-tight text-foreground leading-none flex items-center">
+                            Script<span className="text-primary font-black ml-0.5">Mind</span>
                         </span>
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                            AI Studio
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                            AI STUDIO
                         </span>
                     </div>
                 </Link>

@@ -55,6 +55,8 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { NotificationPanel } from "@/components/NotificationPanel";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 
 
@@ -391,7 +393,7 @@ const Settings = () => {
 
         <main className="lg:pl-[280px] h-screen flex flex-col overflow-hidden">
           {/* Top Navbar for Settings */}
-          <header className="h-16 border-b border-border/40 bg-background/80 backdrop-blur-md flex items-center justify-between px-8 shrink-0 z-20">
+          <header className="h-16 border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl flex items-center justify-between px-8 shrink-0 z-20">
             <div className="flex items-center gap-4">
               <Link to="/">
                 <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 hover:bg-muted">
@@ -402,6 +404,10 @@ const Settings = () => {
               <div>
                 <h1 className="text-lg font-bold tracking-tight">Settings</h1>
               </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <NotificationPanel />
+              <ThemeToggle />
             </div>
           </header>
 

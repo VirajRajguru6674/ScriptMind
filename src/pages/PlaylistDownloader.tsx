@@ -338,23 +338,25 @@ export default function PlaylistDownloader() {
     return (
         <div className="flex h-screen bg-background overflow-hidden selection:bg-primary/20">
             <Sidebar />
-            <main className="flex-1 flex flex-col min-w-0 lg:ml-[296px]">
+            <main className="flex-1 flex flex-col min-w-0 lg:ml-[280px]">
                 {/* Header */}
-                <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+                <header className="sticky top-0 z-50 w-full border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
                     <div className="flex h-16 items-center justify-between px-4 sm:px-8">
                         <div className="flex items-center gap-3 pl-12 lg:pl-0">
-                            <div className="size-9 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 border border-primary/20 flex items-center justify-center text-primary shadow-sm shadow-primary/10">
+                            <div className="size-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm shadow-primary/10">
                                 <Youtube className="w-5 h-5 text-red-500" />
                             </div>
                             <div>
                                 <h1 className="text-base sm:text-lg font-black tracking-tight text-foreground flex items-center gap-2">
                                     Playlist Downloader
-                                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                                    <span className="text-[10px] font-black uppercase tracking-wider bg-primary/15 text-primary px-2.5 py-0.5 rounded-full border border-primary/25 flex items-center gap-1">
+                                        <Archive className="w-3 h-3" />
                                         Bulk ZIP
                                     </span>
                                 </h1>
                             </div>
                         </div>
+                        {/* Right side controls */}
                         <div className="flex items-center gap-2">
                             <NotificationPanel />
                             <ThemeToggle />
