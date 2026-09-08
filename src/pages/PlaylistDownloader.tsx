@@ -6,9 +6,26 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Youtube, Download, Loader2, ListVideo, Check, CheckSquare, Square, MoreVertical, Settings2, DownloadCloud, Link2, Archive, FolderArchive, Sparkles, CheckCircle2 } from 'lucide-react';
+import { 
+    Youtube, 
+    Download, 
+    Loader2, 
+    ListVideo, 
+    Check, 
+    CheckSquare, 
+    Square, 
+    Settings2, 
+    Link2, 
+    Archive, 
+    Sparkles, 
+    Search, 
+    X, 
+    PlaySquare, 
+    Layers, 
+    CheckCircle,
+    SlidersHorizontal
+} from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     Select,
     SelectContent,
@@ -40,30 +57,17 @@ const FALLBACK_RESOLUTIONS = [
     { value: 'mp3', label: 'Audio Only (MP3)' },
 ];
 
-const BULK_QUALITIES = [
-    { value: '360p', label: '360p' },
-    { value: '720p', label: '720p' },
-    { value: '1080p', label: '1080p' },
-    { value: '1440p', label: '1440p' },
-    { value: '4k', label: '4K (Ultra HD)' },
-    { value: 'mp3', label: 'Audio Only (MP3)' },
-];
-
-const QUALITY_ORDER = ['144p', '240p', '360p', '480p', '720p', '1080p', '1440p', '4k', '8k', 'mp3'];
-const QUALITY_LABELS: Record<string, string> = { '144p': '144p', '240p': '240p', '360p': '360p', '480p': '480p', '720p': '720p', '1080p': '1080p', '1440p': '1440p', '4k': '4K (Ultra HD)', '8k': '8K', 'mp3': 'Audio Only (MP3)' };
-
 export default function PlaylistDownloader() {
     const [url, setUrl] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [videos, setVideos] = useState<PlaylistVideo[]>([]);
     const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
     const [quality, setQuality] = useState('1080p');
+    const [searchQuery, setSearchQuery] = useState('');
     const [isDownloading, setIsDownloading] = useState<string | null>(null);
     const [isZipDownloading, setIsZipDownloading] = useState(false);
     const [zipProgress, setZipProgress] = useState(0);
     const [zipStatusMessage, setZipStatusMessage] = useState('');
-    const [videoFormats, setVideoFormats] = useState<Record<string, { value: string; label: string }[]>>({});
-    const [loadingFormats, setLoadingFormats] = useState<string | null>(null);
     const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({});
     const [downloadedVideos, setDownloadedVideos] = useState<Set<string>>(new Set());
     const [allowedQualities, setAllowedQualities] = useState<{ value: string; label: string }[]>(FALLBACK_RESOLUTIONS);
@@ -91,24 +95,6 @@ export default function PlaylistDownloader() {
         fetchAllowedQualities();
     }, []);
 
-    const fetchVideoFormats = async (videoId: string) => {
-        if (videoFormats[videoId]) return;
-        setLoadingFormats(videoId);
-        try {
-            const res = await fetch(`${API_BASE_URL}/video-formats?videoId=${videoId}`);
-            const data = await res.json();
-            if (data.qualities?.length) {
-                setVideoFormats(prev => ({ ...prev, [videoId]: data.qualities }));
-            } else {
-                setVideoFormats(prev => ({ ...prev, [videoId]: FALLBACK_RESOLUTIONS }));
-            }
-        } catch {
-            setVideoFormats(prev => ({ ...prev, [videoId]: FALLBACK_RESOLUTIONS }));
-        } finally {
-            setLoadingFormats(null);
-        }
-    };
-
     const handleFetchPlaylist = async () => {
         if (!url) return;
 
@@ -122,17 +108,18 @@ export default function PlaylistDownloader() {
         try {
             const response = await fetch(`${API_BASE_URL}/playlist-info?playlistId=${playlistId}`);
             const data = await response.json();
-            if (data.videos) {
+            if (data.videos && data.videos.length > 0) {
                 setVideos(data.videos);
-                setSelectedVideos(data.videos.map((v: PlaylistVideo) => v.id)); // Auto-select all by default for convenience
+                // Select all by default so user can directly click download, but allow 1-click select/deselect
+                setSelectedVideos(data.videos.map((v: PlaylistVideo) => v.id));
                 setDownloadedVideos(new Set());
-                setVideoFormats({});
-                toast({ title: "Success!", description: `Found ${data.videos.length} videos in playlist.` });
+                setSearchQuery('');
+                toast({ title: "Playlist Loaded!", description: `Found ${data.videos.length} videos from ${data.videos[0]?.channelTitle || 'playlist'}.` });
             } else {
-                throw new Error(data.error);
+                throw new Error(data.error || "No videos found in this playlist.");
             }
-        } catch (error) {
-            toast({ variant: "destructive", title: "Fetch Failed", description: "Could not retrieve playlist contents." });
+        } catch (error: any) {
+            toast({ variant: "destructive", title: "Fetch Failed", description: error.message || "Could not retrieve playlist contents." });
         } finally {
             setIsLoading(false);
         }
@@ -204,7 +191,7 @@ export default function PlaylistDownloader() {
     // Bulk ZIP Archive Downloader
     const handleBulkZipDownload = async () => {
         if (selectedVideos.length === 0) {
-            toast({ variant: "destructive", title: "No Videos Selected", description: "Please select at least one video to download." });
+            toast({ variant: "destructive", title: "No Videos Selected", description: "Please click on the video cards you want to download." });
             return;
         }
 
@@ -217,7 +204,7 @@ export default function PlaylistDownloader() {
 
         setIsZipDownloading(true);
         setZipProgress(5);
-        setZipStatusMessage(`Connecting to server & packaging ${selectedItems.length} videos...`);
+        setZipStatusMessage(`Packaging ${selectedItems.length} videos into ZIP...`);
 
         try {
             const token = localStorage.getItem('token');
@@ -236,14 +223,14 @@ export default function PlaylistDownloader() {
                         setZipStatusMessage(`Downloading ZIP archive (${pct}%)...`);
                     } else {
                         setZipProgress((prev) => Math.min(prev + 8, 85));
-                        setZipStatusMessage(`Packaging ${selectedItems.length} videos into ZIP...`);
+                        setZipStatusMessage(`Streaming ${selectedItems.length} videos into single ZIP folder...`);
                     }
                 };
 
                 xhr.onload = async () => {
                     if (xhr.status >= 200 && xhr.status < 300) {
                         setZipProgress(100);
-                        setZipStatusMessage('Complete! Saving ZIP file...');
+                        setZipStatusMessage('ZIP ready! Saving file to your computer...');
                         resolve(xhr.response as Blob);
                     } else {
                         try {
@@ -298,12 +285,25 @@ export default function PlaylistDownloader() {
         }
     };
 
-    const toggleSelectAll = () => {
-        if (selectedVideos.length === videos.length) {
+    // Selection Handlers
+    const isAllSelected = videos.length > 0 && selectedVideos.length === videos.length;
+    const isNoneSelected = selectedVideos.length === 0;
+
+    const handleToggleSelectAll = () => {
+        if (isAllSelected) {
             setSelectedVideos([]);
         } else {
             setSelectedVideos(videos.map(v => v.id));
         }
+    };
+
+    const handleClearSelection = () => {
+        setSelectedVideos([]);
+    };
+
+    const handleSelectFirstN = (count: number) => {
+        const ids = videos.slice(0, count).map(v => v.id);
+        setSelectedVideos(ids);
     };
 
     const toggleVideoSelection = (id: string) => {
@@ -312,19 +312,48 @@ export default function PlaylistDownloader() {
         );
     };
 
+    // Filtered videos for search
+    const filteredVideos = useMemo(() => {
+        if (!searchQuery.trim()) return videos;
+        const query = searchQuery.toLowerCase().trim();
+        return videos.filter(v => 
+            v.title.toLowerCase().includes(query) || 
+            v.channelTitle.toLowerCase().includes(query)
+        );
+    }, [videos, searchQuery]);
+
+    const handleSelectAllFiltered = () => {
+        const filteredIds = filteredVideos.map(v => v.id);
+        const allFilteredSelected = filteredIds.every(id => selectedVideos.includes(id));
+        
+        if (allFilteredSelected) {
+            // Deselect filtered
+            setSelectedVideos(prev => prev.filter(id => !filteredIds.includes(id)));
+        } else {
+            // Add all filtered
+            setSelectedVideos(prev => Array.from(new Set([...prev, ...filteredIds])));
+        }
+    };
+
     return (
-        <div className="flex h-screen bg-background overflow-hidden">
+        <div className="flex h-screen bg-background overflow-hidden selection:bg-primary/20">
             <Sidebar />
             <main className="flex-1 flex flex-col min-w-0 lg:ml-[296px]">
-                <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                    <div className="flex h-16 items-center justify-between px-6">
+                {/* Header */}
+                <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+                    <div className="flex h-16 items-center justify-between px-4 sm:px-8">
                         <div className="flex items-center gap-3 pl-12 lg:pl-0">
-                            <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                                <Youtube className="w-5 h-5" />
+                            <div className="size-9 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 border border-primary/20 flex items-center justify-center text-primary shadow-sm shadow-primary/10">
+                                <Youtube className="w-5 h-5 text-red-500" />
                             </div>
-                            <h1 className="text-lg sm:text-xl font-black tracking-tight text-foreground">
-                                Playlist Downloader
-                            </h1>
+                            <div>
+                                <h1 className="text-base sm:text-lg font-black tracking-tight text-foreground flex items-center gap-2">
+                                    Playlist Downloader
+                                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                                        Bulk ZIP
+                                    </span>
+                                </h1>
+                            </div>
                         </div>
                         <div className="flex items-center gap-2">
                             <NotificationPanel />
@@ -333,217 +362,412 @@ export default function PlaylistDownloader() {
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
-                    <div className="w-full space-y-8 pb-12">
-                        {/* URL input bar */}
-                        <div className="space-y-4 text-left">
-                            <div className="flex flex-col sm:flex-row gap-3 max-w-3xl w-full">
-                                <div className="relative flex-1 group">
-                                    <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors duration-300 z-10 pointer-events-none" />
-                                    <Input
-                                        placeholder="Paste YouTube Playlist URL here..."
-                                        value={url}
-                                        onChange={(e) => setUrl(e.target.value)}
-                                        className="h-11 pl-11 pr-5 rounded-xl bg-card/40 hover:bg-card/60 border-border hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary backdrop-blur-md text-xs sm:text-sm w-full transition-all duration-300 shadow-inner"
-                                    />
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
+                    <div className="max-w-7xl mx-auto space-y-6 pb-16">
+                        
+                        {/* URL Search Hero Card */}
+                        <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-card via-card to-card/60 p-6 sm:p-8 shadow-xl backdrop-blur-xl">
+                            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+                            <div className="relative space-y-4 max-w-3xl">
+                                <div className="space-y-1">
+                                    <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
+                                        Download Full YouTube Playlists in One ZIP
+                                    </h2>
+                                    <p className="text-xs sm:text-sm text-muted-foreground">
+                                        Paste any public or unlisted playlist link. Select videos individually or all at once, choose resolution, and download them packaged in a single high-speed ZIP file.
+                                    </p>
                                 </div>
-                                <Button
-                                    onClick={handleFetchPlaylist}
-                                    disabled={isLoading || isZipDownloading}
-                                    className="h-11 px-6 rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:from-primary/95 hover:to-purple-600/95 text-primary-foreground font-black text-xs sm:text-sm shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 shrink-0 hover:scale-[1.02] active:scale-[0.98]"
-                                >
-                                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Fetch Playlist"}
-                                </Button>
+
+                                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                                    <div className="relative flex-1 group">
+                                        <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors duration-200 z-10 pointer-events-none" />
+                                        <Input
+                                            placeholder="Paste YouTube Playlist URL (e.g. https://www.youtube.com/playlist?list=...)"
+                                            value={url}
+                                            onChange={(e) => setUrl(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleFetchPlaylist()}
+                                            className="h-12 pl-11 pr-10 rounded-2xl bg-background/60 hover:bg-background/80 border-border/80 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 text-xs sm:text-sm w-full transition-all duration-200 shadow-inner"
+                                        />
+                                        {url && (
+                                            <button
+                                                onClick={() => setUrl('')}
+                                                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-full transition-colors"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
+                                    </div>
+                                    <Button
+                                        onClick={handleFetchPlaylist}
+                                        disabled={isLoading || isZipDownloading || !url.trim()}
+                                        className="h-12 px-7 rounded-2xl bg-gradient-to-r from-primary via-primary/95 to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-primary-foreground font-black text-xs sm:text-sm shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 transition-all duration-300 shrink-0 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+                                    >
+                                        {isLoading ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                Loading Videos...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <PlaySquare className="w-4 h-4 mr-2" />
+                                                Fetch Playlist
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
                             </div>
                         </div>
 
                         {/* ZIP Packaging Active Banner */}
                         {isZipDownloading && (
-                            <div className="bg-gradient-to-r from-primary/15 via-purple-500/10 to-primary/15 border border-primary/30 p-5 rounded-3xl shadow-xl backdrop-blur-md space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="size-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary animate-pulse">
-                                            <Archive className="w-5 h-5" />
+                            <div className="bg-gradient-to-r from-primary/15 via-purple-500/10 to-primary/15 border border-primary/40 p-5 sm:p-6 rounded-3xl shadow-2xl backdrop-blur-xl space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3.5">
+                                        <div className="size-11 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary animate-pulse shadow-md shadow-primary/10">
+                                            <Archive className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <h4 className="font-extrabold text-sm text-foreground flex items-center gap-2">
-                                                Packaging Videos into ZIP Folder
-                                                <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">Fast Single Download</span>
+                                            <h4 className="font-black text-sm sm:text-base text-foreground flex items-center gap-2">
+                                                Packaging {selectedVideos.length} Videos into ZIP
+                                                <span className="text-[10px] bg-primary text-primary-foreground px-2.5 py-0.5 rounded-full font-extrabold shadow-sm">
+                                                    {quality.toUpperCase()}
+                                                </span>
                                             </h4>
-                                            <p className="text-xs text-muted-foreground font-medium mt-0.5">{zipStatusMessage || 'Downloading and packaging all selected videos...'}</p>
+                                            <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                                                {zipStatusMessage || 'Downloading and streaming files into one compressed folder...'}
+                                            </p>
                                         </div>
                                     </div>
-                                    <span className="text-xs font-black text-primary bg-primary/10 px-3 py-1.5 rounded-xl">
-                                        {zipProgress > 0 ? `${zipProgress}%` : "In Progress"}
+                                    <span className="text-sm font-black text-primary bg-primary/10 border border-primary/20 px-3.5 py-1.5 rounded-xl shrink-0">
+                                        {zipProgress > 0 ? `${zipProgress}%` : "Packaging..."}
                                     </span>
                                 </div>
-                                <Progress value={zipProgress > 0 ? zipProgress : undefined} className="h-2 bg-primary/20" />
-                                <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                                    <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
-                                    <span>All videos will be saved into one neat, compressed folder on your computer so you don't have to download them one by one.</span>
-                                </p>
+                                <Progress value={zipProgress > 0 ? zipProgress : undefined} className="h-2.5 bg-primary/20 rounded-full" />
+                                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                                    <span className="flex items-center gap-1.5">
+                                        <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+                                        Saving into a single ZIP archive to download all videos at once.
+                                    </span>
+                                    <span className="font-semibold">{selectedVideos.length} selected</span>
+                                </div>
                             </div>
                         )}
 
+                        {/* Playlist Content & Controls */}
                         {videos.length > 0 && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                {/* Responsive Control Toolbar */}
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card/70 border border-border/50 p-4 sm:p-5 rounded-3xl shadow-lg backdrop-blur-md sticky top-4 z-10">
-                                    <div className="flex items-center justify-between sm:justify-start gap-4">
-                                        <Button variant="ghost" onClick={toggleSelectAll} disabled={isZipDownloading} className="gap-2 text-sm font-semibold rounded-xl hover:bg-secondary/50 px-3">
-                                            {selectedVideos.length === videos.length ? <CheckSquare className="w-4 h-4 text-primary" /> : <Square className="w-4 h-4" />}
-                                            {selectedVideos.length === videos.length ? "Deselect All" : "Select All"}
-                                        </Button>
-                                        <div className="hidden sm:block h-6 w-[1px] bg-border/50" />
-                                        <p className="text-xs sm:text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-xl">
-                                            {selectedVideos.length} / {videos.length} Selected
-                                        </p>
-                                    </div>
+                            <div className="space-y-6 animate-in fade-in duration-500">
+                                
+                                {/* Sticky Control Toolbar */}
+                                <div className="sticky top-20 z-40 rounded-3xl border border-border/80 bg-card/90 p-4 sm:p-5 shadow-2xl backdrop-blur-2xl transition-all duration-200">
+                                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                                        
+                                        {/* Left: Quick Select Controls */}
+                                        <div className="flex flex-wrap items-center gap-2.5">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={handleToggleSelectAll}
+                                                disabled={isZipDownloading}
+                                                className="h-10 px-4 rounded-xl border-border/80 hover:border-primary/50 hover:bg-primary/10 text-xs font-bold gap-2 transition-all duration-200"
+                                            >
+                                                {isAllSelected ? (
+                                                    <>
+                                                        <CheckSquare className="w-4 h-4 text-primary" />
+                                                        <span>Deselect All</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Square className="w-4 h-4 text-muted-foreground" />
+                                                        <span>Select All ({videos.length})</span>
+                                                    </>
+                                                )}
+                                            </Button>
 
-                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-                                        <Select
-                                            value={quality}
-                                            onValueChange={setQuality}
-                                            disabled={isZipDownloading}
-                                        >
-                                            <SelectTrigger className="w-full sm:w-[200px] h-11 rounded-xl bg-secondary/35 border-transparent font-semibold">
-                                                <Settings2 className="w-4 h-4 mr-2 text-muted-foreground" />
-                                                <SelectValue placeholder="Resolution" />
-                                            </SelectTrigger>
-                                            <SelectContent className="rounded-xl border-border/50">
-                                                {allowedQualities.map((res) => (
-                                                    <SelectItem key={res.value} value={res.value} className="font-semibold text-xs">{res.label}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-
-                                        <Button
-                                            disabled={selectedVideos.length === 0 || !!isDownloading || isZipDownloading}
-                                            onClick={handleBulkZipDownload}
-                                            className="w-full sm:w-auto gap-2 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/95 hover:to-purple-600/95 text-primary-foreground rounded-xl h-11 px-6 font-extrabold transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-primary/30 shrink-0 hover:scale-[1.02] active:scale-[0.98]"
-                                        >
-                                            {isZipDownloading ? (
-                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                            ) : (
-                                                <Archive className="w-4 h-4" />
+                                            {!isNoneSelected && !isAllSelected && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={handleClearSelection}
+                                                    disabled={isZipDownloading}
+                                                    className="h-10 px-3 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary/60 gap-1.5"
+                                                >
+                                                    <X className="w-3.5 h-3.5" />
+                                                    Clear ({selectedVideos.length})
+                                                </Button>
                                             )}
-                                            {isZipDownloading
-                                                ? `Packaging ZIP (${selectedVideos.length})...`
-                                                : selectedVideos.length > 0
-                                                    ? `Download ZIP (${selectedVideos.length} Videos)`
-                                                    : "Download All as ZIP"}
-                                        </Button>
+
+                                            {videos.length > 10 && (
+                                                <div className="hidden sm:flex items-center gap-1.5 pl-1 border-l border-border/60">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleSelectFirstN(5)}
+                                                        disabled={isZipDownloading}
+                                                        className="h-8 px-2.5 rounded-lg text-[11px] font-bold text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                                    >
+                                                        First 5
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleSelectFirstN(10)}
+                                                        disabled={isZipDownloading}
+                                                        className="h-8 px-2.5 rounded-lg text-[11px] font-bold text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                                    >
+                                                        First 10
+                                                    </Button>
+                                                </div>
+                                            )}
+
+                                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-xs font-black text-primary">
+                                                <Layers className="w-3.5 h-3.5" />
+                                                <span>{selectedVideos.length} of {videos.length} selected</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Right: Search + Resolution + Grand Download ZIP CTA */}
+                                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                                            {/* Search in playlist */}
+                                            <div className="relative min-w-[180px] sm:w-[220px]">
+                                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                                                <Input
+                                                    placeholder="Filter videos..."
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    className="h-10 pl-9 pr-8 text-xs rounded-xl bg-background/70 border-border/80 focus-visible:ring-1 focus-visible:ring-primary"
+                                                />
+                                                {searchQuery && (
+                                                    <button 
+                                                        onClick={() => setSearchQuery('')}
+                                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* Resolution dropdown */}
+                                            <Select
+                                                value={quality}
+                                                onValueChange={setQuality}
+                                                disabled={isZipDownloading}
+                                            >
+                                                <SelectTrigger className="h-10 min-w-[130px] rounded-xl bg-background/70 border-border/80 text-xs font-bold focus:ring-1 focus:ring-primary">
+                                                    <Settings2 className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
+                                                    <SelectValue placeholder="Quality" />
+                                                </SelectTrigger>
+                                                <SelectContent className="rounded-xl border-border/80 shadow-2xl">
+                                                    {allowedQualities.map((res) => (
+                                                        <SelectItem key={res.value} value={res.value} className="text-xs font-semibold py-2">
+                                                            {res.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+
+                                            {/* Download ZIP Button */}
+                                            <Button
+                                                disabled={selectedVideos.length === 0 || !!isDownloading || isZipDownloading}
+                                                onClick={handleBulkZipDownload}
+                                                className="h-10 px-5 rounded-xl bg-gradient-to-r from-primary via-primary/95 to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-primary-foreground font-black text-xs sm:text-sm shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 gap-2 shrink-0 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+                                            >
+                                                {isZipDownloading ? (
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                ) : (
+                                                    <Archive className="w-4 h-4" />
+                                                )}
+                                                {isZipDownloading
+                                                    ? `Packaging (${selectedVideos.length})...`
+                                                    : selectedVideos.length > 0
+                                                        ? `Download ZIP (${selectedVideos.length})`
+                                                        : "Select Videos for ZIP"}
+                                            </Button>
+                                        </div>
+
                                     </div>
                                 </div>
 
-                                {/* Responsive Card Grid */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                    {videos.map((v) => (
-                                        <Card key={v.id} className={cn(
-                                            "group relative flex flex-col overflow-hidden rounded-3xl border bg-card hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/20 hover:-translate-y-1 transition-all duration-300",
-                                            selectedVideos.includes(v.id) ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20" : "border-border/50 hover:bg-card/90"
-                                        )}>
-                                            <CardContent className="p-0 flex flex-col h-full">
-                                                {/* Thumbnail Container */}
-                                                <div className="relative aspect-video w-full overflow-hidden bg-secondary">
-                                                    <img src={v.thumbnail} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt={v.title} />
+                                {/* Results Counter when Filtered */}
+                                {searchQuery && (
+                                    <div className="flex items-center justify-between text-xs text-muted-foreground px-2">
+                                        <p>
+                                            Showing <span className="font-bold text-foreground">{filteredVideos.length}</span> matching "{searchQuery}"
+                                        </p>
+                                        {filteredVideos.length > 0 && (
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                onClick={handleSelectAllFiltered}
+                                                className="h-7 text-xs font-semibold text-primary hover:bg-primary/10"
+                                            >
+                                                Toggle Filtered Results
+                                            </Button>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Card Grid */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                                    {filteredVideos.map((v, index) => {
+                                        const isSelected = selectedVideos.includes(v.id);
+                                        const isDone = downloadedVideos.has(v.id);
+                                        const isCurrentDownloading = isDownloading === v.id;
+                                        // Original index in overall playlist
+                                        const originalIndex = videos.findIndex(item => item.id === v.id) + 1;
+
+                                        return (
+                                            <Card
+                                                key={v.id}
+                                                onClick={() => !isZipDownloading && toggleVideoSelection(v.id)}
+                                                className={cn(
+                                                    "group relative flex flex-col overflow-hidden rounded-2xl border cursor-pointer transition-all duration-300 select-none",
+                                                    isSelected
+                                                        ? "border-primary/80 ring-2 ring-primary/40 bg-gradient-to-b from-primary/[0.08] to-card shadow-xl shadow-primary/10 -translate-y-0.5"
+                                                        : "border-border/70 bg-card/60 hover:bg-card hover:border-primary/40 hover:shadow-lg hover:-translate-y-0.5"
+                                                )}
+                                            >
+                                                <CardContent className="p-0 flex flex-col h-full">
                                                     
-                                                    {/* Checkbox overlay always visible */}
-                                                    <div className="absolute top-3 left-3 z-20">
-                                                        <Checkbox
-                                                            checked={selectedVideos.includes(v.id)}
-                                                            onCheckedChange={() => toggleVideoSelection(v.id)}
-                                                            disabled={isZipDownloading}
-                                                            className="w-5.5 h-5.5 rounded-lg border-white/50 bg-black/40 backdrop-blur-md data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                                    {/* Thumbnail Container */}
+                                                    <div className="relative aspect-video w-full overflow-hidden bg-muted/40">
+                                                        <img 
+                                                            src={v.thumbnail} 
+                                                            className={cn(
+                                                                "w-full h-full object-cover transition-transform duration-500 group-hover:scale-105",
+                                                                isSelected && "brightness-95"
+                                                            )} 
+                                                            alt={v.title} 
+                                                            loading="lazy"
                                                         />
-                                                    </div>
-                                                    
-                                                    {/* Progress Spinner overlay */}
-                                                    {isDownloading === v.id && (
-                                                        <div className="absolute inset-0 z-30 bg-black/75 backdrop-blur-sm flex flex-col items-center justify-center gap-3 p-4">
-                                                            <Loader2 className="w-9 h-9 animate-spin text-primary" />
-                                                            <div className="w-full max-w-[140px] space-y-1 text-center">
-                                                                <Progress value={downloadProgress[v.id] ?? 0} className="h-1.5 bg-white/20" />
-                                                                <p className="text-xs font-bold text-white tracking-wider">
-                                                                    {downloadProgress[v.id] ?? 0}%
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                    
-                                                    {/* Checkmark overlay for done */}
-                                                    {downloadedVideos.has(v.id) && isDownloading !== v.id && (
-                                                        <div className="absolute inset-0 z-25 bg-primary/25 backdrop-blur-[1px] flex items-center justify-center animate-in fade-in zoom-in duration-300">
-                                                            <div className="bg-primary text-primary-foreground p-2.5 rounded-full shadow-xl shadow-primary/20">
-                                                                <Check className="w-6 h-6 stroke-[3px]" />
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
 
-                                                {/* Details & Actions Block */}
-                                                <div className="p-4 flex flex-col justify-between flex-1 min-h-[140px]">
-                                                    <div className="space-y-1.5">
-                                                        <h4 className="font-extrabold text-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors text-card-foreground">
-                                                            {v.title}
-                                                        </h4>
-                                                        <p className="text-[11px] font-medium text-muted-foreground">{v.channelTitle}</p>
-                                                    </div>
+                                                        {/* Subtle dark gradient overlay on top for contrast */}
+                                                        <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/60 to-transparent pointer-events-none" />
 
-                                                    <div className="flex items-center justify-between pt-4 border-t border-border/30 mt-auto">
-                                                        {downloadedVideos.has(v.id) ? (
-                                                            <span className="flex items-center gap-1 text-[10px] font-black text-primary bg-primary/10 px-2 py-1 rounded-lg uppercase tracking-wider">
-                                                                <Check className="w-3.5 h-3.5" />
-                                                                Done
+                                                        {/* Video Index Pill (Top-Left, non-intrusive) */}
+                                                        <div className="absolute top-2.5 left-2.5 z-10">
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-black/70 backdrop-blur-md text-white/90 border border-white/10 shadow-sm">
+                                                                #{originalIndex}
                                                             </span>
-                                                        ) : (
-                                                            <span className="text-[11px] text-muted-foreground font-semibold">Ready</span>
+                                                        </div>
+
+                                                        {/* Selection Checkbox Badge (Top-Right, clean glass aesthetic) */}
+                                                        <div className="absolute top-2.5 right-2.5 z-20">
+                                                            <div className={cn(
+                                                                "size-7 rounded-full flex items-center justify-center transition-all duration-200 backdrop-blur-md border shadow-md",
+                                                                isSelected 
+                                                                    ? "bg-primary border-primary text-primary-foreground scale-105 shadow-primary/30" 
+                                                                    : "bg-black/50 border-white/30 text-white/40 group-hover:text-white/80 group-hover:border-white/60 group-hover:scale-105"
+                                                            )}>
+                                                                <Check className={cn(
+                                                                    "w-4 h-4 stroke-[3px] transition-transform duration-200",
+                                                                    isSelected ? "scale-100 opacity-100" : "scale-75 opacity-0 group-hover:opacity-60"
+                                                                )} />
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Progress Overlay when single downloading */}
+                                                        {isCurrentDownloading && (
+                                                            <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2.5 p-4">
+                                                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                                                <div className="w-full max-w-[130px] space-y-1 text-center">
+                                                                    <Progress value={downloadProgress[v.id] ?? 0} className="h-1.5 bg-white/20" />
+                                                                    <p className="text-[11px] font-extrabold text-white tracking-wider">
+                                                                        {downloadProgress[v.id] ?? 0}%
+                                                                    </p>
+                                                                </div>
+                                                            </div>
                                                         )}
 
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button
-                                                                    variant="secondary"
-                                                                    size="sm"
-                                                                    className="h-8 gap-1.5 px-3 rounded-lg bg-secondary/50 hover:bg-primary hover:text-primary-foreground transition-all duration-300 font-extrabold text-xs shadow-sm hover:shadow-md"
-                                                                    disabled={!!isDownloading || isZipDownloading}
-                                                                >
-                                                                    <Download className="w-3.5 h-3.5" />
-                                                                    Download
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-48 rounded-xl p-1.5 shadow-xl border-border/50">
-                                                                {allowedQualities.map((res) => (
-                                                                    <DropdownMenuItem
-                                                                        key={res.value}
-                                                                        onClick={() => handleDownload(v.id, v.title, res.value)}
-                                                                        className="rounded-lg font-bold text-xs py-2 cursor-pointer focus:bg-primary focus:text-primary-foreground transition-colors"
-                                                                    >
-                                                                        {res.label}
-                                                                    </DropdownMenuItem>
-                                                                ))}
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
+                                                        {/* Checkmark overlay for completed video */}
+                                                        {isDone && !isCurrentDownloading && (
+                                                            <div className="absolute bottom-2.5 right-2.5 z-10 flex items-center gap-1 bg-emerald-500/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-md shadow-md">
+                                                                <CheckCircle className="w-3 h-3" />
+                                                                Saved
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    ))}
+
+                                                    {/* Video Details & Actions */}
+                                                    <div className="p-4 flex flex-col justify-between flex-1 gap-3">
+                                                        <div className="space-y-1">
+                                                            <h4 
+                                                                title={v.title}
+                                                                className={cn(
+                                                                    "font-bold text-xs sm:text-sm line-clamp-2 leading-snug transition-colors",
+                                                                    isSelected ? "text-primary font-extrabold" : "text-card-foreground group-hover:text-primary"
+                                                                )}
+                                                            >
+                                                                {v.title}
+                                                            </h4>
+                                                            <p className="text-[11px] font-medium text-muted-foreground line-clamp-1">
+                                                                {v.channelTitle}
+                                                            </p>
+                                                        </div>
+
+                                                        {/* Footer action bar */}
+                                                        <div 
+                                                            className="flex items-center justify-between pt-2.5 border-t border-border/40 mt-auto"
+                                                            onClick={(e) => e.stopPropagation()} // Prevent card selection when interacting with download
+                                                        >
+                                                            <span className={cn(
+                                                                "text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider transition-colors",
+                                                                isSelected 
+                                                                    ? "bg-primary/15 text-primary border border-primary/20" 
+                                                                    : "bg-secondary/60 text-muted-foreground"
+                                                            )}>
+                                                                {isSelected ? "Selected" : "Click to select"}
+                                                            </span>
+
+                                                            {/* Single video download dropdown */}
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-7 px-2.5 rounded-lg text-xs font-bold gap-1 text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+                                                                        disabled={!!isDownloading || isZipDownloading}
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                    >
+                                                                        <Download className="w-3 h-3 text-primary" />
+                                                                        <span>Download</span>
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end" className="w-44 rounded-xl p-1 shadow-2xl border-border/80">
+                                                                    {allowedQualities.map((res) => (
+                                                                        <DropdownMenuItem
+                                                                            key={res.value}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleDownload(v.id, v.title, res.value);
+                                                                            }}
+                                                                            className="rounded-lg font-semibold text-xs py-1.5 cursor-pointer focus:bg-primary focus:text-primary-foreground transition-colors"
+                                                                        >
+                                                                            {res.label}
+                                                                        </DropdownMenuItem>
+                                                                    ))}
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </div>
+
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}
 
+                        {/* Empty State */}
                         {!videos.length && !isLoading && (
-                            <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in duration-500 space-y-4">
-                                <div className="size-16 rounded-2xl bg-muted/40 flex items-center justify-center">
-                                    <ListVideo className="w-7 h-7 text-muted-foreground/50 stroke-1" />
+                            <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in duration-500 space-y-4 rounded-3xl border border-dashed border-border/80 bg-card/20 p-8">
+                                <div className="size-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-inner">
+                                    <ListVideo className="w-8 h-8 stroke-[1.5]" />
                                 </div>
-                                <div className="space-y-1.5">
-                                    <h3 className="font-bold text-base text-foreground">No playlist loaded</h3>
-                                    <p className="text-sm text-muted-foreground/60 max-w-xs leading-relaxed">
-                                        Paste a YouTube playlist URL above and click{" "}
-                                        <span className="text-primary font-semibold">Fetch Playlist</span>{" "}
-                                        to get started.
+                                <div className="space-y-1.5 max-w-sm">
+                                    <h3 className="font-extrabold text-base text-foreground">Ready to download your playlist</h3>
+                                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                        Paste any YouTube playlist URL into the box above and click <span className="text-primary font-bold">Fetch Playlist</span> to download individual videos or the full series in a single ZIP file.
                                     </p>
                                 </div>
                             </div>
@@ -555,3 +779,4 @@ export default function PlaylistDownloader() {
         </div>
     );
 }
+
