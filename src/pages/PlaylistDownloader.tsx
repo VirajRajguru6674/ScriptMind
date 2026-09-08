@@ -6,7 +6,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Youtube, Download, Loader2, ListVideo, Check, CheckSquare, Square, MoreVertical, Settings2, DownloadCloud, Link2 } from 'lucide-react';
+import { Youtube, Download, Loader2, ListVideo, Check, CheckSquare, Square, MoreVertical, Settings2, DownloadCloud, Link2, Archive, FolderArchive, Sparkles, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -59,6 +59,9 @@ export default function PlaylistDownloader() {
     const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
     const [quality, setQuality] = useState('1080p');
     const [isDownloading, setIsDownloading] = useState<string | null>(null);
+    const [isZipDownloading, setIsZipDownloading] = useState(false);
+    const [zipProgress, setZipProgress] = useState(0);
+    const [zipStatusMessage, setZipStatusMessage] = useState('');
     const [videoFormats, setVideoFormats] = useState<Record<string, { value: string; label: string }[]>>({});
     const [loadingFormats, setLoadingFormats] = useState<string | null>(null);
     const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({});
@@ -106,8 +109,6 @@ export default function PlaylistDownloader() {
         }
     };
 
-
-
     const handleFetchPlaylist = async () => {
         if (!url) return;
 
@@ -123,7 +124,7 @@ export default function PlaylistDownloader() {
             const data = await response.json();
             if (data.videos) {
                 setVideos(data.videos);
-                setSelectedVideos([]);
+                setSelectedVideos(data.videos.map((v: PlaylistVideo) => v.id)); // Auto-select all by default for convenience
                 setDownloadedVideos(new Set());
                 setVideoFormats({});
                 toast({ title: "Success!", description: `Found ${data.videos.length} videos in playlist.` });
@@ -200,15 +201,100 @@ export default function PlaylistDownloader() {
         }
     };
 
-    const handleBulkDownload = async () => {
-        if (selectedVideos.length === 0) return;
-        toast({ title: "Bulk Download", description: `Queued ${selectedVideos.length} downloads...` });
+    // Bulk ZIP Archive Downloader
+    const handleBulkZipDownload = async () => {
+        if (selectedVideos.length === 0) {
+            toast({ variant: "destructive", title: "No Videos Selected", description: "Please select at least one video to download." });
+            return;
+        }
 
-        for (const id of selectedVideos) {
-            const video = videos.find(v => v.id === id);
-            if (video) {
-                await handleDownload(id, video.title, quality);
-            }
+        const selectedItems = videos
+            .filter(v => selectedVideos.includes(v.id))
+            .map(v => ({ videoId: v.id, title: v.title }));
+
+        const playlistTitle = videos[0]?.channelTitle ? `${videos[0].channelTitle}_Playlist` : 'Playlist_Videos';
+        const cleanZipName = playlistTitle.replace(/[^a-z0-9_\-\s]/gi, '_').trim() || 'Playlist_Videos';
+
+        setIsZipDownloading(true);
+        setZipProgress(5);
+        setZipStatusMessage(`Connecting to server & packaging ${selectedItems.length} videos...`);
+
+        try {
+            const token = localStorage.getItem('token');
+            const blob = await new Promise<Blob>((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `${API_BASE_URL}/download-zip`);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.setRequestHeader('x-action-type', 'download');
+                if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+                xhr.responseType = 'blob';
+
+                xhr.onprogress = (e) => {
+                    if (e.lengthComputable && e.total > 0) {
+                        const pct = Math.round((e.loaded / e.total) * 100);
+                        setZipProgress(pct);
+                        setZipStatusMessage(`Downloading ZIP archive (${pct}%)...`);
+                    } else {
+                        setZipProgress((prev) => Math.min(prev + 8, 85));
+                        setZipStatusMessage(`Packaging ${selectedItems.length} videos into ZIP...`);
+                    }
+                };
+
+                xhr.onload = async () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        setZipProgress(100);
+                        setZipStatusMessage('Complete! Saving ZIP file...');
+                        resolve(xhr.response as Blob);
+                    } else {
+                        try {
+                            const text = await xhr.response.text();
+                            const errorData = JSON.parse(text);
+                            reject(new Error(errorData.error || "ZIP download failed"));
+                        } catch (e) {
+                            reject(new Error("ZIP download failed"));
+                        }
+                    }
+                };
+
+                xhr.onerror = () => reject(new Error("Network error during ZIP download"));
+                xhr.send(JSON.stringify({
+                    items: selectedItems,
+                    quality,
+                    zipName: cleanZipName
+                }));
+            });
+
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `${cleanZipName}_${quality}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+
+            toast({
+                title: "🎉 ZIP Download Complete!",
+                description: `Successfully downloaded ${selectedItems.length} videos in ${cleanZipName}_${quality}.zip`
+            });
+
+            // Mark all selected videos as downloaded
+            setDownloadedVideos(prev => {
+                const next = new Set(prev);
+                selectedVideos.forEach(id => next.add(id));
+                return next;
+            });
+
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Bulk ZIP Error",
+                description: error.message || "Failed to create bulk ZIP download."
+            });
+        } finally {
+            setIsZipDownloading(false);
+            setZipProgress(0);
+            setZipStatusMessage('');
         }
     };
 
@@ -232,14 +318,14 @@ export default function PlaylistDownloader() {
             <main className="flex-1 flex flex-col min-w-0 lg:ml-[296px]">
                 <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                     <div className="flex h-16 items-center justify-between px-6">
-                        {/* Page title shown in header row on desktop, aligned with sidebar logo */}
                         <div className="flex items-center gap-3 pl-12 lg:pl-0">
-                            <Youtube className="w-5 h-5 text-primary" />
+                            <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                <Youtube className="w-5 h-5" />
+                            </div>
                             <h1 className="text-lg sm:text-xl font-black tracking-tight text-foreground">
                                 Playlist Downloader
                             </h1>
                         </div>
-                        {/* Right side controls */}
                         <div className="flex items-center gap-2">
                             <NotificationPanel />
                             <ThemeToggle />
@@ -249,7 +335,7 @@ export default function PlaylistDownloader() {
 
                 <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
                     <div className="w-full space-y-8 pb-12">
-                        {/* URL input bar only, title moved to header */}
+                        {/* URL input bar */}
                         <div className="space-y-4 text-left">
                             <div className="flex flex-col sm:flex-row gap-3 max-w-3xl w-full">
                                 <div className="relative flex-1 group">
@@ -263,7 +349,7 @@ export default function PlaylistDownloader() {
                                 </div>
                                 <Button
                                     onClick={handleFetchPlaylist}
-                                    disabled={isLoading}
+                                    disabled={isLoading || isZipDownloading}
                                     className="h-11 px-6 rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:from-primary/95 hover:to-purple-600/95 text-primary-foreground font-black text-xs sm:text-sm shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 shrink-0 hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Fetch Playlist"}
@@ -271,18 +357,46 @@ export default function PlaylistDownloader() {
                             </div>
                         </div>
 
+                        {/* ZIP Packaging Active Banner */}
+                        {isZipDownloading && (
+                            <div className="bg-gradient-to-r from-primary/15 via-purple-500/10 to-primary/15 border border-primary/30 p-5 rounded-3xl shadow-xl backdrop-blur-md space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="size-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary animate-pulse">
+                                            <Archive className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-extrabold text-sm text-foreground flex items-center gap-2">
+                                                Packaging Videos into ZIP Folder
+                                                <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">Fast Single Download</span>
+                                            </h4>
+                                            <p className="text-xs text-muted-foreground font-medium mt-0.5">{zipStatusMessage || 'Downloading and packaging all selected videos...'}</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs font-black text-primary bg-primary/10 px-3 py-1.5 rounded-xl">
+                                        {zipProgress > 0 ? `${zipProgress}%` : "In Progress"}
+                                    </span>
+                                </div>
+                                <Progress value={zipProgress > 0 ? zipProgress : undefined} className="h-2 bg-primary/20" />
+                                <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                                    <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+                                    <span>All videos will be saved into one neat, compressed folder on your computer so you don't have to download them one by one.</span>
+                                </p>
+                            </div>
+                        )}
+
                         {videos.length > 0 && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {/* Responsive Control Toolbar */}
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card/70 border border-border/50 p-4 sm:p-5 rounded-3xl shadow-lg backdrop-blur-md sticky top-4 z-10">
                                     <div className="flex items-center justify-between sm:justify-start gap-4">
-                                        <Button variant="ghost" onClick={toggleSelectAll} className="gap-2 text-sm font-semibold rounded-xl hover:bg-secondary/50 px-3">
+                                        <Button variant="ghost" onClick={toggleSelectAll} disabled={isZipDownloading} className="gap-2 text-sm font-semibold rounded-xl hover:bg-secondary/50 px-3">
                                             {selectedVideos.length === videos.length ? <CheckSquare className="w-4 h-4 text-primary" /> : <Square className="w-4 h-4" />}
                                             {selectedVideos.length === videos.length ? "Deselect All" : "Select All"}
                                         </Button>
                                         <div className="hidden sm:block h-6 w-[1px] bg-border/50" />
                                         <p className="text-xs sm:text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-xl">
-                                            {selectedVideos.length} Selected
+                                            {selectedVideos.length} / {videos.length} Selected
                                         </p>
                                     </div>
 
@@ -290,6 +404,7 @@ export default function PlaylistDownloader() {
                                         <Select
                                             value={quality}
                                             onValueChange={setQuality}
+                                            disabled={isZipDownloading}
                                         >
                                             <SelectTrigger className="w-full sm:w-[200px] h-11 rounded-xl bg-secondary/35 border-transparent font-semibold">
                                                 <Settings2 className="w-4 h-4 mr-2 text-muted-foreground" />
@@ -303,12 +418,20 @@ export default function PlaylistDownloader() {
                                         </Select>
 
                                         <Button
-                                            disabled={selectedVideos.length === 0 || !!isDownloading}
-                                            onClick={handleBulkDownload}
-                                            className="w-full sm:w-auto gap-2 bg-foreground text-background hover:bg-foreground/90 rounded-xl h-11 px-6 font-extrabold transition-all duration-300 shadow-md"
+                                            disabled={selectedVideos.length === 0 || !!isDownloading || isZipDownloading}
+                                            onClick={handleBulkZipDownload}
+                                            className="w-full sm:w-auto gap-2 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/95 hover:to-purple-600/95 text-primary-foreground rounded-xl h-11 px-6 font-extrabold transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-primary/30 shrink-0 hover:scale-[1.02] active:scale-[0.98]"
                                         >
-                                            <DownloadCloud className="w-4 h-4" />
-                                            Bulk Download
+                                            {isZipDownloading ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <Archive className="w-4 h-4" />
+                                            )}
+                                            {isZipDownloading
+                                                ? `Packaging ZIP (${selectedVideos.length})...`
+                                                : selectedVideos.length > 0
+                                                    ? `Download ZIP (${selectedVideos.length} Videos)`
+                                                    : "Download All as ZIP"}
                                         </Button>
                                     </div>
                                 </div>
@@ -330,6 +453,7 @@ export default function PlaylistDownloader() {
                                                         <Checkbox
                                                             checked={selectedVideos.includes(v.id)}
                                                             onCheckedChange={() => toggleVideoSelection(v.id)}
+                                                            disabled={isZipDownloading}
                                                             className="w-5.5 h-5.5 rounded-lg border-white/50 bg-black/40 backdrop-blur-md data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                                         />
                                                     </div>
@@ -382,7 +506,7 @@ export default function PlaylistDownloader() {
                                                                     variant="secondary"
                                                                     size="sm"
                                                                     className="h-8 gap-1.5 px-3 rounded-lg bg-secondary/50 hover:bg-primary hover:text-primary-foreground transition-all duration-300 font-extrabold text-xs shadow-sm hover:shadow-md"
-                                                                    disabled={!!isDownloading}
+                                                                    disabled={!!isDownloading || isZipDownloading}
                                                                 >
                                                                     <Download className="w-3.5 h-3.5" />
                                                                     Download

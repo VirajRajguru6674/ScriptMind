@@ -2547,6 +2547,264 @@ app.all('/api/download', authenticateToken, async (req, res) => {
     }
 });
 
+// Bulk ZIP Downloader for Playlists
+app.post('/api/download-zip', authenticateToken, async (req, res) => {
+    const { items, quality = '720p', zipName = 'Playlist_Videos' } = req.body;
+    const userId = req.user.id;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ error: 'items array with { videoId, title } is required.' });
+    }
+
+    let cookieData = null;
+    let jobDir = null;
+
+    try {
+        // 1. Check Plan Limits and Allowed Qualities
+        const [rows] = await pool.execute(`
+            SELECT u.plan, u.role, u.downloads_count, u.last_usage_reset, u.org_id,
+            o.owner_id as org_owner_id,
+            owner.plan as org_plan
+            FROM users u
+            LEFT JOIN organizations o ON u.org_id = o.id
+            LEFT JOIN users owner ON o.owner_id = owner.id
+            WHERE u.id = ?
+        `, [userId]);
+
+        const userRecord = rows[0];
+        const effectivePlan = (userRecord?.org_id && userRecord?.org_plan) ? userRecord.org_plan : (userRecord?.plan || (req.user.role === 'admin' ? 'expert' : 'free'));
+        const role = userRecord?.role || req.user.role;
+
+        const allowedQualities = {
+            'free': ['144p', '240p', '360p', '480p', '720p', 'mp3'],
+            'pro': ['144p', '240p', '360p', '480p', '720p', '1080p', '1440p', '4k', 'mp3'],
+            'expert': ['144p', '240p', '360p', '480p', '720p', '1080p', '1440p', '4k', '8k', 'mp3']
+        };
+
+        const isAllowed = role === 'admin' || (allowedQualities[effectivePlan] && allowedQualities[effectivePlan].includes(quality)) || quality === 'mp3';
+        if (!isAllowed) {
+            return res.status(403).json({ error: `Your ${effectivePlan} plan does not support ${quality} downloads.` });
+        }
+
+        const limits = {
+            'free': { notes: 5, downloads: 5 },
+            'pro': { notes: 100, downloads: 50 },
+            'expert': { notes: 500, downloads: 200 },
+            'organization': { notes: 9999, downloads: 9999 }
+        };
+        const planLimit = limits[effectivePlan] || limits['free'];
+
+        if (role !== 'admin' && (userRecord.downloads_count + items.length) > planLimit.downloads) {
+            return res.status(403).json({
+                error: `Downloading ${items.length} videos exceeds your monthly download limit (${userRecord.downloads_count}/${planLimit.downloads} used).`,
+                upgrade: true
+            });
+        }
+
+        // 2. Setup Temp Job Directory
+        jobDir = path.join(os.tmpdir(), `zip_job_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`);
+        fs.mkdirSync(jobDir, { recursive: true });
+
+        const ytDlp = require('yt-dlp-exec');
+        const ffmpegPath = getFfmpegPath();
+        cookieData = getSecureCookies();
+
+        const cleanZipName = (zipName || 'Playlist_Videos').replace(/[^a-z0-9_\-\s]/gi, '_').trim() || 'Playlist_Videos';
+        const folderName = cleanZipName;
+
+        console.log(`📦 [ZIP-Job] Starting bulk download of ${items.length} videos for user ${userId} in ${jobDir}`);
+
+        // Helper: Find actual output file
+        const findActualOutputFile = (targetPath) => {
+            if (fs.existsSync(targetPath) && fs.statSync(targetPath).size > 0) return targetPath;
+            const dir = path.dirname(targetPath);
+            const baseName = path.basename(targetPath);
+            const candidates = [
+                `${targetPath}.mkv`,
+                `${targetPath}.webm`,
+                `${targetPath}.mp4`,
+                path.join(dir, `${path.parse(baseName).name}.mkv`),
+                path.join(dir, `${path.parse(baseName).name}.webm`),
+                path.join(dir, `${path.parse(baseName).name}.mp4`)
+            ];
+            for (const cand of candidates) {
+                if (fs.existsSync(cand) && fs.statSync(cand).size > 0) {
+                    try {
+                        fs.renameSync(cand, targetPath);
+                        return targetPath;
+                    } catch (e) {
+                        return cand;
+                    }
+                }
+            }
+            return null;
+        };
+
+        const downloadSingleVideo = async (item, index) => {
+            const videoId = item.videoId;
+            const rawTitle = item.title || `Video_${index + 1}`;
+            const cleanTitle = rawTitle.replace(/[^a-z0-9_\-\s]/gi, '_').trim() || `video_${index + 1}`;
+            const fileExt = quality === 'mp3' ? 'mp3' : 'mp4';
+            const fileName = `${String(index + 1).padStart(2, '0')} - ${cleanTitle}_${quality}.${fileExt}`;
+            const fullPath = path.join(jobDir, fileName);
+
+            const downloadStrategies = [
+                { name: 'iOS client (no cookies)', client: 'ios', cookies: false },
+                { name: 'TV client (no cookies)', client: 'tv_embedded', cookies: false },
+                { name: 'Mobile Web (with cookies)', client: 'mweb', cookies: true },
+                { name: 'Web (with cookies & Node JS runtime)', client: 'web', cookies: true },
+                { name: 'Android client (no cookies)', client: 'android', cookies: false },
+                { name: 'Default client (with cookies)', client: null, cookies: true }
+            ];
+
+            for (const strat of downloadStrategies) {
+                try {
+                    const dlpOptions = {
+                        output: fullPath,
+                        noCheckCertificates: true,
+                        preferFreeFormats: true,
+                        jsRuntimes: 'node',
+                        userAgent: getYoutubeUserAgent(),
+                        addHeader: [
+                            'Accept-Language:en-US,en;q=0.9',
+                            'Referer:https://www.youtube.com/watch?v=' + videoId
+                        ]
+                    };
+
+                    if (process.env.YOUTUBE_PROXY) {
+                        dlpOptions.proxy = process.env.YOUTUBE_PROXY;
+                    }
+
+                    const extractorParts = [];
+                    if (strat.client) {
+                        extractorParts.push(`player-client=${strat.client}`);
+                    }
+                    if (process.env.YOUTUBE_PO_TOKEN) {
+                        extractorParts.push(`po_token=web+${process.env.YOUTUBE_PO_TOKEN}`);
+                    }
+                    if (process.env.YOUTUBE_DATA_SYNC_ID) {
+                        extractorParts.push(`data_sync_id=${process.env.YOUTUBE_DATA_SYNC_ID}`);
+                    }
+                    if (extractorParts.length > 0) {
+                        dlpOptions.extractorArgs = `youtube:${extractorParts.join(';')}`;
+                    }
+
+                    if (ffmpegPath) {
+                        dlpOptions.ffmpegLocation = ffmpegPath;
+                    }
+
+                    if (strat.cookies && cookieData && (!strat.client || strat.client.includes('web') || strat.client.includes('ios') || strat.client.includes('mweb'))) {
+                        dlpOptions.cookies = cookieData.path;
+                    }
+
+                    if (quality === 'mp3') {
+                        dlpOptions.format = 'bestaudio/best';
+                        dlpOptions.extractAudio = true;
+                        dlpOptions.audioFormat = 'mp3';
+                    } else {
+                        const h = quality.replace('p', '');
+                        dlpOptions.format = `bestvideo[height<=${h}]+bestaudio/best[height<=${h}]/best`;
+                        dlpOptions.mergeOutputFormat = 'mp4';
+                    }
+
+                    await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpOptions);
+                    const resolvedFile = findActualOutputFile(fullPath);
+                    if (resolvedFile) {
+                        console.log(`✅ [ZIP-Job] Downloaded (${index + 1}/${items.length}): ${fileName} via ${strat.name}`);
+                        return { success: true, filePath: resolvedFile, fileName };
+                    }
+                } catch (e) {
+                    // Try next strategy
+                }
+            }
+
+            console.warn(`⚠️ [ZIP-Job] Failed to download video (${index + 1}/${items.length}) ${videoId} - ${rawTitle}`);
+            return { success: false, videoId, title: rawTitle };
+        };
+
+        // Download items
+        const successfulFiles = [];
+        for (let i = 0; i < items.length; i++) {
+            const resItem = await downloadSingleVideo(items[i], i);
+            if (resItem.success) {
+                successfulFiles.push(resItem);
+            }
+        }
+
+        if (successfulFiles.length === 0) {
+            throw new Error("Could not download any of the selected videos due to YouTube rate limits. Please try a different resolution or verify cookies/proxy.");
+        }
+
+        console.log(`📦 [ZIP-Job] Compressing ${successfulFiles.length} videos into ${cleanZipName}.zip...`);
+
+        // 3. Create ZIP Archive and Stream to Client
+        const archiver = require('archiver');
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', `attachment; filename="${cleanZipName}.zip"`);
+        res.setHeader('Transfer-Encoding', 'chunked');
+
+        const archive = archiver('zip', {
+            zlib: { level: 1 } // Fast compression for media containers
+        });
+
+        archive.on('warning', (err) => {
+            console.warn("Archive warning:", err);
+        });
+
+        archive.on('error', (err) => {
+            console.error("Archive error:", err);
+            if (!res.headersSent) {
+                res.status(500).json({ error: "Failed to create ZIP archive", details: err.message });
+            }
+        });
+
+        // Cleanup on response completion
+        const cleanupJob = () => {
+            try {
+                if (jobDir && fs.existsSync(jobDir)) {
+                    fs.rmSync(jobDir, { recursive: true, force: true });
+                    console.log(`🧹 [ZIP-Job] Cleaned up temp directory ${jobDir}`);
+                }
+            } catch (e) {
+                console.error("Failed to clean up zip job directory:", e.message);
+            }
+        };
+
+        res.on('finish', cleanupJob);
+        res.on('close', cleanupJob);
+
+        archive.pipe(res);
+
+        for (const file of successfulFiles) {
+            archive.file(file.filePath, { name: path.join(folderName, file.fileName) });
+        }
+
+        await archive.finalize();
+
+        // 4. Update download count in database
+        await pool.execute('UPDATE users SET downloads_count = downloads_count + ? WHERE id = ?', [successfulFiles.length, userId]);
+        logAction(userId, 'DOWNLOAD_PLAYLIST_ZIP', { count: successfulFiles.length, quality, zipName: cleanZipName });
+
+    } catch (error) {
+        console.error("🏁 Bulk ZIP Download Error:", error.message);
+        if (!res.headersSent) {
+            res.status(500).json({
+                error: error.message || "Failed to create bulk ZIP download.",
+                details: error.message
+            });
+        } else {
+            res.end();
+        }
+        if (jobDir && fs.existsSync(jobDir)) {
+            try { fs.rmSync(jobDir, { recursive: true, force: true }); } catch (e) { }
+        }
+    } finally {
+        if (cookieData && cookieData.isTemp) {
+            try { fs.unlinkSync(cookieData.path); } catch (e) { }
+        }
+    }
+});
+
 app.get('/api/history', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
