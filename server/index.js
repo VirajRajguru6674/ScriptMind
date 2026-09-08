@@ -2922,11 +2922,24 @@ app.delete('/api/collections/:id/items/:noteId', authenticateToken, async (req, 
     }
 });
 
-const isAdmin = (req, res, next) => {
-    if (req.user && req.user.role === 'admin') {
-        next();
-    } else {
+const isAdmin = async (req, res, next) => {
+    try {
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ error: 'Authentication required' });
+        }
+        const [rows] = await pool.execute('SELECT role FROM users WHERE id = ?', [req.user.id]);
+        if (rows.length > 0 && rows[0].role === 'admin') {
+            return next();
+        }
+        if (req.user.role === 'admin') {
+            return next();
+        }
         res.status(403).json({ error: 'Admin access required' });
+    } catch (error) {
+        if (req.user && req.user.role === 'admin') {
+            return next();
+        }
+        res.status(500).json({ error: 'Server error verifying admin permissions' });
     }
 };
 

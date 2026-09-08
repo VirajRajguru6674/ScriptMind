@@ -52,18 +52,27 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
         onCloseMobile?.();
     };
 
-    const isDark = theme === "dark" || (theme === "system" && typeof window !== 'undefined' && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    const logoSrc = isDark ? "/logo-dark.png" : "/logo-light.png";
-
     const SidebarContent = () => (
         <div className="flex h-full flex-col bg-sidebar-background">
-            <div className="flex h-22 items-center px-6 border-b border-sidebar-border/50">
-                <Link to="/" className="flex items-center w-full">
-                    <img 
-                        src={logoSrc} 
-                        alt="Logo" 
-                        className="h-14 w-auto max-w-full object-contain transition-transform duration-300 hover:scale-[1.02]" 
-                    />
+            <div className="flex h-20 items-center px-6 border-b border-sidebar-border/50">
+                <Link to="/" className="flex items-center gap-3 w-full group">
+                    <div className="size-10 rounded-xl bg-gradient-to-tr from-primary to-purple-500 p-0.5 shadow-md shadow-primary/20 group-hover:scale-105 transition-transform duration-300 shrink-0">
+                        <div className="w-full h-full rounded-[10px] bg-sidebar-background flex items-center justify-center overflow-hidden">
+                            <img 
+                                src="/logo.png" 
+                                alt="ScriptMind Logo" 
+                                className="w-full h-full object-cover" 
+                            />
+                        </div>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="font-black text-lg tracking-tight text-foreground leading-tight">
+                            Script<span className="text-primary">Mind</span>
+                        </span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                            AI Studio
+                        </span>
+                    </div>
                 </Link>
             </div>
 

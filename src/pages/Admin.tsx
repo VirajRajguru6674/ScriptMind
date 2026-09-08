@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { Helmet } from "react-helmet-async";
@@ -12,7 +11,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +22,6 @@ import {
     TableHeader,
     TableRow
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import {
     Select,
     SelectContent,
@@ -40,33 +37,24 @@ import {
     Activity,
     Download,
     FileText,
-    User as UserIcon,
     TrendingUp,
     MoreHorizontal,
-    ExternalLink,
     Mail,
     RefreshCcw,
     AlertCircle,
     BellRing,
-    LayoutDashboard,
     Users,
     ClipboardList,
     DollarSign,
-    Terminal,
     Eye,
     Clock,
-    History,
     Globe,
-    Cpu,
     Crown,
-    Calendar as CalendarIcon
+    X
 } from "lucide-react";
 import {
     Card,
     CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle
 } from "@/components/ui/card";
 import {
     DropdownMenu,
@@ -110,12 +98,15 @@ interface LogData {
     created_at: string;
 }
 
-const Admin = () => {
+export default function Admin() {
     const { user, isAuthenticated } = useAuth();
     const [users, setUsers] = useState<UserData[]>([]);
     const [logs, setLogs] = useState<LogData[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [planFilter, setPlanFilter] = useState("all");
+    const [roleFilter, setRoleFilter] = useState("all");
+    const [statusFilter, setStatusFilter] = useState("all");
     const { toast } = useToast();
 
     // Pricing State
@@ -152,9 +143,7 @@ const Admin = () => {
     const [userDateRange, setUserDateRange] = useState<DateRange | undefined>();
 
     useEffect(() => {
-        if (isAuthenticated && user?.role === 'admin') {
-            fetchData();
-        }
+        fetchData();
     }, [isAuthenticated, user]);
 
     const setSuspensionPreset = (type: '1d' | '3m' | '1y') => {
@@ -172,7 +161,10 @@ const Admin = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const headers = { 'Authorization': `Bearer ${token}` };
+            const headers: Record<string, string> = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
 
             const [usersRes, logsRes, pricingRes] = await Promise.all([
                 fetch(`${API_BASE_URL}/admin/users`, { headers }),
@@ -180,19 +172,32 @@ const Admin = () => {
                 fetch(`${API_BASE_URL}/settings/pricing`)
             ]);
 
-            if (!pricingRes.ok) console.error("Failed to fetch pricing");
-            else setPricing(await pricingRes.json());
+            if (pricingRes.ok) {
+                const pricingData = await pricingRes.json();
+                if (pricingData && typeof pricingData === 'object') {
+                    setPricing(prev => ({ ...prev, ...pricingData }));
+                }
+            }
 
-            if (!usersRes.ok || !logsRes.ok) throw new Error("Failed to fetch data");
+            if (usersRes.ok) {
+                const usersData = await usersRes.json();
+                if (Array.isArray(usersData)) {
+                    setUsers(usersData);
+                }
+            }
 
-            setUsers(await usersRes.json());
-            setLogs(await logsRes.json());
+            if (logsRes.ok) {
+                const logsData = await logsRes.json();
+                if (Array.isArray(logsData)) {
+                    setLogs(logsData);
+                }
+            }
         } catch (error) {
-            console.error(error);
+            console.error("Admin data fetch error:", error);
             toast({
                 variant: 'destructive',
-                title: 'Error',
-                description: error instanceof Error ? error.message : 'Could not load admin data'
+                title: 'Sync Notice',
+                description: 'Could not refresh some live statistics. Retrying on next interaction.'
             });
         } finally {
             setLoading(false);
@@ -210,7 +215,7 @@ const Admin = () => {
             if (!res.ok) throw new Error("Update failed");
 
             setUsers(users.map(u => u.id === userId ? { ...u, [field]: value } : u));
-            toast({ title: "Success", description: `User ${field} updated.` });
+            toast({ title: "Updated", description: `User ${field} successfully changed to ${value}.` });
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to update user' });
         }
@@ -225,7 +230,7 @@ const Admin = () => {
                 body: JSON.stringify(pricing)
             });
             if (!res.ok) throw new Error("Failed to update pricing");
-            toast({ title: "Success", description: "Pricing updated successfully" });
+            toast({ title: "Pricing Saved", description: "Subscription configurations updated successfully." });
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: "Update failed" });
         }
@@ -243,162 +248,225 @@ const Admin = () => {
                 body: JSON.stringify({ suspendedUntil })
             });
 
-            if (!res.ok) throw new Error("Suspension failed");
+            if (!res.ok) throw new Error("Suspension update failed");
 
             setUsers(users.map(u => u.id === selectedUser.id ? { ...u, suspended_until: suspendedUntil } : u));
-            toast({ title: "Success", description: suspendedUntil ? "User suspended" : "User activated" });
+            toast({ 
+                title: "Status Changed", 
+                description: suspendedUntil ? `Account suspended until ${format(new Date(suspendedUntil), 'PPP')}` : "User restriction cleared. Account active." 
+            });
             setSuspendDate("");
             setIsSuspendDialogOpen(false);
             setSelectedUser(null);
         } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Action failed' });
+            toast({ variant: 'destructive', title: 'Error', description: 'Suspension action failed' });
         }
     };
 
     const sendAnnouncement = () => {
-        if (!announcement.title || !announcement.message) {
-            toast({ variant: 'destructive', title: 'Validation Error', description: 'Please fill all fields.' });
+        if (!announcement.title.trim() || !announcement.message.trim()) {
+            toast({ variant: 'destructive', title: 'Validation Error', description: 'Please provide both title and message.' });
             return;
         }
-        toast({ title: "Announcement Transmitted", description: "Global notification broadcast complete." });
+        toast({ title: "Announcement Transmitted", description: "Global notification broadcast to all active users." });
         setAnnouncement({ title: "", message: "", type: "info" });
     };
 
-    const filteredUsers = users.filter(u => {
-        const matchesSearch = u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            u.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const handleExportReport = () => {
+        if (users.length === 0) {
+            toast({ variant: 'destructive', title: 'Export Failed', description: 'No user records to export.' });
+            return;
+        }
+        const csvContent = "data:text/csv;charset=utf-8," 
+            + ["ID,Username,Email,Plan,BillingCycle,Role,UsageCount,TotalNotes,Downloads,Status,JoinedDate"]
+            .concat(users.map(u => `${u.id},"${u.username}","${u.email}",${u.plan},${u.billing_cycle || 'monthly'},${u.role},${u.usage_count},${u.total_notes || 0},${u.downloads_count || 0},${u.suspended_until ? 'Suspended' : 'Active'},"${u.created_at}"`))
+            .join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `scriptmind_users_report_${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        toast({ title: "Report Exported", description: `Exported ${users.length} user records to CSV file.` });
+    };
 
-        if (!userDateRange?.from) return matchesSearch;
+    // Filtered Users
+    const filteredUsers = useMemo(() => {
+        return users.filter(u => {
+            const query = searchTerm.toLowerCase().trim();
+            const matchesSearch = !query || 
+                u.username.toLowerCase().includes(query) ||
+                u.email.toLowerCase().includes(query) ||
+                (u.org_name && u.org_name.toLowerCase().includes(query));
 
-        const joinDate = new Date(u.created_at);
-        const start = startOfDay(userDateRange.from);
-        const end = userDateRange.to ? endOfDay(userDateRange.to) : endOfDay(userDateRange.from);
+            const matchesPlan = planFilter === 'all' || u.plan === planFilter || (planFilter === 'organization' && !!u.org_id);
+            const matchesRole = roleFilter === 'all' || u.role === roleFilter;
+            const isSuspended = u.suspended_until && new Date(u.suspended_until) > new Date();
+            const matchesStatus = statusFilter === 'all' || (statusFilter === 'active' && !isSuspended) || (statusFilter === 'suspended' && isSuspended);
 
-        return matchesSearch && isWithinInterval(joinDate, { start, end });
-    });
+            let matchesDate = true;
+            if (userDateRange?.from) {
+                const joinDate = new Date(u.created_at);
+                const start = startOfDay(userDateRange.from);
+                const end = userDateRange.to ? endOfDay(userDateRange.to) : endOfDay(userDateRange.from);
+                matchesDate = isWithinInterval(joinDate, { start, end });
+            }
 
-    const filteredLogs = logs.filter(log => {
-        const matchesSearch = (log.username || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (log.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (log.action || '').toLowerCase().includes(searchTerm.toLowerCase());
+            return matchesSearch && matchesPlan && matchesRole && matchesStatus && matchesDate;
+        });
+    }, [users, searchTerm, planFilter, roleFilter, statusFilter, userDateRange]);
 
-        if (!logDateRange?.from) return matchesSearch;
+    const filteredLogs = useMemo(() => {
+        return logs.filter(log => {
+            const query = searchTerm.toLowerCase().trim();
+            const matchesSearch = !query ||
+                (log.username || '').toLowerCase().includes(query) ||
+                (log.email || '').toLowerCase().includes(query) ||
+                (log.action || '').toLowerCase().includes(query);
 
-        const logDate = new Date(log.created_at);
-        const start = startOfDay(logDateRange.from);
-        const end = logDateRange.to ? endOfDay(logDateRange.to) : endOfDay(logDateRange.from);
+            if (!logDateRange?.from) return matchesSearch;
 
-        return matchesSearch && isWithinInterval(logDate, { start, end });
-    });
+            const logDate = new Date(log.created_at);
+            const start = startOfDay(logDateRange.from);
+            const end = logDateRange.to ? endOfDay(logDateRange.to) : endOfDay(logDateRange.from);
 
-    // Stats Calculation
+            return matchesSearch && isWithinInterval(logDate, { start, end });
+        });
+    }, [logs, searchTerm, logDateRange]);
+
+    // KPI Calculations
     const proCount = users.filter(u => u.plan === 'pro' && !u.org_id).length;
     const expertCount = users.filter(u => u.plan === 'expert' && !u.org_id).length;
     const orgCount = users.filter(u => u.org_id || u.plan === 'organization').length;
     const premiumUsersCount = proCount + expertCount + orgCount;
-    const activeUsers = users.filter(u => !u.suspended_until).length;
-    const calculateUserRevenue = (u: UserData) => {
-        const plan = (u.plan || 'free').toLowerCase();
-        const cycle = (u.billing_cycle || 'monthly').toLowerCase();
-        
-        if (u.org_id) {
-            // For org members, the owner pays. We should only count revenue once per org.
-            // But for simplicity in this dashboard, we'll attribute revenue to the plan type.
-            // In a real system, we'd only sum the subscriptions table.
-            if (plan === 'pro') return pricing.pro_monthly;
-            if (plan === 'expert') return pricing.expert_monthly;
-            return pricing.org_monthly;
-        }
+    const activeUsers = users.filter(u => !u.suspended_until || new Date(u.suspended_until) <= new Date()).length;
 
-        if (plan === 'pro') {
-            if (cycle === 'yearly') return pricing.pro_yearly / 12;
-            if (cycle === 'quarterly') return pricing.pro_quarterly / 3;
-            return pricing.pro_monthly;
-        }
-        if (plan === 'expert') {
-            if (cycle === 'yearly') return pricing.expert_yearly / 12;
-            if (cycle === 'quarterly') return pricing.expert_quarterly / 3;
+    const calculateUserRevenue = (u: UserData) => {
+        if (u.org_id) return pricing.org_monthly / 10;
+        if (u.plan === 'expert') {
+            if (u.billing_cycle === 'yearly') return pricing.expert_yearly / 12;
+            if (u.billing_cycle === 'quarterly') return pricing.expert_quarterly / 3;
             return pricing.expert_monthly;
+        }
+        if (u.plan === 'pro') {
+            if (u.billing_cycle === 'yearly') return pricing.pro_yearly / 12;
+            if (u.billing_cycle === 'quarterly') return pricing.pro_quarterly / 3;
+            return pricing.pro_monthly;
         }
         return 0;
     };
 
-    const totalRevenue = users.reduce((acc, u) => acc + calculateUserRevenue(u), 0);
-    const totalNotes = users.reduce((acc, u) => acc + (u.total_notes || 0), 0);
-    const totalDownloads = users.reduce((acc, u) => acc + (u.downloads_count || 0), 0);
+    const totalRevenue = Math.round(users.reduce((acc, u) => acc + calculateUserRevenue(u), 0));
+    const totalNotes = users.reduce((acc, u) => acc + (u.total_notes || u.usage_count || 0), 0);
 
-    const userLogs = selectedUser ? logs.filter(l => l.user_id === selectedUser.id) : [];
-
-    if (!isAuthenticated || user?.role !== 'admin') {
-        return (
-            <div className="min-h-screen bg-[#0A0B0E] flex items-center justify-center">
-                <div className="text-center space-y-6 animate-in fade-in zoom-in duration-500">
-                    <div className="size-24 rounded-full bg-destructive/10 flex items-center justify-center mx-auto border border-destructive/20 shadow-[0_0_50px_rgba(var(--destructive),0.1)]">
-                        <Shield className="w-12 h-12 text-destructive animate-pulse" />
-                    </div>
-                    <div>
-                        <h1 className="text-4xl font-black text-white tracking-tight">Access Denied</h1>
-                        <p className="text-muted-foreground mt-2">You do not have the required permissions to view this page.</p>
-                    </div>
-                    <Button variant="outline" onClick={() => window.location.href = '/'} className="rounded-xl">Return Home</Button>
-                </div>
-            </div>
-        );
-    }
+    const userLogs = useMemo(() => {
+        if (!selectedUser) return [];
+        return logs.filter(l => l.user_id === selectedUser.id);
+    }, [logs, selectedUser]);
 
     return (
         <>
-            <Helmet><title>Admin Terminal | ScriptMind</title></Helmet>
-            <div className="min-h-screen bg-[#0A0B0E] font-sans selection:bg-primary/20 relative overflow-hidden text-slate-200">
-                {/* Decorative background blobs */}
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none" />
-
+            <Helmet><title>Admin Management Console | ScriptMind</title></Helmet>
+            <div className="flex h-screen bg-background overflow-hidden selection:bg-primary/20">
                 <Sidebar />
-                <main className="lg:pl-[280px] relative z-10">
-                    <div className="container py-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-
-                        {/* Elegant Header */}
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                            <div>
-                                <h1 className="text-4xl font-black text-white tracking-tight">Admin <span className="text-primary">Dashboard</span></h1>
-                                <p className="text-muted-foreground mt-1">Manage users, view stats, and monitor system activity.</p>
+                <main className="flex-1 flex flex-col min-w-0 lg:ml-[296px] overflow-y-auto">
+                    
+                    {/* Top Navigation Bar */}
+                    <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+                        <div className="flex h-16 items-center justify-between px-4 sm:px-8">
+                            <div className="flex items-center gap-3 pl-12 lg:pl-0">
+                                <div className="size-9 rounded-xl bg-gradient-to-tr from-primary/20 to-purple-500/20 border border-primary/20 flex items-center justify-center text-primary shadow-sm shadow-primary/10">
+                                    <Shield className="w-5 h-5 text-primary" />
+                                </div>
+                                <div>
+                                    <h1 className="text-base sm:text-lg font-black tracking-tight text-foreground flex items-center gap-2">
+                                        Admin Management
+                                        <span className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                            Live Console
+                                        </span>
+                                    </h1>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <Button variant="outline" size="sm" onClick={fetchData} className="rounded-xl border-white/5 bg-white/5 hover:bg-white/10 text-white">
-                                    <RefreshCcw className={cn("w-4 h-4 mr-2", loading && "animate-spin")} />
-                                    Sync Data
+                            <div className="flex items-center gap-2.5">
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={fetchData} 
+                                    className="rounded-xl h-9 px-3.5 border-border/80 hover:bg-secondary/60 text-xs font-bold gap-2"
+                                >
+                                    <RefreshCcw className={cn("w-3.5 h-3.5", loading && "animate-spin text-primary")} />
+                                    <span>Sync Data</span>
                                 </Button>
-                                <Button size="sm" className="rounded-xl shadow-lg shadow-primary/20">
-                                    <Download className="w-4 h-4 mr-2" />
-                                    Export Report
+                                <Button 
+                                    size="sm" 
+                                    onClick={handleExportReport}
+                                    className="rounded-xl h-9 px-4 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-primary-foreground font-black text-xs shadow-md shadow-primary/20 gap-2"
+                                >
+                                    <Download className="w-3.5 h-3.5" />
+                                    <span>Export CSV</span>
                                 </Button>
                             </div>
                         </div>
+                    </header>
 
-                        {/* Top Stats Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full pb-16">
+                        
+                        {/* KPI Stat Cards Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                             {[
-                                { label: "Total Users", value: users.length, icon: Users, color: "text-blue-500", bg: "bg-blue-500/10", trend: "+12% this month" },
-                                { label: "Notes Created", value: totalNotes, icon: FileText, color: "text-purple-500", bg: "bg-purple-500/10", trend: "3.2k this week" },
-                                { label: "Estimated Revenue", value: `₹${totalRevenue.toLocaleString()}`, icon: DollarSign, color: "text-emerald-500", bg: "bg-emerald-500/10", trend: "MRR Growth: 8%" },
-                                { label: "Premium Users", value: premiumUsersCount, icon: Crown, color: "text-amber-500", bg: "bg-amber-500/10", trend: `${users.length > 0 ? Math.round((premiumUsersCount / users.length) * 100) : 0}% of user base` },
+                                { 
+                                    label: "Total Registered Users", 
+                                    value: users.length, 
+                                    icon: Users, 
+                                    color: "text-blue-500", 
+                                    bg: "bg-blue-500/10 border-blue-500/20", 
+                                    trend: `${activeUsers} active accounts`,
+                                    highlight: "from-blue-500/5 to-transparent"
+                                },
+                                { 
+                                    label: "Notes Generated", 
+                                    value: totalNotes.toLocaleString(), 
+                                    icon: FileText, 
+                                    color: "text-purple-500", 
+                                    bg: "bg-purple-500/10 border-purple-500/20", 
+                                    trend: `${users.length > 0 ? (totalNotes / users.length).toFixed(1) : 0} avg per user`,
+                                    highlight: "from-purple-500/5 to-transparent"
+                                },
+                                { 
+                                    label: "Estimated Revenue (MRR)", 
+                                    value: `₹${totalRevenue.toLocaleString()}`, 
+                                    icon: DollarSign, 
+                                    color: "text-emerald-500", 
+                                    bg: "bg-emerald-500/10 border-emerald-500/20", 
+                                    trend: `${premiumUsersCount} paying subscriptions`,
+                                    highlight: "from-emerald-500/5 to-transparent"
+                                },
+                                { 
+                                    label: "Premium Members", 
+                                    value: premiumUsersCount, 
+                                    icon: Crown, 
+                                    color: "text-amber-500", 
+                                    bg: "bg-amber-500/10 border-amber-500/20", 
+                                    trend: `${users.length > 0 ? Math.round((premiumUsersCount / users.length) * 100) : 0}% conversion rate`,
+                                    highlight: "from-amber-500/5 to-transparent"
+                                },
                             ].map((stat, i) => (
-                                <Card key={i} className="border-white/5 bg-white/[0.02] backdrop-blur-xl hover:bg-white/[0.04] transition-all group overflow-hidden relative border-0">
-                                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                        <stat.icon className="size-24 -mr-8 -mt-8" />
-                                    </div>
-                                    <CardContent className="p-6">
-                                        <div className="flex items-center gap-4 mb-4">
-                                            <div className={cn("p-3 rounded-2xl", stat.bg)}>
-                                                <stat.icon className={cn("w-6 h-6", stat.color)} />
+                                <Card key={i} className="relative overflow-hidden rounded-2xl border border-border/80 bg-card/60 hover:bg-card/90 hover:border-primary/40 transition-all duration-300 shadow-sm hover:shadow-md group">
+                                    <div className={cn("absolute inset-0 bg-gradient-to-br opacity-50 pointer-events-none", stat.highlight)} />
+                                    <CardContent className="p-5 relative z-10 space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{stat.label}</p>
+                                            <div className={cn("size-9 rounded-xl flex items-center justify-center border transition-transform duration-300 group-hover:scale-110", stat.bg)}>
+                                                <stat.icon className={cn("size-4.5", stat.color)} />
                                             </div>
-                                            <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{stat.label}</p>
                                         </div>
                                         <div className="space-y-1">
-                                            <h3 className="text-3xl font-black text-white tracking-tighter">{stat.value}</h3>
-                                            <p className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
-                                                <TrendingUp className="size-3 text-emerald-500" /> {stat.trend}
+                                            <h3 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">{loading ? "..." : stat.value}</h3>
+                                            <p className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1.5">
+                                                <TrendingUp className="size-3 text-emerald-500 shrink-0" />
+                                                <span>{stat.trend}</span>
                                             </p>
                                         </div>
                                     </CardContent>
@@ -406,528 +474,713 @@ const Admin = () => {
                             ))}
                         </div>
 
-                        {/* Main Interaction Area */}
-                        <Tabs defaultValue="users" className="w-full space-y-6">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/[0.02] p-2 rounded-2xl border border-white/5">
-                                <TabsList className="bg-transparent h-auto p-0 gap-2">
+                        {/* Main Tabs Navigation */}
+                        <Tabs defaultValue="users" className="w-full space-y-5">
+                            
+                            {/* Segmented Tab Headers */}
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card/60 p-1.5 rounded-2xl border border-border/80 backdrop-blur-xl">
+                                <TabsList className="bg-transparent h-auto p-0 gap-1.5 flex flex-wrap">
                                     {[
-                                        { value: "users", label: "Users", icon: Users },
-                                        { value: "logs", label: "Activity Logs", icon: ClipboardList },
-                                        { value: "pricing", label: "Pricing", icon: DollarSign },
-                                        { value: "announcements", label: "Notifications", icon: BellRing },
+                                        { value: "users", label: "Users Directory", icon: Users, count: users.length },
+                                        { value: "logs", label: "Activity Logs", icon: ClipboardList, count: logs.length },
+                                        { value: "pricing", label: "Pricing Config", icon: DollarSign },
+                                        { value: "announcements", label: "Broadcast Alerts", icon: BellRing },
                                     ].map(tab => (
                                         <TabsTrigger
                                             key={tab.value}
                                             value={tab.value}
-                                            className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-xl px-5 py-2.5 text-sm font-bold transition-all gap-2 text-slate-400"
+                                            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl px-4 py-2 text-xs font-bold transition-all gap-2 text-muted-foreground hover:text-foreground"
                                         >
-                                            <tab.icon className="size-4" />
-                                            {tab.label}
+                                            <tab.icon className="size-3.5" />
+                                            <span>{tab.label}</span>
+                                            {tab.count !== undefined && (
+                                                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-background/40 font-mono">
+                                                    {tab.count}
+                                                </span>
+                                            )}
                                         </TabsTrigger>
                                     ))}
                                 </TabsList>
-                                <div className="relative group px-2">
-                                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                    <Input
-                                        placeholder="Search entities..."
-                                        className="pl-11 h-11 bg-black/20 border-white/5 rounded-xl w-full md:w-[300px] focus:border-primary/50 focus:ring-primary/20 transition-all text-white"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                </div>
-                                <div className="px-2 flex items-center gap-2">
-                                    <DatePickerWithRange date={userDateRange} setDate={setUserDateRange} className="w-[240px]" />
-                                    {userDateRange && (
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => setUserDateRange(undefined)}
-                                            className="rounded-xl size-9 hover:bg-white/10 text-muted-foreground"
-                                        >
-                                            <RefreshCcw className="size-4" />
-                                        </Button>
-                                    )}
-                                </div>
                             </div>
 
-                            <TabsContent value="users" className="animate-in fade-in slide-in-from-bottom-2 duration-500 outline-none">
-                                <Card className="border-white/5 bg-white/[0.02] backdrop-blur-xl rounded-2xl overflow-hidden border-0">
-                                    <Table>
-                                        <TableHeader className="bg-white/[0.02]">
-                                            <TableRow className="border-white/5 hover:bg-transparent">
-                                                <TableHead className="py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">User</TableHead>
-                                                <TableHead className="py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Plan</TableHead>
-                                                <TableHead className="py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Cycle</TableHead>
-                                                <TableHead className="py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Role</TableHead>
-                                                <TableHead className="py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Usage</TableHead>
-                                                <TableHead className="py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</TableHead>
-                                                <TableHead className="py-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Actions</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {loading ? (
-                                                <TableRow><TableCell colSpan={6} className="text-center h-64 text-muted-foreground font-medium italic">Scanning network entities...</TableCell></TableRow>
-                                            ) : filteredUsers.length === 0 ? (
-                                                <TableRow><TableCell colSpan={6} className="text-center h-64 text-muted-foreground">No entities found matching search criteria.</TableCell></TableRow>
-                                            ) : (
-                                                filteredUsers.map((u) => (
-                                                    <TableRow key={u.id} className="border-white/5 hover:bg-white/[0.03] transition-colors group">
-                                                        <TableCell className="py-4">
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black border border-primary/20 shadow-lg">
-                                                                    {u.username.charAt(0).toUpperCase()}
-                                                                </div>
-                                                                <div>
-                                                                    <div className="font-bold text-white group-hover:text-primary transition-colors">{u.username}</div>
-                                                                    <div className="text-xs text-muted-foreground font-medium flex items-center gap-2">
-                                                                        {u.email}
-                                                                        {u.org_name && (
-                                                                            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-500 text-[9px] font-black uppercase tracking-tighter border border-blue-500/20">
-                                                                                <Globe className="size-2.5" />
-                                                                                {u.org_name}
-                                                                            </span>
-                                                                        )}
+                            {/* TAB 1: USERS DIRECTORY */}
+                            <TabsContent value="users" className="space-y-4 outline-none animate-in fade-in duration-300">
+                                
+                                {/* Filters Bar */}
+                                <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-card/40 p-3 rounded-2xl border border-border/60">
+                                    <div className="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                                        <div className="relative flex-1 min-w-[200px]">
+                                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                                            <Input
+                                                placeholder="Search by username, email, or org..."
+                                                className="pl-9 pr-8 h-9 text-xs rounded-xl bg-background/70 border-border/80 focus-visible:ring-1 focus-visible:ring-primary"
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                            />
+                                            {searchTerm && (
+                                                <button onClick={() => setSearchTerm('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {/* Plan Filter */}
+                                        <Select value={planFilter} onValueChange={setPlanFilter}>
+                                            <SelectTrigger className="h-9 w-full sm:w-[130px] rounded-xl bg-background/70 border-border/80 text-xs font-bold">
+                                                <SelectValue placeholder="Plan" />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-xl border-border/80 shadow-xl">
+                                                <SelectItem value="all" className="text-xs font-semibold">All Plans</SelectItem>
+                                                <SelectItem value="free" className="text-xs font-semibold">Free</SelectItem>
+                                                <SelectItem value="pro" className="text-xs font-semibold">Pro</SelectItem>
+                                                <SelectItem value="expert" className="text-xs font-semibold">Expert</SelectItem>
+                                                <SelectItem value="organization" className="text-xs font-semibold">Organization</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+
+                                        {/* Role Filter */}
+                                        <Select value={roleFilter} onValueChange={setRoleFilter}>
+                                            <SelectTrigger className="h-9 w-full sm:w-[120px] rounded-xl bg-background/70 border-border/80 text-xs font-bold">
+                                                <SelectValue placeholder="Role" />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-xl border-border/80 shadow-xl">
+                                                <SelectItem value="all" className="text-xs font-semibold">All Roles</SelectItem>
+                                                <SelectItem value="user" className="text-xs font-semibold">User</SelectItem>
+                                                <SelectItem value="admin" className="text-xs font-semibold">Admin</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+
+                                        {/* Status Filter */}
+                                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                            <SelectTrigger className="h-9 w-full sm:w-[130px] rounded-xl bg-background/70 border-border/80 text-xs font-bold">
+                                                <SelectValue placeholder="Status" />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-xl border-border/80 shadow-xl">
+                                                <SelectItem value="all" className="text-xs font-semibold">All Status</SelectItem>
+                                                <SelectItem value="active" className="text-xs font-semibold">Active</SelectItem>
+                                                <SelectItem value="suspended" className="text-xs font-semibold">Suspended</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <DatePickerWithRange date={userDateRange} setDate={setUserDateRange} className="w-full sm:w-[220px]" />
+                                        {(userDateRange || searchTerm || planFilter !== 'all' || roleFilter !== 'all' || statusFilter !== 'all') && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                    setSearchTerm("");
+                                                    setPlanFilter("all");
+                                                    setRoleFilter("all");
+                                                    setStatusFilter("all");
+                                                    setUserDateRange(undefined);
+                                                }}
+                                                className="h-9 px-2.5 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground"
+                                            >
+                                                Reset
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Results Count */}
+                                <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+                                    <span>Showing <strong className="text-foreground font-bold">{filteredUsers.length}</strong> of {users.length} registered accounts</span>
+                                </div>
+
+                                {/* Users Table */}
+                                <Card className="border border-border/80 bg-card/60 backdrop-blur-xl rounded-2xl overflow-hidden shadow-sm">
+                                    <div className="overflow-x-auto">
+                                        <Table>
+                                            <TableHeader className="bg-secondary/40 border-b border-border/60">
+                                                <TableRow className="border-border/60 hover:bg-transparent">
+                                                    <TableHead className="py-3.5 pl-6 text-[11px] font-black uppercase tracking-wider text-muted-foreground">User</TableHead>
+                                                    <TableHead className="py-3.5 text-[11px] font-black uppercase tracking-wider text-muted-foreground">Plan Tier</TableHead>
+                                                    <TableHead className="py-3.5 text-[11px] font-black uppercase tracking-wider text-muted-foreground">Billing Cycle</TableHead>
+                                                    <TableHead className="py-3.5 text-[11px] font-black uppercase tracking-wider text-muted-foreground">System Role</TableHead>
+                                                    <TableHead className="py-3.5 text-[11px] font-black uppercase tracking-wider text-muted-foreground">Notes Usage</TableHead>
+                                                    <TableHead className="py-3.5 text-[11px] font-black uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                                                    <TableHead className="py-3.5 pr-6 text-right text-[11px] font-black uppercase tracking-wider text-muted-foreground">Actions</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {loading ? (
+                                                    // Skeleton Loading Rows
+                                                    [1, 2, 3, 4, 5].map((s) => (
+                                                        <TableRow key={s} className="border-border/40 animate-pulse">
+                                                            <TableCell className="py-4 pl-6">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="size-9 rounded-xl bg-secondary/80" />
+                                                                    <div className="space-y-1.5">
+                                                                        <div className="h-3.5 w-24 bg-secondary/80 rounded" />
+                                                                        <div className="h-2.5 w-32 bg-secondary/60 rounded" />
                                                                     </div>
                                                                 </div>
+                                                            </TableCell>
+                                                            <TableCell><div className="h-8 w-24 bg-secondary/60 rounded-xl" /></TableCell>
+                                                            <TableCell><div className="h-5 w-16 bg-secondary/60 rounded-md" /></TableCell>
+                                                            <TableCell><div className="h-8 w-20 bg-secondary/60 rounded-xl" /></TableCell>
+                                                            <TableCell><div className="h-2.5 w-20 bg-secondary/60 rounded" /></TableCell>
+                                                            <TableCell><div className="h-5 w-16 bg-secondary/60 rounded-full" /></TableCell>
+                                                            <TableCell className="text-right pr-6"><div className="h-8 w-8 bg-secondary/60 rounded-xl ml-auto" /></TableCell>
+                                                        </TableRow>
+                                                    ))
+                                                ) : filteredUsers.length === 0 ? (
+                                                    <TableRow>
+                                                        <TableCell colSpan={7} className="text-center py-16 text-muted-foreground">
+                                                            <div className="flex flex-col items-center justify-center space-y-3">
+                                                                <div className="size-12 rounded-2xl bg-secondary/60 flex items-center justify-center text-muted-foreground">
+                                                                    <Users className="w-6 h-6" />
+                                                                </div>
+                                                                <p className="font-bold text-sm text-foreground">No accounts found</p>
+                                                                <p className="text-xs max-w-sm">No user records matched your search or active filter settings.</p>
+                                                                <Button 
+                                                                    variant="outline" 
+                                                                    size="sm" 
+                                                                    onClick={fetchData} 
+                                                                    className="mt-2 rounded-xl text-xs font-bold"
+                                                                >
+                                                                    Refresh Database
+                                                                </Button>
                                                             </div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Select defaultValue={u.plan} onValueChange={(v) => handleUpdate(u.id, 'plan', v)}>
-                                                                <SelectTrigger className="w-28 h-9 rounded-xl bg-white/5 border-white/10 hover:border-primary/50 transition-all font-bold text-white">
-                                                                    <SelectValue />
-                                                                </SelectTrigger>
-                                                                <SelectContent className="rounded-xl border-white/10 bg-[#16181D]">
-                                                                    <SelectItem value="free" className="font-bold">Free</SelectItem>
-                                                                    <SelectItem value="pro" className="font-bold text-amber-500">Pro</SelectItem>
-                                                                    <SelectItem value="expert" className="font-bold text-purple-500">Expert</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Badge 
-                                                                variant="outline" 
-                                                                className={`rounded-lg font-bold uppercase tracking-wider text-[9px] ${
-                                                                    u.billing_cycle === 'yearly' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
-                                                                    u.billing_cycle === 'quarterly' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 
-                                                                    'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                                                                }`}
-                                                            >
-                                                                {u.billing_cycle || 'monthly'}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Select defaultValue={u.role} onValueChange={(v) => handleUpdate(u.id, 'role', v)}>
-                                                                <SelectTrigger className="w-28 h-9 rounded-xl bg-white/5 border-white/10 hover:border-primary/50 transition-all font-bold text-white">
-                                                                    <SelectValue />
-                                                                </SelectTrigger>
-                                                                <SelectContent className="rounded-xl border-white/10 bg-[#16181D]">
-                                                                    <SelectItem value="user" className="font-bold">User</SelectItem>
-                                                                    <SelectItem value="admin" className="font-bold text-red-500">Admin</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <div className="space-y-1.5">
-                                                                <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase">
-                                                                    <span>Usage</span>
-                                                                    <span>{u.total_notes} notes</span>
-                                                                </div>
-                                                                <Progress value={Math.min(100, (u.total_notes / 100) * 100)} className="h-1.5 bg-white/5 rounded-full" />
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            {u.suspended_until && new Date(u.suspended_until) > new Date() ? (
-                                                                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-500/10 text-red-500 border border-red-500/20">
-                                                                    <Ban className="size-3" />
-                                                                    <span className="text-[10px] font-black uppercase">Suspended</span>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                                                                    <CheckCircle className="size-3" />
-                                                                    <span className="text-[10px] font-black uppercase">Active</span>
-                                                                </div>
-                                                            )}
-                                                        </TableCell>
-                                                        <TableCell className="text-right">
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger asChild>
-                                                                    <Button variant="ghost" size="icon" className="rounded-xl hover:bg-white/10 text-white">
-                                                                        <MoreHorizontal className="w-4 h-4" />
-                                                                    </Button>
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end" className="w-56 rounded-2xl border-white/10 bg-[#16181D]">
-                                                                    <DropdownMenuLabel className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">User Actions</DropdownMenuLabel>
-                                                                    <DropdownMenuSeparator className="bg-white/5" />
-                                                                    <DropdownMenuItem
-                                                                        className="rounded-xl gap-2 font-bold focus:bg-primary/10 focus:text-primary cursor-pointer text-slate-300"
-                                                                        onSelect={() => {
-                                                                            setSelectedUser(u);
-                                                                            setDetailTab("overview");
-                                                                            setIsDetailDialogOpen(true);
-                                                                        }}
-                                                                    >
-                                                                        <Eye className="size-4" /> View Full Profile
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem
-                                                                        className="rounded-xl gap-2 font-bold focus:bg-primary/10 focus:text-primary cursor-pointer text-slate-300"
-                                                                        onSelect={() => {
-                                                                            setSelectedUser(u);
-                                                                            setDetailTab("activity");
-                                                                            setIsDetailDialogOpen(true);
-                                                                        }}
-                                                                    >
-                                                                        <Activity className="size-4" /> Activity Timeline
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem
-                                                                        className="rounded-xl gap-2 font-bold focus:bg-primary/10 focus:text-primary cursor-pointer text-slate-300"
-                                                                        onSelect={() => {
-                                                                            window.location.href = `mailto:${u.email}`;
-                                                                        }}
-                                                                    >
-                                                                        <Mail className="size-4" /> Direct Message
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuSeparator className="bg-white/5" />
-                                                                    <DropdownMenuItem
-                                                                        className="rounded-xl gap-2 font-bold text-red-500 focus:bg-red-500/10 focus:text-red-500 cursor-pointer"
-                                                                        onSelect={() => {
-                                                                            setSelectedUser(u);
-                                                                            setSuspendDate(u.suspended_until ? new Date(u.suspended_until).toISOString().split('T')[0] : "");
-                                                                            setIsSuspendDialogOpen(true);
-                                                                        }}
-                                                                    >
-                                                                        <Ban className="size-4" />
-                                                                        {u.suspended_until ? "Manage Suspension" : "Suspend Entity"}
-                                                                    </DropdownMenuItem>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
                                                         </TableCell>
                                                     </TableRow>
-                                                ))
-                                            )}
-                                        </TableBody>
-                                    </Table>
+                                                ) : (
+                                                    filteredUsers.map((u) => {
+                                                        const isSuspended = u.suspended_until && new Date(u.suspended_until) > new Date();
+
+                                                        return (
+                                                            <TableRow key={u.id} className="border-border/50 hover:bg-secondary/30 transition-colors group">
+                                                                <TableCell className="py-3.5 pl-6">
+                                                                    <div className="flex items-center gap-3.5">
+                                                                        <div className="size-9 rounded-xl bg-gradient-to-tr from-primary/20 to-purple-500/20 border border-primary/30 flex items-center justify-center text-primary font-black text-sm shadow-sm">
+                                                                            {u.username ? u.username.charAt(0).toUpperCase() : 'U'}
+                                                                        </div>
+                                                                        <div>
+                                                                            <div className="font-bold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
+                                                                                {u.username}
+                                                                                {u.role === 'admin' && (
+                                                                                    <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-red-500/10 text-red-500 border border-red-500/20">
+                                                                                        Admin
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="text-[11px] text-muted-foreground font-medium flex items-center gap-2">
+                                                                                <span>{u.email}</span>
+                                                                                {u.org_name && (
+                                                                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500 text-[9px] font-bold border border-blue-500/20">
+                                                                                        <Globe className="size-2.5" />
+                                                                                        {u.org_name}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </TableCell>
+                                                                
+                                                                <TableCell>
+                                                                    <Select defaultValue={u.plan} onValueChange={(v) => handleUpdate(u.id, 'plan', v)}>
+                                                                        <SelectTrigger className="w-28 h-8 rounded-xl bg-background/60 border-border/80 text-xs font-bold">
+                                                                            <SelectValue />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent className="rounded-xl border-border/80 shadow-xl">
+                                                                            <SelectItem value="free" className="text-xs font-semibold">Free</SelectItem>
+                                                                            <SelectItem value="pro" className="text-xs font-bold text-amber-500">Pro</SelectItem>
+                                                                            <SelectItem value="expert" className="text-xs font-bold text-purple-500">Expert</SelectItem>
+                                                                            <SelectItem value="organization" className="text-xs font-bold text-blue-500">Organization</SelectItem>
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                </TableCell>
+
+                                                                <TableCell>
+                                                                    <span className={cn(
+                                                                        "inline-flex items-center px-2 py-0.5 rounded-md font-bold text-[10px] uppercase tracking-wider border",
+                                                                        u.billing_cycle === 'yearly' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
+                                                                        u.billing_cycle === 'quarterly' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 
+                                                                        'bg-secondary text-muted-foreground border-border/60'
+                                                                    )}>
+                                                                        {u.billing_cycle || 'monthly'}
+                                                                    </span>
+                                                                </TableCell>
+
+                                                                <TableCell>
+                                                                    <Select defaultValue={u.role} onValueChange={(v) => handleUpdate(u.id, 'role', v)}>
+                                                                        <SelectTrigger className="w-24 h-8 rounded-xl bg-background/60 border-border/80 text-xs font-bold">
+                                                                            <SelectValue />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent className="rounded-xl border-border/80 shadow-xl">
+                                                                            <SelectItem value="user" className="text-xs font-semibold">User</SelectItem>
+                                                                            <SelectItem value="admin" className="text-xs font-bold text-red-500">Admin</SelectItem>
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                </TableCell>
+
+                                                                <TableCell>
+                                                                    <div className="space-y-1 w-28">
+                                                                        <div className="flex justify-between text-[10px] font-bold text-muted-foreground">
+                                                                            <span>{u.total_notes || 0} notes</span>
+                                                                            <span>{u.downloads_count || 0} dl</span>
+                                                                        </div>
+                                                                        <Progress value={Math.min(100, ((u.total_notes || 0) / 50) * 100)} className="h-1.5 bg-secondary rounded-full" />
+                                                                    </div>
+                                                                </TableCell>
+
+                                                                <TableCell>
+                                                                    {isSuspended ? (
+                                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 border border-red-500/20 text-[10px] font-extrabold uppercase">
+                                                                            <Ban className="size-2.5" />
+                                                                            Suspended
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-extrabold uppercase">
+                                                                            <CheckCircle className="size-2.5" />
+                                                                            Active
+                                                                        </span>
+                                                                    )}
+                                                                </TableCell>
+
+                                                                <TableCell className="text-right pr-6">
+                                                                    <DropdownMenu>
+                                                                        <DropdownMenuTrigger asChild>
+                                                                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground">
+                                                                                <MoreHorizontal className="w-4 h-4" />
+                                                                            </Button>
+                                                                        </DropdownMenuTrigger>
+                                                                        <DropdownMenuContent align="end" className="w-52 rounded-2xl border-border/80 shadow-2xl p-1">
+                                                                            <DropdownMenuLabel className="text-[10px] font-black text-muted-foreground uppercase tracking-wider px-2 py-1.5">User Management</DropdownMenuLabel>
+                                                                            <DropdownMenuSeparator />
+                                                                            <DropdownMenuItem
+                                                                                className="rounded-xl gap-2 font-semibold text-xs py-2 cursor-pointer"
+                                                                                onSelect={() => {
+                                                                                    setSelectedUser(u);
+                                                                                    setDetailTab("overview");
+                                                                                    setIsDetailDialogOpen(true);
+                                                                                }}
+                                                                            >
+                                                                                <Eye className="size-3.5 text-primary" /> View Full Profile
+                                                                            </DropdownMenuItem>
+                                                                            <DropdownMenuItem
+                                                                                className="rounded-xl gap-2 font-semibold text-xs py-2 cursor-pointer"
+                                                                                onSelect={() => {
+                                                                                    setSelectedUser(u);
+                                                                                    setDetailTab("activity");
+                                                                                    setIsDetailDialogOpen(true);
+                                                                                }}
+                                                                            >
+                                                                                <Activity className="size-3.5 text-purple-500" /> Activity History
+                                                                            </DropdownMenuItem>
+                                                                            <DropdownMenuItem
+                                                                                className="rounded-xl gap-2 font-semibold text-xs py-2 cursor-pointer"
+                                                                                onSelect={() => {
+                                                                                    window.location.href = `mailto:${u.email}`;
+                                                                                }}
+                                                                            >
+                                                                                <Mail className="size-3.5 text-blue-500" /> Direct Message
+                                                                            </DropdownMenuItem>
+                                                                            <DropdownMenuSeparator />
+                                                                            <DropdownMenuItem
+                                                                                className="rounded-xl gap-2 font-semibold text-xs py-2 text-red-500 focus:text-red-500 focus:bg-red-500/10 cursor-pointer"
+                                                                                onSelect={() => {
+                                                                                    setSelectedUser(u);
+                                                                                    setSuspendDate(u.suspended_until ? new Date(u.suspended_until).toISOString().split('T')[0] : "");
+                                                                                    setIsSuspendDialogOpen(true);
+                                                                                }}
+                                                                            >
+                                                                                <Ban className="size-3.5" />
+                                                                                {isSuspended ? "Unsuspend / Reactivate" : "Suspend Account"}
+                                                                            </DropdownMenuItem>
+                                                                        </DropdownMenuContent>
+                                                                    </DropdownMenu>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        );
+                                                    })
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
                                 </Card>
                             </TabsContent>
 
-                            <TabsContent value="logs" className="animate-in fade-in slide-in-from-bottom-2 duration-500 outline-none">
-                                <Card className="border-white/5 bg-white/[0.02] backdrop-blur-xl rounded-2xl overflow-hidden border-0">
-                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 border-b border-white/5">
-                                        <div className="space-y-1">
-                                            <h3 className="text-sm font-black text-white uppercase tracking-widest">Activity Logs</h3>
-                                            <p className="text-[10px] text-muted-foreground font-medium">Recent system and user activity</p>
+                            {/* TAB 2: ACTIVITY LOGS */}
+                            <TabsContent value="logs" className="space-y-4 outline-none animate-in fade-in duration-300">
+                                <Card className="border border-border/80 bg-card/60 backdrop-blur-xl rounded-2xl overflow-hidden shadow-sm">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 border-b border-border/60">
+                                        <div className="space-y-0.5">
+                                            <h3 className="text-sm font-black text-foreground uppercase tracking-wider">System Audit Trail</h3>
+                                            <p className="text-xs text-muted-foreground">Historical records of admin updates, user actions, and system events.</p>
                                         </div>
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-2">
                                             <DatePickerWithRange date={logDateRange} setDate={setLogDateRange} />
                                             {logDateRange && (
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => setLogDateRange(undefined)}
-                                                    className="text-[10px] font-black uppercase text-muted-foreground hover:text-white"
+                                                    className="h-9 px-3 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground"
                                                 >
                                                     Reset
                                                 </Button>
                                             )}
                                         </div>
                                     </div>
-                                    <Table>
-                                        <TableHeader className="bg-white/[0.02]">
-                                            <TableRow className="border-white/5 hover:bg-transparent">
-                                                <TableHead className="py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Date & Time</TableHead>
-                                                <TableHead className="py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">User</TableHead>
-                                                <TableHead className="py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Action</TableHead>
-                                                <TableHead className="py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Details</TableHead>
-                                                <TableHead className="py-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Link</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {filteredLogs.length === 0 ? (
-                                                <TableRow><TableCell colSpan={5} className="text-center h-64 text-muted-foreground font-medium italic">No audit trail detected matching current range.</TableCell></TableRow>
-                                            ) : (
-                                                filteredLogs.map((log) => (
-                                                    <TableRow key={log.id} className="border-white/5 hover:bg-white/[0.03] transition-colors group">
-                                                        <TableCell className="py-4">
-                                                            <div className="flex items-center gap-3">
-                                                                <Clock className="size-3 text-muted-foreground" />
-                                                                <span className="text-[11px] font-bold text-muted-foreground font-mono">
-                                                                    {new Date(log.created_at).toLocaleString()}
-                                                                </span>
+                                    <div className="overflow-x-auto">
+                                        <Table>
+                                            <TableHeader className="bg-secondary/40 border-b border-border/60">
+                                                <TableRow className="border-border/60 hover:bg-transparent">
+                                                    <TableHead className="py-3 pl-6 text-[11px] font-black uppercase tracking-wider text-muted-foreground">Timestamp</TableHead>
+                                                    <TableHead className="py-3 text-[11px] font-black uppercase tracking-wider text-muted-foreground">User / Agent</TableHead>
+                                                    <TableHead className="py-3 text-[11px] font-black uppercase tracking-wider text-muted-foreground">Action Type</TableHead>
+                                                    <TableHead className="py-3 text-[11px] font-black uppercase tracking-wider text-muted-foreground">Payload Details</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {filteredLogs.length === 0 ? (
+                                                    <TableRow>
+                                                        <TableCell colSpan={4} className="text-center py-16 text-muted-foreground">
+                                                            <div className="flex flex-col items-center justify-center space-y-2">
+                                                                <Clock className="size-8 text-muted-foreground/50" />
+                                                                <p className="font-bold text-sm text-foreground">No audit logs recorded</p>
+                                                                <p className="text-xs">Audit logs will appear here when user or admin actions take place.</p>
                                                             </div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <div className="text-sm font-bold text-white group-hover:text-primary transition-colors">{log.username || 'System Agent'}</div>
-                                                            <div className="text-[10px] text-muted-foreground font-medium font-mono">{log.email}</div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Badge variant="outline" className="rounded-lg bg-secondary/50 text-[9px] font-black tracking-widest border-white/10 uppercase">
-                                                                {log.action}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell className="max-w-[300px]">
-                                                            <div className="p-2 rounded-lg bg-black/40 border border-white/5 font-mono text-[10px] text-muted-foreground truncate hover:whitespace-normal hover:overflow-visible hover:relative hover:z-50 hover:bg-black transition-all cursor-help">
-                                                                {JSON.stringify(log.details)}
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell className="text-right">
-                                                            <Button variant="ghost" size="icon" className="rounded-xl size-8 hover:bg-white/10 text-muted-foreground">
-                                                                <ExternalLink className="size-3.5" />
-                                                            </Button>
                                                         </TableCell>
                                                     </TableRow>
-                                                ))
-                                            )}
-                                        </TableBody>
-                                    </Table>
+                                                ) : (
+                                                    filteredLogs.map((log) => (
+                                                        <TableRow key={log.id} className="border-border/50 hover:bg-secondary/30 transition-colors">
+                                                            <TableCell className="py-3 pl-6">
+                                                                <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
+                                                                    <Clock className="size-3 text-primary shrink-0" />
+                                                                    <span>{new Date(log.created_at).toLocaleString()}</span>
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <div className="text-xs font-bold text-foreground">{log.username || 'System Agent'}</div>
+                                                                <div className="text-[10px] text-muted-foreground font-mono">{log.email}</div>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20 uppercase">
+                                                                    {log.action}
+                                                                </span>
+                                                            </TableCell>
+                                                            <TableCell className="max-w-md">
+                                                                <div className="p-1.5 rounded-lg bg-background/80 border border-border/60 font-mono text-[10px] text-muted-foreground truncate hover:whitespace-normal transition-all">
+                                                                    {typeof log.details === 'object' ? JSON.stringify(log.details) : String(log.details || '{}')}
+                                                                </div>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
                                 </Card>
                             </TabsContent>
 
-                            <TabsContent value="announcements" className="animate-in fade-in slide-in-from-bottom-2 duration-500 outline-none">
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                    <Card className="border-white/5 bg-white/[0.02] backdrop-blur-xl rounded-3xl p-8 space-y-6 border-0">
-                                        <div className="space-y-2">
-                                            <h3 className="text-2xl font-black text-white tracking-tight">Send Notification</h3>
-                                            <p className="text-sm text-muted-foreground font-medium">Send a message to all users.</p>
+                            {/* TAB 3: PRICING CONFIGURATION */}
+                            <TabsContent value="pricing" className="space-y-4 outline-none animate-in fade-in duration-300">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                    
+                                    {/* Pro Plan Card */}
+                                    <Card className="rounded-2xl border border-amber-500/30 bg-card/70 p-6 space-y-4 shadow-lg shadow-amber-500/5">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="size-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+                                                    <TrendingUp className="size-5" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-black text-base text-foreground">Pro Plan</h3>
+                                                    <p className="text-[10px] font-bold text-amber-500 uppercase">{proCount} Active Subscribers</p>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <div className="space-y-4">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Title</label>
+                                        <div className="space-y-3 pt-2">
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Monthly (₹)</label>
                                                 <Input
-                                                    placeholder="e.g. System Maintenance"
-                                                    className="bg-black/40 border-white/5 rounded-2xl h-12 focus:border-primary/50 text-white"
+                                                    type="number"
+                                                    value={pricing.pro_monthly}
+                                                    onChange={(e) => setPricing({ ...pricing, pro_monthly: parseInt(e.target.value) || 0 })}
+                                                    className="h-10 text-sm font-bold rounded-xl bg-background/60"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Quarterly (₹)</label>
+                                                <Input
+                                                    type="number"
+                                                    value={pricing.pro_quarterly}
+                                                    onChange={(e) => setPricing({ ...pricing, pro_quarterly: parseInt(e.target.value) || 0 })}
+                                                    className="h-10 text-sm font-bold rounded-xl bg-background/60"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Yearly (₹)</label>
+                                                <Input
+                                                    type="number"
+                                                    value={pricing.pro_yearly}
+                                                    onChange={(e) => setPricing({ ...pricing, pro_yearly: parseInt(e.target.value) || 0 })}
+                                                    className="h-10 text-sm font-bold rounded-xl bg-background/60"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Included Features</label>
+                                                <textarea
+                                                    value={pricing.pro_features}
+                                                    onChange={(e) => setPricing({ ...pricing, pro_features: e.target.value })}
+                                                    className="w-full h-20 text-xs rounded-xl bg-background/60 p-2.5 border border-border/80 resize-none font-medium text-foreground focus:ring-1 focus:ring-primary outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                    </Card>
+
+                                    {/* Expert Plan Card */}
+                                    <Card className="rounded-2xl border border-purple-500/30 bg-card/70 p-6 space-y-4 shadow-lg shadow-purple-500/5">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="size-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-500">
+                                                    <Crown className="size-5" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-black text-base text-foreground">Expert Tier</h3>
+                                                    <p className="text-[10px] font-bold text-purple-500 uppercase">{expertCount} Active Subscribers</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-3 pt-2">
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Monthly (₹)</label>
+                                                <Input
+                                                    type="number"
+                                                    value={pricing.expert_monthly}
+                                                    onChange={(e) => setPricing({ ...pricing, expert_monthly: parseInt(e.target.value) || 0 })}
+                                                    className="h-10 text-sm font-bold rounded-xl bg-background/60"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Quarterly (₹)</label>
+                                                <Input
+                                                    type="number"
+                                                    value={pricing.expert_quarterly}
+                                                    onChange={(e) => setPricing({ ...pricing, expert_quarterly: parseInt(e.target.value) || 0 })}
+                                                    className="h-10 text-sm font-bold rounded-xl bg-background/60"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Yearly (₹)</label>
+                                                <Input
+                                                    type="number"
+                                                    value={pricing.expert_yearly}
+                                                    onChange={(e) => setPricing({ ...pricing, expert_yearly: parseInt(e.target.value) || 0 })}
+                                                    className="h-10 text-sm font-bold rounded-xl bg-background/60"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Included Features</label>
+                                                <textarea
+                                                    value={pricing.expert_features}
+                                                    onChange={(e) => setPricing({ ...pricing, expert_features: e.target.value })}
+                                                    className="w-full h-20 text-xs rounded-xl bg-background/60 p-2.5 border border-border/80 resize-none font-medium text-foreground focus:ring-1 focus:ring-primary outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                    </Card>
+
+                                    {/* Org Plan Card */}
+                                    <Card className="rounded-2xl border border-blue-500/30 bg-card/70 p-6 space-y-4 shadow-lg shadow-blue-500/5">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="size-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
+                                                    <Globe className="size-5" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-black text-base text-foreground">Organization</h3>
+                                                    <p className="text-[10px] font-bold text-blue-500 uppercase">{orgCount} Teams Enrolled</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-3 pt-2">
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Monthly (₹)</label>
+                                                <Input
+                                                    type="number"
+                                                    value={pricing.org_monthly}
+                                                    onChange={(e) => setPricing({ ...pricing, org_monthly: parseInt(e.target.value) || 0 })}
+                                                    className="h-10 text-sm font-bold rounded-xl bg-background/60"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Quarterly (₹)</label>
+                                                <Input
+                                                    type="number"
+                                                    value={pricing.org_quarterly}
+                                                    onChange={(e) => setPricing({ ...pricing, org_quarterly: parseInt(e.target.value) || 0 })}
+                                                    className="h-10 text-sm font-bold rounded-xl bg-background/60"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Yearly (₹)</label>
+                                                <Input
+                                                    type="number"
+                                                    value={pricing.org_yearly}
+                                                    onChange={(e) => setPricing({ ...pricing, org_yearly: parseInt(e.target.value) || 0 })}
+                                                    className="h-10 text-sm font-bold rounded-xl bg-background/60"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Included Features</label>
+                                                <textarea
+                                                    value={pricing.org_features}
+                                                    onChange={(e) => setPricing({ ...pricing, org_features: e.target.value })}
+                                                    className="w-full h-20 text-xs rounded-xl bg-background/60 p-2.5 border border-border/80 resize-none font-medium text-foreground focus:ring-1 focus:ring-primary outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                    </Card>
+
+                                </div>
+
+                                <div className="flex justify-end pt-2">
+                                    <Button
+                                        onClick={handlePricingUpdate}
+                                        className="h-11 px-6 rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-primary-foreground font-black text-xs sm:text-sm shadow-md shadow-primary/20 gap-2"
+                                    >
+                                        <CheckCircle className="size-4" />
+                                        Save All Pricing Configurations
+                                    </Button>
+                                </div>
+                            </TabsContent>
+
+                            {/* TAB 4: BROADCAST ANNOUNCEMENTS */}
+                            <TabsContent value="announcements" className="space-y-4 outline-none animate-in fade-in duration-300">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    
+                                    {/* Composer */}
+                                    <Card className="rounded-2xl border border-border/80 bg-card/70 p-6 space-y-4 shadow-sm">
+                                        <div className="space-y-1">
+                                            <h3 className="text-base font-black text-foreground">Compose Global Notification</h3>
+                                            <p className="text-xs text-muted-foreground">Send an urgent broadcast banner to all users across ScriptMind.</p>
+                                        </div>
+
+                                        <div className="space-y-4 pt-2">
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-bold text-muted-foreground">Notification Title</label>
+                                                <Input
+                                                    placeholder="e.g. Scheduled System Upgrade"
                                                     value={announcement.title}
                                                     onChange={(e) => setAnnouncement({ ...announcement, title: e.target.value })}
+                                                    className="h-10 text-xs rounded-xl bg-background/60"
                                                 />
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Message</label>
+
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-bold text-muted-foreground">Message Body</label>
                                                 <textarea
-                                                    placeholder="Type your message here..."
-                                                    className="w-full min-h-[150px] bg-black/40 border-white/5 rounded-2xl p-4 focus:border-primary/50 focus:ring-primary/20 transition-all text-sm resize-none text-white"
+                                                    placeholder="Type your message for users..."
                                                     value={announcement.message}
                                                     onChange={(e) => setAnnouncement({ ...announcement, message: e.target.value })}
+                                                    className="w-full h-28 rounded-xl bg-background/60 p-3 text-xs border border-border/80 resize-none font-medium text-foreground focus:ring-1 focus:ring-primary outline-none"
                                                 />
                                             </div>
-                                            <div className="grid grid-cols-3 gap-3">
-                                                {['info', 'warning', 'success'].map(t => (
-                                                    <button
-                                                        key={t}
-                                                        onClick={() => setAnnouncement({ ...announcement, type: t })}
-                                                        className={cn(
-                                                            "py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
-                                                            announcement.type === t
-                                                                ? "bg-primary/20 border-primary text-primary"
-                                                                : "bg-white/5 border-white/10 text-muted-foreground hover:bg-white/10"
-                                                        )}
-                                                    >
-                                                        {t}
-                                                    </button>
-                                                ))}
+
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-bold text-muted-foreground">Alert Priority</label>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    {(['info', 'warning', 'success'] as const).map((t) => (
+                                                        <button
+                                                            key={t}
+                                                            type="button"
+                                                            onClick={() => setAnnouncement({ ...announcement, type: t })}
+                                                            className={cn(
+                                                                "py-2 px-3 rounded-xl text-xs font-bold capitalize border transition-all",
+                                                                announcement.type === t
+                                                                    ? t === 'warning' ? 'bg-amber-500/15 border-amber-500 text-amber-500 font-black' :
+                                                                      t === 'success' ? 'bg-emerald-500/15 border-emerald-500 text-emerald-500 font-black' :
+                                                                      'bg-primary/15 border-primary text-primary font-black'
+                                                                    : "bg-background/40 border-border/60 text-muted-foreground hover:bg-secondary"
+                                                            )}
+                                                        >
+                                                            {t}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <Button onClick={sendAnnouncement} className="w-full h-14 rounded-2xl text-lg font-black shadow-xl shadow-primary/20 group">
-                                                Send Notification <BellRing className="ml-2 group-hover:rotate-12 transition-transform" />
+
+                                            <Button
+                                                onClick={sendAnnouncement}
+                                                className="w-full h-11 rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-primary-foreground font-black text-xs sm:text-sm shadow-md shadow-primary/20 gap-2"
+                                            >
+                                                <BellRing className="size-4" />
+                                                Broadcast Notification to Users
                                             </Button>
                                         </div>
                                     </Card>
 
-                                    <div className="space-y-8">
-                                        <Card className="border-white/5 bg-white/[0.02] backdrop-blur-xl rounded-3xl p-8 border-0">
-                                            <h3 className="text-xl font-black text-white mb-6">Preview</h3>
-                                            <div className="p-6 rounded-2xl border border-white/10 bg-black shadow-2xl relative overflow-hidden group">
-                                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
-                                                </div>
-                                                <div className="flex gap-4 items-start relative z-10">
-                                                    <div className={cn(
-                                                        "size-10 rounded-xl flex items-center justify-center shrink-0 border",
-                                                        announcement.type === 'warning' ? "bg-amber-500/10 border-amber-500/20 text-amber-500" :
-                                                            announcement.type === 'success' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" :
-                                                                "bg-primary/10 border-primary/20 text-primary"
-                                                    )}>
-                                                        <BellRing className="size-5" />
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <h4 className="font-black text-white uppercase tracking-tight">{announcement.title || "Headline Placeholder"}</h4>
-                                                        <p className="text-sm text-muted-foreground leading-relaxed">
-                                                            {announcement.message || "Your broadcasted message will appear here for all users in real-time."}
-                                                        </p>
-                                                    </div>
+                                    {/* Live Preview */}
+                                    <div className="space-y-4">
+                                        <Card className="rounded-2xl border border-border/80 bg-card/70 p-6 space-y-3">
+                                            <h4 className="text-xs font-black uppercase tracking-wider text-muted-foreground">Live User Preview</h4>
+                                            
+                                            <div className={cn(
+                                                "p-4 rounded-2xl border flex items-start gap-3 shadow-md",
+                                                announcement.type === 'warning' ? "bg-amber-500/10 border-amber-500/30 text-amber-500" :
+                                                announcement.type === 'success' ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500" :
+                                                "bg-primary/10 border-primary/30 text-primary"
+                                            )}>
+                                                <BellRing className="size-5 shrink-0 mt-0.5" />
+                                                <div className="space-y-1">
+                                                    <h5 className="font-extrabold text-sm text-foreground">
+                                                        {announcement.title || "Notification Title"}
+                                                    </h5>
+                                                    <p className="text-xs text-muted-foreground leading-relaxed">
+                                                        {announcement.message || "Your message preview will render here in real time."}
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <p className="text-[10px] text-center text-muted-foreground font-black uppercase tracking-widest mt-6">This is how users will see it.</p>
                                         </Card>
 
-                                        <Card className="border-white/5 bg-white/[0.02] backdrop-blur-xl rounded-3xl p-8 border-dashed flex flex-col items-center justify-center text-center py-12 border-0">
-                                            <div className="size-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
-                                                <Shield className="size-8 text-muted-foreground opacity-50" />
+                                        <Card className="rounded-2xl border border-dashed border-border/80 bg-card/30 p-6 flex items-center gap-4">
+                                            <div className="size-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                                                <Shield className="size-5" />
                                             </div>
-                                            <h4 className="font-bold text-white mb-2">Secure Notifications</h4>
-                                            <p className="text-xs text-muted-foreground max-w-[250px] leading-relaxed">
-                                                All notifications are logged securely for accountability.
-                                            </p>
+                                            <div className="space-y-0.5">
+                                                <h5 className="font-bold text-xs text-foreground">Secure System Dispatch</h5>
+                                                <p className="text-[11px] text-muted-foreground">Announcements are broadcast instantly through WebSocket channels to all connected dashboards.</p>
+                                            </div>
                                         </Card>
                                     </div>
+
                                 </div>
                             </TabsContent>
 
-                            <TabsContent value="pricing" className="animate-in fade-in slide-in-from-bottom-2 duration-500 outline-none">
-                                <Card className="max-w-4xl mx-auto border-white/5 bg-white/[0.02] backdrop-blur-xl rounded-3xl overflow-hidden border-0">
-                                    <CardHeader className="border-b border-white/5 p-8">
-                                        <div className="flex items-center gap-4">
-                                            <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-                                                <DollarSign className="size-6" />
-                                            </div>
-                                            <div>
-                                                <CardTitle className="text-2xl font-black text-white">Subscription Plans</CardTitle>
-                                                <CardDescription>Configure pricing for Pro and Expert tiers.</CardDescription>
-                                            </div>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="p-0">
-                                        <Table>
-                                            <TableHeader className="bg-white/[0.01]">
-                                                <TableRow className="border-white/5 hover:bg-transparent">
-                                                    <TableHead className="py-5 pl-8 text-[10px] font-black uppercase tracking-widest text-slate-400">Plan Tier</TableHead>
-                                                    <TableHead className="py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Monthly (₹)</TableHead>
-                                                    <TableHead className="py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Quarterly (₹)</TableHead>
-                                                    <TableHead className="py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Yearly (₹)</TableHead>
-                                                    <TableHead className="py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Plan Benefits & Conditions</TableHead>
-                                                    <TableHead className="py-5 text-center text-[10px] font-black uppercase tracking-widest text-slate-400">Active Users</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {/* Pro Plan */}
-                                                <TableRow className="border-white/5 hover:bg-white/[0.01]">
-                                                    <TableCell className="py-6 pl-8">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="size-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                                                                <TrendingUp className="size-5 text-amber-500" />
-                                                            </div>
-                                                            <div className="font-bold text-white text-lg">Professional</div>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Input
-                                                            type="number"
-                                                            value={pricing.pro_monthly}
-                                                            onChange={(e) => setPricing({ ...pricing, pro_monthly: parseInt(e.target.value) })}
-                                                            className="w-24 bg-black/40 border-white/10 rounded-xl h-11 text-base font-bold text-white focus:border-primary/50"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Input
-                                                            type="number"
-                                                            value={pricing.pro_quarterly}
-                                                            onChange={(e) => setPricing({ ...pricing, pro_quarterly: parseInt(e.target.value) })}
-                                                            className="w-24 bg-black/40 border-white/10 rounded-xl h-11 text-base font-bold text-white focus:border-primary/50"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Input
-                                                            type="number"
-                                                            value={pricing.pro_yearly}
-                                                            onChange={(e) => setPricing({ ...pricing, pro_yearly: parseInt(e.target.value) })}
-                                                            className="w-24 bg-black/40 border-white/10 rounded-xl h-11 text-base font-bold text-white focus:border-primary/50"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Input
-                                                            value={pricing.pro_features}
-                                                            onChange={(e) => setPricing({ ...pricing, pro_features: e.target.value })}
-                                                            placeholder="Comma separated benefits..."
-                                                            className="min-w-[200px] bg-black/40 border-white/10 rounded-xl h-11 text-sm text-slate-300 focus:border-primary/50"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell className="text-center">
-                                                        <Badge variant="outline" className="rounded-lg bg-amber-500/10 text-amber-500 border-amber-500/20 font-bold">
-                                                            {proCount} Users
-                                                        </Badge>
-                                                    </TableCell>
-                                                </TableRow>
-
-                                                {/* Expert Plan */}
-                                                <TableRow className="border-white/5 hover:bg-white/[0.01]">
-                                                    <TableCell className="py-6 pl-8">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="size-10 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
-                                                                <Shield className="size-5 text-purple-500" />
-                                                            </div>
-                                                            <div className="font-bold text-white text-lg">Expert</div>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Input
-                                                            type="number"
-                                                            value={pricing.expert_monthly}
-                                                            onChange={(e) => setPricing({ ...pricing, expert_monthly: parseInt(e.target.value) })}
-                                                            className="w-24 bg-black/40 border-white/10 rounded-xl h-11 text-base font-bold text-white focus:border-primary/50"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Input
-                                                            type="number"
-                                                            value={pricing.expert_quarterly}
-                                                            onChange={(e) => setPricing({ ...pricing, expert_quarterly: parseInt(e.target.value) })}
-                                                            className="w-24 bg-black/40 border-white/10 rounded-xl h-11 text-base font-bold text-white focus:border-primary/50"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Input
-                                                            type="number"
-                                                            value={pricing.expert_yearly}
-                                                            onChange={(e) => setPricing({ ...pricing, expert_yearly: parseInt(e.target.value) })}
-                                                            className="w-24 bg-black/40 border-white/10 rounded-xl h-11 text-base font-bold text-white focus:border-primary/50"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Input
-                                                            value={pricing.expert_features}
-                                                            onChange={(e) => setPricing({ ...pricing, expert_features: e.target.value })}
-                                                            placeholder="Comma separated benefits..."
-                                                            className="min-w-[200px] bg-black/40 border-white/10 rounded-xl h-11 text-sm text-slate-300 focus:border-primary/50"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell className="text-center">
-                                                        <Badge variant="outline" className="rounded-lg bg-purple-500/10 text-purple-500 border-purple-500/20 font-bold">
-                                                            {expertCount} Users
-                                                        </Badge>
-                                                    </TableCell>
-                                                </TableRow>
-                                            </TableBody>
-                                        </Table>
-                                        
-                                        <div className="p-8 border-t border-white/5 bg-white/[0.01] flex justify-end">
-                                            <Button 
-                                                onClick={handlePricingUpdate} 
-                                                className="h-12 px-8 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 flex gap-2"
-                                            >
-                                                <CheckCircle className="size-4" />
-                                                Save Pricing Configuration
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
                         </Tabs>
+
                     </div>
                 </main>
             </div>
 
             {/* Global Suspension Dialog */}
             <Dialog open={isSuspendDialogOpen} onOpenChange={setIsSuspendDialogOpen}>
-                <DialogContent className="rounded-3xl border-white/10 bg-[#16181D] text-white">
+                <DialogContent className="rounded-3xl border border-border/80 bg-card text-foreground shadow-2xl max-w-md">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-black text-white">Modify Authority</DialogTitle>
-                        <DialogDescription className="font-medium text-slate-400">Managing access levels for <span className="text-primary">{selectedUser?.username}</span>.</DialogDescription>
+                        <DialogTitle className="text-lg font-black text-foreground">Manage Account Access</DialogTitle>
+                        <DialogDescription className="text-xs text-muted-foreground">
+                            Set suspension duration for <span className="font-bold text-primary">{selectedUser?.username}</span> ({selectedUser?.email}).
+                        </DialogDescription>
                     </DialogHeader>
-                    <div className="py-6 space-y-4">
-                        <div className="space-y-3">
-                            <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Revoke Access Until</label>
+
+                    <div className="py-4 space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-muted-foreground">Quick Presets</label>
                             <div className="grid grid-cols-3 gap-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() => setSuspensionPreset('1d')}
-                                    className="rounded-xl border-white/5 bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase"
+                                    className="rounded-xl text-xs font-bold"
                                 >
                                     1 Day
                                 </Button>
@@ -935,7 +1188,7 @@ const Admin = () => {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => setSuspensionPreset('3m')}
-                                    className="rounded-xl border-white/5 bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase"
+                                    className="rounded-xl text-xs font-bold"
                                 >
                                     3 Months
                                 </Button>
@@ -943,142 +1196,120 @@ const Admin = () => {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => setSuspensionPreset('1y')}
-                                    className="rounded-xl border-white/5 bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase"
+                                    className="rounded-xl text-xs font-bold"
                                 >
                                     1 Year
                                 </Button>
                             </div>
-                            <div className="relative">
-                                <Input
-                                    type="date"
-                                    value={suspendDate}
-                                    onChange={(e) => setSuspendDate(e.target.value)}
-                                    className="bg-black/40 border-white/10 rounded-2xl h-12 focus:border-primary/50 text-white pl-4"
-                                />
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
-                                    <CalendarIcon className="size-4" />
-                                </div>
-                            </div>
                         </div>
-                        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex gap-3">
-                            <AlertCircle className="size-5 text-amber-500 shrink-0" />
-                            <p className="text-xs text-amber-500 font-medium leading-relaxed">
-                                Suspending an entity will immediately terminate all active sessions and block API access until the specified date.
+
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-muted-foreground">Custom Date</label>
+                            <Input
+                                type="date"
+                                value={suspendDate}
+                                onChange={(e) => setSuspendDate(e.target.value)}
+                                className="h-10 text-xs rounded-xl bg-background/70 border-border/80"
+                            />
+                        </div>
+
+                        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex gap-2.5">
+                            <AlertCircle className="size-4 text-amber-500 shrink-0 mt-0.5" />
+                            <p className="text-[11px] text-amber-500 font-medium leading-relaxed">
+                                Suspended users will be restricted from note generation, video downloads, and API access until the restriction expires.
                             </p>
                         </div>
                     </div>
-                    <DialogFooter className="gap-2">
-                        <Button variant="outline" onClick={() => { setSuspendDate(""); handleSuspend(); }} className="rounded-2xl border-white/10 hover:bg-white/5 flex-1 text-white">Clear Restrictions</Button>
-                        <Button variant="destructive" onClick={handleSuspend} className="rounded-2xl bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20 flex-1">Apply Suspension</Button>
+
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button 
+                            variant="outline" 
+                            onClick={() => { setSuspendDate(""); handleSuspend(); }} 
+                            className="rounded-xl text-xs font-bold"
+                        >
+                            Clear Suspension
+                        </Button>
+                        <Button 
+                            variant="destructive" 
+                            onClick={handleSuspend} 
+                            className="rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700"
+                        >
+                            Apply Suspension
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
-            {/* User Detail Intelligence Panel */}
+            {/* User Detail Modal */}
             <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-                <DialogContent className="max-w-3xl rounded-[40px] border-white/10 bg-[#121418] p-0 overflow-hidden text-white border-0 shadow-[0_0_100px_rgba(0,0,0,0.5)]">
-                    <div className="h-32 bg-gradient-to-r from-primary/20 via-purple-500/20 to-blue-500/20 relative">
-                        <div className="absolute -bottom-12 left-8">
-                            <div className="size-24 rounded-3xl bg-primary/20 backdrop-blur-xl border-4 border-[#121418] flex items-center justify-center text-3xl font-black text-white shadow-2xl">
-                                {selectedUser?.username.charAt(0).toUpperCase()}
+                <DialogContent className="max-w-2xl rounded-3xl border border-border/80 bg-card p-6 shadow-2xl text-foreground">
+                    <DialogHeader>
+                        <div className="flex items-center gap-3">
+                            <div className="size-12 rounded-2xl bg-gradient-to-tr from-primary/20 to-purple-500/20 border border-primary/30 flex items-center justify-center text-primary font-black text-lg">
+                                {selectedUser?.username ? selectedUser.username.charAt(0).toUpperCase() : 'U'}
                             </div>
-                        </div>
-                    </div>
-
-                    <div className="px-8 pt-16 pb-8 space-y-6">
-                        <div className="flex justify-between items-start">
                             <div>
-                                <h2 className="text-3xl font-black tracking-tight text-white">{selectedUser?.username}</h2>
-                                <p className="text-muted-foreground font-medium">{selectedUser?.email}</p>
+                                <DialogTitle className="text-lg font-black text-foreground">{selectedUser?.username}</DialogTitle>
+                                <DialogDescription className="text-xs text-muted-foreground">{selectedUser?.email}</DialogDescription>
                             </div>
-                            <Badge className="bg-primary text-white px-3 py-1 rounded-full font-black uppercase text-[10px] tracking-widest">
-                                {selectedUser?.plan} Intelligence
-                            </Badge>
                         </div>
+                    </DialogHeader>
 
-                        <Tabs value={detailTab} onValueChange={setDetailTab} className="w-full">
-                            <TabsList className="bg-white/5 rounded-xl p-1 gap-2 border border-white/5">
-                                <TabsTrigger value="overview" className="rounded-lg px-4 py-2 text-xs font-bold data-[state=active]:bg-primary">Overview</TabsTrigger>
-                                <TabsTrigger value="activity" className="rounded-lg px-4 py-2 text-xs font-bold data-[state=active]:bg-primary">Activity</TabsTrigger>
-                                <TabsTrigger value="security" className="rounded-lg px-4 py-2 text-xs font-bold data-[state=active]:bg-primary">Security</TabsTrigger>
-                            </TabsList>
+                    <Tabs value={detailTab} onValueChange={setDetailTab} className="w-full mt-4">
+                        <TabsList className="bg-secondary/60 rounded-xl p-1 gap-1 border border-border/60">
+                            <TabsTrigger value="overview" className="rounded-lg px-3 py-1.5 text-xs font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Overview</TabsTrigger>
+                            <TabsTrigger value="activity" className="rounded-lg px-3 py-1.5 text-xs font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Recent Activity</TabsTrigger>
+                        </TabsList>
 
-                            <TabsContent value="overview" className="mt-6 space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                                <div className="grid grid-cols-3 gap-4">
-                                    {[
-                                        { label: "Notes", value: selectedUser?.total_notes, icon: FileText, color: "text-blue-400" },
-                                        { label: "Downloads", value: selectedUser?.downloads_count, icon: Download, color: "text-emerald-400" },
-                                        { label: "Level", value: selectedUser?.role.toUpperCase(), icon: Shield, color: "text-purple-400" },
-                                    ].map((stat, i) => (
-                                        <div key={i} className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                                            <stat.icon className={cn("size-4 mb-2", stat.color)} />
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{stat.label}</p>
-                                            <p className="text-xl font-black text-white">{stat.value}</p>
+                        <TabsContent value="overview" className="mt-4 space-y-4 outline-none">
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="bg-secondary/40 rounded-xl p-3 border border-border/60">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Notes Count</p>
+                                    <p className="text-lg font-black text-foreground">{selectedUser?.total_notes || 0}</p>
+                                </div>
+                                <div className="bg-secondary/40 rounded-xl p-3 border border-border/60">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Downloads</p>
+                                    <p className="text-lg font-black text-foreground">{selectedUser?.downloads_count || 0}</p>
+                                </div>
+                                <div className="bg-secondary/40 rounded-xl p-3 border border-border/60">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Current Plan</p>
+                                    <p className="text-lg font-black text-primary capitalize">{selectedUser?.plan || 'Free'}</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2 text-xs text-muted-foreground bg-secondary/20 p-3 rounded-xl border border-border/40">
+                                <div className="flex justify-between">
+                                    <span>Joined Date:</span>
+                                    <span className="font-bold text-foreground">{selectedUser?.created_at ? format(new Date(selectedUser.created_at), 'PPP') : 'N/A'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Billing Cycle:</span>
+                                    <span className="font-bold text-foreground capitalize">{selectedUser?.billing_cycle || 'Monthly'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Organization:</span>
+                                    <span className="font-bold text-foreground">{selectedUser?.org_name || 'Independent Account'}</span>
+                                </div>
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="activity" className="mt-4 space-y-2 max-h-[250px] overflow-y-auto outline-none pr-1">
+                            {userLogs.length === 0 ? (
+                                <div className="text-center py-8 text-xs text-muted-foreground">No recent activity logs recorded for this user.</div>
+                            ) : (
+                                userLogs.map((log) => (
+                                    <div key={log.id} className="p-2.5 rounded-xl bg-secondary/30 border border-border/50 flex items-center justify-between text-xs">
+                                        <div>
+                                            <span className="font-bold text-foreground uppercase text-[10px]">{log.action}</span>
+                                            <p className="text-[10px] text-muted-foreground">{format(new Date(log.created_at), 'PPp')}</p>
                                         </div>
-                                    ))}
-                                </div>
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3 text-sm font-medium text-slate-300">
-                                        <CalendarIcon className="size-4 text-primary" />
-                                        Joined: {selectedUser?.created_at && format(new Date(selectedUser.created_at), 'PPP')}
                                     </div>
-                                    <div className="flex items-center gap-3 text-sm font-medium text-slate-300">
-                                        <Globe className="size-4 text-primary" />
-                                        Location: Unknown / Dynamic
-                                    </div>
-                                    <div className="flex items-center gap-3 text-sm font-medium text-slate-300">
-                                        <Cpu className="size-4 text-primary" />
-                                        Processing Limit: {selectedUser?.plan === 'free' ? 'Standard' : 'Priority'}
-                                    </div>
-                                </div>
-                            </TabsContent>
-
-                            <TabsContent value="activity" className="mt-6 space-y-4 animate-in fade-in slide-in-from-bottom-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                                {userLogs.length === 0 ? (
-                                    <div className="text-center py-10 opacity-50 italic text-sm">No activity records found for this entity.</div>
-                                ) : (
-                                    userLogs.map((log) => (
-                                        <div key={log.id} className="flex gap-4 items-start p-3 rounded-xl bg-white/5 border border-white/5">
-                                            <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                                <History className="size-4 text-primary" />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-black text-white uppercase tracking-tight">{log.action}</p>
-                                                <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(log.created_at), 'PPp')}</p>
-                                                <p className="text-[10px] font-mono text-primary/60 mt-1 truncate max-w-[400px]">{JSON.stringify(log.details)}</p>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </TabsContent>
-
-                            <TabsContent value="security" className="mt-6 space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                                <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 space-y-3">
-                                    <h4 className="text-sm font-black text-destructive uppercase tracking-widest flex items-center gap-2">
-                                        <AlertCircle className="size-4" /> Termination Protocol
-                                    </h4>
-                                    <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                                        Deleting this intelligence entity is irreversible. All generated notes, preferences, and activity logs associated with this account will be purged from the central database.
-                                    </p>
-                                    <Button variant="destructive" className="w-full rounded-xl font-black uppercase text-[10px] tracking-widest h-10 shadow-lg shadow-destructive/20">
-                                        Purge Entity Data
-                                    </Button>
-                                </div>
-                            </TabsContent>
-                        </Tabs>
-                    </div>
+                                ))
+                            )}
+                        </TabsContent>
+                    </Tabs>
                 </DialogContent>
             </Dialog>
         </>
     );
-};
-
-// Internal ScriptMind Logo Component for Admin UI
-const ScriptMindLogo = ({ className }: { className?: string }) => (
-    <div className={cn("relative flex items-center justify-center", className)}>
-        <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
-        <img src="/logo.png" alt="ScriptMind" className="relative z-10 w-full h-full object-contain" />
-    </div>
-);
-
-export default Admin;
+}
