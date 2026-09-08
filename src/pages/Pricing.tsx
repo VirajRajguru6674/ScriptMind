@@ -211,7 +211,7 @@ const Pricing = () => {
                         </div>
                     </header>
 
-                    <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full pb-12 animate-fade-in space-y-12">
+                    <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full pb-12 space-y-12">
                         
                         {/* Main Category Tabs */}
                         <div className="flex flex-col items-center gap-8">

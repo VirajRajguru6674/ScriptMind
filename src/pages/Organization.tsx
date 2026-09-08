@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Sidebar } from "@/components/Sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -174,8 +175,6 @@ const Organization = () => {
 
     const isOwner = org && user && org.owner_id === user.id;
 
-    if (loading) return null;
-
     return (
         <>
             <Helmet>
@@ -204,9 +203,13 @@ const Organization = () => {
                         </div>
                     </header>
 
-                    <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-5xl mx-auto w-full pb-12 animate-in fade-in duration-700 space-y-6">
-
-                        {!org ? (
+                    <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-5xl mx-auto w-full pb-12 space-y-6">
+                        {loading ? (
+                            <div className="flex flex-col items-center justify-center min-h-[350px] space-y-4">
+                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                <p className="text-sm font-medium text-muted-foreground">Loading organization workspace...</p>
+                            </div>
+                        ) : !org ? (
                             <Card className="border-border bg-card rounded-[32px] overflow-hidden p-12 text-center space-y-8 border shadow-2xl">
                                 <div className="size-24 rounded-[32px] bg-primary/5 flex items-center justify-center border border-primary/10 mx-auto">
                                     <Building2 className="size-12 text-primary/50" />
@@ -243,7 +246,7 @@ const Organization = () => {
                                             You need an **Organization Plan** to create and manage teams.
                                         </p>
                                         <Button variant="outline" className="h-12 px-8 rounded-xl border-border hover:bg-muted" asChild>
-                                            <a href="/pricing">View Plans</a>
+                                            <Link to="/pricing">View Plans</Link>
                                         </Button>
                                     </div>
                                 )}

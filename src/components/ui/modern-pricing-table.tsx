@@ -2,6 +2,7 @@
 
 import React from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Check, Star } from "lucide-react"
 
@@ -191,9 +192,9 @@ const PricingTable: React.FC<PricingTableProps> = ({ plans, interval }) => {
                                     {plan.disabled ? (
                                         <span>{plan.ctaText}</span>
                                     ) : (
-                                        <a href={plan.ctaHref}>
+                                        <Link to={plan.ctaHref}>
                                             {plan.ctaText}
-                                        </a>
+                                        </Link>
                                     )}
                                 </Button>
                             </motion.div>

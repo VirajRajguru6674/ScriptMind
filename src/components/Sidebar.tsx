@@ -102,25 +102,25 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
                         </Button>
 
                         <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5 transition-all" asChild>
-                            <Link to="/playlist">
+                            <Link to="/playlist" onClick={() => { setOpen(false); onCloseMobile?.(); }}>
                                 <Video className="h-4 w-4" />
                                 Playlist Downloader
                             </Link>
                         </Button>
                         <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5 transition-all" asChild>
-                            <Link to="/pricing">
+                            <Link to="/pricing" onClick={() => { setOpen(false); onCloseMobile?.(); }}>
                                 <CreditCard className="h-4 w-4" />
                                 Pricing
                             </Link>
                         </Button>
                         <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5 transition-all" asChild>
-                            <Link to="/notifications">
+                            <Link to="/notifications" onClick={() => { setOpen(false); onCloseMobile?.(); }}>
                                 <Bell className="h-4 w-4" />
                                 Notifications
                             </Link>
                         </Button>
                         <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5 transition-all" asChild>
-                            <Link to="/organization">
+                            <Link to="/organization" onClick={() => { setOpen(false); onCloseMobile?.(); }}>
                                 <Users className="h-4 w-4" />
                                 Organization
                             </Link>
