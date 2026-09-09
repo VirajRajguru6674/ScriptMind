@@ -28,6 +28,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useNotes } from "@/context/NotesContext";
 import { useSidebarContext } from "@/context/SidebarContext";
 
+import { ScriptMindLogo } from "@/components/ScriptMindLogo";
+
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
     onHistorySelect?: (item: any) => void;
     refreshTrigger?: number;
@@ -70,56 +72,12 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
 
     const isPathActive = (path: string) => location.pathname === path;
 
-    const logoIcon = (
-        <div className="relative size-9 rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 border border-primary/25 flex items-center justify-center text-primary shadow-sm shrink-0">
-            <svg 
-                viewBox="0 0 28 28" 
-                fill="none" 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="w-5 h-5 text-primary"
-            >
-                <defs>
-                    <linearGradient id="sm-logo-gradient" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stopColor="currentColor" stopOpacity="1" />
-                        <stop offset="100%" stopColor="currentColor" stopOpacity="0.75" />
-                    </linearGradient>
-                </defs>
-                {/* S - Script */}
-                <path 
-                    d="M6 8.5C6 6.567 7.567 5 9.5 5H13C14.657 5 16 6.343 16 8C16 9.657 14.657 11 13 11H8.5C6.567 11 5 12.567 5 14.5C5 16.433 6.567 18 8.5 18H12" 
-                    stroke="url(#sm-logo-gradient)" 
-                    strokeWidth="2.5" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                />
-                {/* M - Mind */}
-                <path 
-                    d="M15 23V11.5L19 16.5L23 11.5V23" 
-                    stroke="url(#sm-logo-gradient)" 
-                    strokeWidth="2.5" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                />
-                {/* AI Sparkle Node */}
-                <circle cx="21.5" cy="5.5" r="1.75" fill="currentColor" />
-            </svg>
-        </div>
-    );
-
     // Full Expanded Sidebar Content
     const sidebarContent = (
         <div className="flex h-full flex-col bg-sidebar-background">
             <div className="flex h-16 items-center px-6 border-b border-sidebar-border/50">
-                <Link to="/" className="flex items-center gap-3 w-full group">
-                    {logoIcon}
-                    <div className="flex flex-col">
-                        <span className="font-black text-lg tracking-tight text-foreground leading-none flex items-center">
-                            Script<span className="text-primary font-black ml-0.5">Mind</span>
-                        </span>
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
-                            AI STUDIO
-                        </span>
-                    </div>
+                <Link to="/" className="flex items-center w-full">
+                    <ScriptMindLogo showText={true} />
                 </Link>
             </div>
 
@@ -335,11 +293,11 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
 
     // Collapsed Mini / Little Sidebar Content (68px)
     const miniSidebarContent = (
-        <div className="flex h-full flex-col items-center bg-sidebar-background py-3">
+        <div className="flex h-full flex-col items-center bg-sidebar-background">
             {/* Logo */}
-            <div className="flex h-10 items-center justify-center border-b border-sidebar-border/50 w-full shrink-0 pb-3 mb-2">
-                <Link to="/" className="group" title="ScriptMind AI Studio">
-                    {logoIcon}
+            <div className="flex h-16 items-center justify-center border-b border-sidebar-border/50 w-full shrink-0">
+                <Link to="/" title="ScriptMind AI Studio" className="flex items-center justify-center">
+                    <ScriptMindLogo showText={false} />
                 </Link>
             </div>
 
