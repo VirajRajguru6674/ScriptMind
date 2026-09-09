@@ -9,7 +9,16 @@ import {
     ContextMenuItem,
     ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Video, Plus, CreditCard, Search, Star, Menu, ExternalLink, Trash2, Bell, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { 
+    Video, Plus, CreditCard, Search, Star, Menu, ExternalLink, 
+    Trash2, Bell, Users, ChevronLeft, ChevronRight, Clock, BrainCircuit 
+} from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useNotesHistory } from "@/hooks/useNotesHistory";
@@ -61,36 +70,48 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
 
     const isPathActive = (path: string) => location.pathname === path;
 
+    const logoIcon = (
+        <div className="relative size-9 rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 border border-primary/25 flex items-center justify-center text-primary shadow-sm shrink-0">
+            <svg 
+                viewBox="0 0 28 28" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="w-5 h-5 text-primary"
+            >
+                <defs>
+                    <linearGradient id="sm-logo-gradient" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stopColor="currentColor" stopOpacity="1" />
+                        <stop offset="100%" stopColor="currentColor" stopOpacity="0.75" />
+                    </linearGradient>
+                </defs>
+                {/* S - Script */}
+                <path 
+                    d="M6 8.5C6 6.567 7.567 5 9.5 5H13C14.657 5 16 6.343 16 8C16 9.657 14.657 11 13 11H8.5C6.567 11 5 12.567 5 14.5C5 16.433 6.567 18 8.5 18H12" 
+                    stroke="url(#sm-logo-gradient)" 
+                    strokeWidth="2.5" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                />
+                {/* M - Mind */}
+                <path 
+                    d="M15 23V11.5L19 16.5L23 11.5V23" 
+                    stroke="url(#sm-logo-gradient)" 
+                    strokeWidth="2.5" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                />
+                {/* AI Sparkle Node */}
+                <circle cx="21.5" cy="5.5" r="1.75" fill="currentColor" />
+            </svg>
+        </div>
+    );
+
+    // Full Expanded Sidebar Content
     const sidebarContent = (
         <div className="flex h-full flex-col bg-sidebar-background">
             <div className="flex h-16 items-center px-6 border-b border-sidebar-border/50">
                 <Link to="/" className="flex items-center gap-3 w-full group">
-                    <div className="relative size-9 rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 border border-primary/30 flex items-center justify-center text-primary shadow-sm shadow-primary/20 transition-all duration-300 group-hover:scale-105 group-hover:border-primary/50 group-hover:shadow-md group-hover:shadow-primary/30 shrink-0 overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/30 via-transparent to-transparent opacity-60 pointer-events-none" />
-                        <svg 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            className="w-5 h-5 relative z-10 text-primary transition-transform duration-300 group-hover:scale-110"
-                        >
-                            <path 
-                                d="M17.5 7C17.5 5.067 15.709 3.5 13.5 3.5H9.5C6.73858 3.5 4.5 5.73858 4.5 8.5C4.5 11.2614 6.73858 13.5 9.5 13.5H14.5C17.2614 13.5 19.5 15.7386 19.5 18.5C19.5 21.2614 17.2614 23.5 14.5 23.5H10.5C8.291 23.5 6.5 21.933 6.5 20" 
-                                stroke="currentColor" 
-                                strokeWidth="2.75" 
-                                strokeLinecap="round" 
-                                strokeLinejoin="round" 
-                            />
-                            <circle cx="17.5" cy="7" r="1.5" fill="currentColor" />
-                            <circle cx="6.5" cy="20" r="1.5" fill="currentColor" />
-                            <path 
-                                d="M12 11.5L12 15.5" 
-                                stroke="currentColor" 
-                                strokeWidth="1.5" 
-                                strokeLinecap="round" 
-                                opacity="0.6" 
-                            />
-                        </svg>
-                    </div>
+                    {logoIcon}
                     <div className="flex flex-col">
                         <span className="font-black text-lg tracking-tight text-foreground leading-none flex items-center">
                             Script<span className="text-primary font-black ml-0.5">Mind</span>
@@ -312,6 +333,155 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
         </div>
     );
 
+    // Collapsed Mini / Little Sidebar Content (68px)
+    const miniSidebarContent = (
+        <div className="flex h-full flex-col items-center bg-sidebar-background py-3">
+            {/* Logo */}
+            <div className="flex h-10 items-center justify-center border-b border-sidebar-border/50 w-full shrink-0 pb-3 mb-2">
+                <Link to="/" className="group" title="ScriptMind AI Studio">
+                    {logoIcon}
+                </Link>
+            </div>
+
+            {/* Nav Icons */}
+            <div className="flex-1 py-2 flex flex-col items-center gap-2 overflow-hidden w-full">
+                {/* New Note */}
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className={cn(
+                                "size-10 rounded-xl transition-all",
+                                isPathActive("/")
+                                    ? "bg-primary/10 text-primary font-bold shadow-sm"
+                                    : "text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5"
+                            )} 
+                            asChild
+                        >
+                            <Link to="/" onClick={() => { (onNewNote || reset)(); }}>
+                                <Plus className="h-4 w-4" />
+                            </Link>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="font-semibold text-xs">New Note</TooltipContent>
+                </Tooltip>
+
+                {/* Playlist Downloader */}
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className={cn(
+                                "size-10 rounded-xl transition-all",
+                                isPathActive("/playlist")
+                                    ? "bg-primary/10 text-primary font-bold shadow-sm"
+                                    : "text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5"
+                            )} 
+                            asChild
+                        >
+                            <Link to="/playlist">
+                                <Video className="h-4 w-4" />
+                            </Link>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="font-semibold text-xs">Playlist Downloader</TooltipContent>
+                </Tooltip>
+
+                {/* Pricing */}
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className={cn(
+                                "size-10 rounded-xl transition-all",
+                                isPathActive("/pricing")
+                                    ? "bg-primary/10 text-primary font-bold shadow-sm"
+                                    : "text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5"
+                            )} 
+                            asChild
+                        >
+                            <Link to="/pricing">
+                                <CreditCard className="h-4 w-4" />
+                            </Link>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="font-semibold text-xs">Pricing</TooltipContent>
+                </Tooltip>
+
+                {/* Notifications */}
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className={cn(
+                                "size-10 rounded-xl transition-all",
+                                isPathActive("/notifications")
+                                    ? "bg-primary/10 text-primary font-bold shadow-sm"
+                                    : "text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5"
+                            )} 
+                            asChild
+                        >
+                            <Link to="/notifications">
+                                <Bell className="h-4 w-4" />
+                            </Link>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="font-semibold text-xs">Notifications</TooltipContent>
+                </Tooltip>
+
+                {/* Organization */}
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className={cn(
+                                "size-10 rounded-xl transition-all",
+                                isPathActive("/organization")
+                                    ? "bg-primary/10 text-primary font-bold shadow-sm"
+                                    : "text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5"
+                            )} 
+                            asChild
+                        >
+                            <Link to="/organization">
+                                <Users className="h-4 w-4" />
+                            </Link>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="font-semibold text-xs">Organization</TooltipContent>
+                </Tooltip>
+
+                {/* Divider */}
+                <div className="w-8 h-px bg-sidebar-border/60 my-1 shrink-0" />
+
+                {/* History Quick Access */}
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={toggleSidebar}
+                            className="size-10 rounded-xl text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5 transition-all"
+                        >
+                            <Clock className="h-4 w-4" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="font-semibold text-xs">Notes History (Click to Expand)</TooltipContent>
+                </Tooltip>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-auto flex flex-col items-center gap-2 pt-2 border-t border-sidebar-border/50 w-full shrink-0">
+                <UserMenu compact={true} />
+                <ThemeToggle />
+            </div>
+        </div>
+    );
+
     return (
         <>
             {/* Mobile Sidebar Sheet */}
@@ -335,43 +505,30 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
                 </SheetContent>
             </Sheet>
 
-            {/* Desktop Collapsed Floating Expand Trigger */}
-            {isCollapsed && (
-                <button
-                    onClick={toggleSidebar}
-                    aria-label="Expand sidebar"
-                    title="Expand sidebar (Ctrl+B)"
-                    className="hidden lg:flex fixed left-4 top-4 z-50 items-center gap-2 px-3 py-2 rounded-xl bg-card/90 backdrop-blur-xl border border-border/80 shadow-xl shadow-black/20 hover:border-primary/50 text-foreground hover:text-primary transition-all duration-200 group hover:scale-105 active:scale-95 animate-in fade-in zoom-in-95 cursor-pointer"
-                >
-                    <div className="w-5 h-5 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                        <ChevronRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
-                    </div>
-                    <span className="text-xs font-bold tracking-tight text-foreground/90 group-hover:text-primary transition-colors">
-                        Expand
-                    </span>
-                </button>
-            )}
-
-            {/* Desktop Sidebar Container */}
+            {/* Desktop Sidebar Container (Full width 280px or Mini width 68px) */}
             <div 
                 className={cn(
-                    "hidden lg:block w-[280px] fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out",
-                    isCollapsed ? "-translate-x-full" : "translate-x-0",
+                    "hidden lg:block fixed inset-y-0 left-0 z-40 transition-all duration-300 ease-in-out",
+                    isCollapsed ? "w-[68px]" : "w-[280px]",
                     className
                 )}
             >
                 <div className="h-full w-full bg-sidebar-background/80 backdrop-blur-xl border-r border-sidebar-border/50 shadow-2xl flex flex-col overflow-hidden">
-                    {sidebarContent}
+                    {isCollapsed ? miniSidebarContent : sidebarContent}
                 </div>
 
-                {/* Stylish Collapse Button on Right Border (Marked Area) */}
+                {/* Single Stylish Expand / Collapse Button on the Right Border (Marked Area) */}
                 <button
                     onClick={toggleSidebar}
-                    aria-label="Collapse sidebar"
-                    title="Collapse sidebar (Ctrl+B)"
+                    aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    title={isCollapsed ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"}
                     className="absolute -right-3.5 top-20 z-50 w-7 h-7 rounded-full bg-card/95 backdrop-blur-md border border-border/80 shadow-lg shadow-black/30 hover:bg-secondary hover:border-primary/50 text-muted-foreground hover:text-primary transition-all duration-200 flex items-center justify-center cursor-pointer group hover:scale-110 active:scale-95"
                 >
-                    <ChevronLeft className="w-3.5 h-3.5 transition-transform duration-200 group-hover:-translate-x-0.5" />
+                    {isCollapsed ? (
+                        <ChevronRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+                    ) : (
+                        <ChevronLeft className="w-3.5 h-3.5 transition-transform duration-200 group-hover:-translate-x-0.5" />
+                    )}
                 </button>
             </div>
         </>

@@ -12,7 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export const UserMenu = () => {
+import { cn } from "@/lib/utils";
+
+export const UserMenu = ({ compact = false }: { compact?: boolean }) => {
     const { user, logout, isAuthenticated } = useAuth();
     const navigate = useNavigate();
 
@@ -22,6 +24,20 @@ export const UserMenu = () => {
     };
 
     if (!isAuthenticated || !user) {
+        if (compact) {
+            return (
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigate("/login")}
+                    title="Login"
+                    className="size-9 rounded-xl text-foreground hover:text-primary hover:bg-primary/10 transition-all"
+                >
+                    <UserIcon className="h-4 w-4" />
+                </Button>
+            );
+        }
+
         return (
             <div className="flex gap-2">
                 <Button
@@ -48,8 +64,11 @@ export const UserMenu = () => {
             <DropdownMenuTrigger asChild>
                 <Button
                     variant="ghost"
-                    size="sm"
-                    className="flex items-center gap-2 hover:bg-white/5 transition-colors"
+                    size={compact ? "icon" : "sm"}
+                    className={cn(
+                        "hover:bg-white/5 transition-colors",
+                        compact ? "size-9 rounded-full p-0" : "flex items-center gap-2"
+                    )}
                 >
                     <Avatar className="w-8 h-8 border border-primary/20">
                         <AvatarImage src={user.avatar_url} />
@@ -57,12 +76,14 @@ export const UserMenu = () => {
                             {user.username.charAt(0).toUpperCase()}
                         </AvatarFallback>
                     </Avatar>
-                    <span className="text-foreground font-medium hidden sm:inline">
-                        {user.username}
-                    </span>
+                    {!compact && (
+                        <span className="text-foreground font-medium hidden sm:inline">
+                            {user.username}
+                        </span>
+                    )}
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-card/95 backdrop-blur-xl border-white/10">
+            <DropdownMenuContent align={compact ? "center" : "end"} side={compact ? "right" : "bottom"} className="w-56 bg-card/95 backdrop-blur-xl border-white/10">
                 <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                         <div className="flex items-center justify-between gap-2">
