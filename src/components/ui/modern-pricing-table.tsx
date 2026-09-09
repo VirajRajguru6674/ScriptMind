@@ -105,9 +105,9 @@ const PricingTable: React.FC<PricingTableProps> = ({ plans, interval }) => {
     }
 
     return (
-        <div className="w-full max-w-7xl mx-auto space-y-16">
+        <div className="w-full max-w-5xl mx-auto">
             <motion.div
-                className={`grid grid-cols-1 gap-6 ${plans.length === 1 ? 'max-w-md mx-auto' : plans.length === 2 ? 'md:grid-cols-2 max-w-3xl mx-auto' : plans.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2 xl:grid-cols-4'}`}
+                className={`grid grid-cols-1 gap-5 items-stretch ${plans.length === 1 ? 'max-w-md mx-auto' : plans.length === 2 ? 'md:grid-cols-2 max-w-2xl mx-auto' : plans.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2 xl:grid-cols-4'}`}
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
@@ -116,16 +116,16 @@ const PricingTable: React.FC<PricingTableProps> = ({ plans, interval }) => {
                     <motion.div
                         key={plan.title}
                         variants={cardVariants}
-                        className="relative"
+                        className="relative flex flex-col"
                     >
                         {plan.isFeatured && !plan.disabled && (
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.8, y: -10 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 transition={{ delay: 0.5 + index * 0.1, duration: 0.4 }}
-                                className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10"
+                                className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10"
                             >
-                                <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-lg whitespace-nowrap">
+                                <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-md whitespace-nowrap">
                                     <Star className="size-3 fill-current" />
                                     {plan.title === 'Organization' ? 'Institutional' : 'Most Popular'}
                                 </div>
@@ -133,46 +133,46 @@ const PricingTable: React.FC<PricingTableProps> = ({ plans, interval }) => {
                         )}
 
                         <div className={`
-              relative h-full p-8 rounded-[32px] border transition-all duration-300
+              relative h-full p-5 sm:p-6 rounded-2xl border flex flex-col justify-between transition-all duration-300
               ${plan.isFeatured
-                                ? 'border-primary/50 bg-primary/[0.03] shadow-2xl shadow-primary/5'
-                                : 'border-border bg-card/50 shadow-sm'
+                                ? 'border-primary/50 bg-primary/[0.04] shadow-xl shadow-primary/5 ring-1 ring-primary/20'
+                                : 'border-border bg-card/60 shadow-sm'
                             }
             `}>
-                            <div className="text-center space-y-4 mb-8">
-                                <h3 className="text-2xl font-black text-foreground">{plan.title}</h3>
-                                <p className="text-sm text-muted-foreground font-medium leading-relaxed">{plan.description}</p>
+                            <div className="text-center space-y-2 mb-5">
+                                <h3 className="text-xl font-black text-foreground">{plan.title}</h3>
+                                <p className="text-xs text-muted-foreground font-medium leading-relaxed">{plan.description}</p>
  
-                                <div className="space-y-2">
-                                    <div className="text-4xl font-black text-foreground flex items-center justify-center tracking-tighter">
+                                <div className="space-y-1 pt-1">
+                                    <div className="text-3xl font-black text-foreground flex items-center justify-center tracking-tight">
                                         ₹<ScrollingNumber value={getPriceValue(plan)} />
-                                        <span className="text-base text-muted-foreground font-bold ml-1">
+                                        <span className="text-xs text-muted-foreground font-bold ml-1">
                                             {getIntervalLabel()}
                                         </span>
                                     </div>
                                     <motion.div
                                         initial={{ opacity: 0, y: 5 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="text-xs text-muted-foreground font-bold uppercase tracking-widest"
+                                        className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider"
                                     >
                                         <span>Billed {interval}</span>
                                     </motion.div>
                                 </div>
                             </div>
  
-                            <div className="space-y-4 mb-8">
+                            <div className="space-y-2.5 mb-6 flex-1">
                                 {plan.features.map((feature, featureIndex) => (
                                     <motion.div
                                         key={feature}
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: 0.6 + index * 0.1 + featureIndex * 0.05 }}
-                                        className="flex items-center gap-3"
+                                        className="flex items-center gap-2.5"
                                     >
-                                        <div className="flex-shrink-0 size-5 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
-                                            <Check className="size-3 text-primary" />
+                                        <div className="flex-shrink-0 size-4 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+                                            <Check className="size-2.5 text-primary" />
                                         </div>
-                                        <span className="text-sm text-foreground/90 font-medium">{feature}</span>
+                                        <span className="text-xs text-foreground/90 font-medium">{feature}</span>
                                     </motion.div>
                                 ))}
                             </div>
@@ -185,8 +185,8 @@ const PricingTable: React.FC<PricingTableProps> = ({ plans, interval }) => {
                                 <Button
                                     asChild={!plan.disabled}
                                     variant={plan.isFeatured ? "default" : "outline"}
-                                    size="lg"
-                                    className={`w-full h-14 rounded-2xl font-bold transition-all hover:scale-[1.02] active:scale-[0.98] ${plan.isFeatured ? 'shadow-xl shadow-primary/20' : 'border-border hover:bg-muted'}`}
+                                    size="sm"
+                                    className={`w-full h-11 rounded-xl text-sm font-bold transition-all hover:scale-[1.01] active:scale-[0.99] ${plan.isFeatured ? 'shadow-md shadow-primary/20' : 'border-border hover:bg-muted'}`}
                                     disabled={plan.disabled}
                                 >
                                     {plan.disabled ? (

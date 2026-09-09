@@ -206,51 +206,53 @@ const Pricing = () => {
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full pb-12 space-y-12">
+                <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-5 max-w-6xl mx-auto w-full pb-10 space-y-6">
                     
-                    {/* Main Category Tabs */}
-                    <div className="flex flex-col items-center gap-8">
-                        <div className="text-center space-y-4">
-                            <h1 className="text-2xl sm:text-3xl md:text-5xl font-black text-foreground tracking-tight">Choose Your Plan</h1>
-                            <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl px-4 sm:px-0">Select the perfect subscription for your learning journey.</p>
+                    {/* Compact Category & Interval Header */}
+                    <div className="flex flex-col items-center gap-3.5 text-center">
+                        <div className="space-y-1">
+                            <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">Choose Your Plan</h1>
+                            <p className="text-muted-foreground text-xs sm:text-sm max-w-md mx-auto">Select the perfect subscription for your learning journey.</p>
                         </div>
 
-                        <div className="flex bg-secondary/60 border border-border/40 p-1.5 rounded-2xl w-full max-w-[400px] shadow-sm">
-                            <button
-                                type="button"
-                                onClick={() => setCategory("individuals")}
-                                className={cn(
-                                    "flex-1 py-2.5 text-center rounded-xl font-bold text-sm sm:text-base transition-all duration-200",
-                                    category === "individuals"
-                                        ? "bg-background text-foreground shadow-md"
-                                        : "text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                Individuals
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setCategory("organizations")}
-                                className={cn(
-                                    "flex-1 py-2.5 text-center rounded-xl font-bold text-sm sm:text-base transition-all duration-200",
-                                    category === "organizations"
-                                        ? "bg-background text-foreground shadow-md"
-                                        : "text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                Organizations
-                            </button>
-                        </div>
+                        {/* Controls: Category Switcher + Interval Switcher in a neat, balanced row */}
+                        <div className="flex flex-wrap items-center justify-center gap-2.5 pt-0.5">
+                            {/* Category toggle: Individuals / Organizations */}
+                            <div className="flex bg-secondary/70 border border-border/40 p-1 rounded-xl shadow-inner">
+                                <button
+                                    type="button"
+                                    onClick={() => setCategory("individuals")}
+                                    className={cn(
+                                        "px-4 py-1.5 text-center rounded-lg font-bold text-xs sm:text-sm transition-all duration-200",
+                                        category === "individuals"
+                                            ? "bg-background text-foreground shadow-sm"
+                                            : "text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    Individuals
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setCategory("organizations")}
+                                    className={cn(
+                                        "px-4 py-1.5 text-center rounded-lg font-bold text-xs sm:text-sm transition-all duration-200",
+                                        category === "organizations"
+                                            ? "bg-background text-foreground shadow-sm"
+                                            : "text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    Organizations
+                                </button>
+                            </div>
 
-                        {/* Sub Tabs based on category */}
-                        <div className="flex items-center gap-4">
+                            {/* Interval toggle: Monthly / Yearly or Quarterly / Yearly */}
                             {category === "individuals" ? (
-                                <div className="flex bg-secondary/50 border border-border/20 p-1 rounded-xl shadow-inner">
+                                <div className="flex bg-secondary/50 border border-border/30 p-1 rounded-xl shadow-inner">
                                     <button
                                         type="button"
                                         onClick={() => setIndividualInterval("monthly")}
                                         className={cn(
-                                            "px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all",
+                                            "px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all",
                                             individualInterval === "monthly"
                                                 ? "bg-background text-foreground shadow-sm"
                                                 : "text-muted-foreground hover:text-foreground"
@@ -262,23 +264,23 @@ const Pricing = () => {
                                         type="button"
                                         onClick={() => setIndividualInterval("yearly")}
                                         className={cn(
-                                            "px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-2 transition-all",
+                                            "px-3.5 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-all",
                                             individualInterval === "yearly"
                                                 ? "bg-background text-foreground shadow-sm"
                                                 : "text-muted-foreground hover:text-foreground"
                                         )}
                                     >
                                         Yearly
-                                        <Badge className="bg-green-500/10 text-green-500 border-0 text-[10px] h-4 px-1.5">Save 20%</Badge>
+                                        <Badge className="bg-emerald-500/15 text-emerald-500 border-0 text-[10px] h-4 px-1.5 font-bold">Save 20%</Badge>
                                     </button>
                                 </div>
                             ) : (
-                                <div className="flex bg-secondary/50 border border-border/20 p-1 rounded-xl shadow-inner">
+                                <div className="flex bg-secondary/50 border border-border/30 p-1 rounded-xl shadow-inner">
                                     <button
                                         type="button"
                                         onClick={() => setOrgInterval("quarterly")}
                                         className={cn(
-                                            "px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all",
+                                            "px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all",
                                             orgInterval === "quarterly"
                                                 ? "bg-background text-foreground shadow-sm"
                                                 : "text-muted-foreground hover:text-foreground"
@@ -290,14 +292,14 @@ const Pricing = () => {
                                         type="button"
                                         onClick={() => setOrgInterval("yearly")}
                                         className={cn(
-                                            "px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-2 transition-all",
+                                            "px-3.5 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-all",
                                             orgInterval === "yearly"
                                                 ? "bg-background text-foreground shadow-sm"
                                                 : "text-muted-foreground hover:text-foreground"
                                         )}
                                     >
                                         Yearly
-                                        <Badge className="bg-green-500/10 text-green-500 border-0 text-[10px] h-4 px-1.5">Best Value</Badge>
+                                        <Badge className="bg-emerald-500/15 text-emerald-500 border-0 text-[10px] h-4 px-1.5 font-bold">Best Value</Badge>
                                     </button>
                                 </div>
                             )}
