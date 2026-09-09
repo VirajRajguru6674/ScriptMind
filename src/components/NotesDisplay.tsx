@@ -495,19 +495,21 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
       </div>
 
       {activeTab === 'notes' ? (
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8" ref={contentRef}>
-          <article className="markdown-content max-w-none">
-            <ReactMarkdown components={markdownComponents}>{currentContent}</ReactMarkdown>
-          </article>
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-y-auto p-6 sm:p-8" ref={contentRef}>
+            <article className="markdown-content max-w-none">
+              <ReactMarkdown components={markdownComponents}>{currentContent}</ReactMarkdown>
+            </article>
+          </div>
           {totalPages > 1 && (
-            <div className="mt-8 pt-4 border-t border-border/40 flex items-center justify-end">
-              <div className="flex items-center gap-1.5 bg-secondary/50 border border-border/40 p-1 rounded-xl shadow-sm">
+            <div className="shrink-0 border-t border-border/40 px-4 sm:px-6 py-2 bg-card/90 backdrop-blur-md flex items-center justify-end">
+              <div className="flex items-center gap-1 bg-secondary/50 border border-border/40 p-1 rounded-xl shadow-sm">
                 <Button 
                   variant="ghost" 
                   size="sm"
                   onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); contentRef.current?.scrollTo(0, 0); }} 
                   disabled={currentPage === 1}
-                  className="h-8 px-2.5 rounded-lg text-xs font-semibold hover:bg-background transition-all disabled:opacity-40"
+                  className="h-7 px-2.5 rounded-lg text-xs font-semibold hover:bg-background transition-all disabled:opacity-40"
                 >
                   <ChevronLeft className="mr-1 h-3.5 w-3.5" /> Previous
                 </Button>
@@ -521,7 +523,7 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
                   size="sm"
                   onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); contentRef.current?.scrollTo(0, 0); }} 
                   disabled={currentPage === totalPages}
-                  className="h-8 px-2.5 rounded-lg text-xs font-semibold hover:bg-background transition-all disabled:opacity-40"
+                  className="h-7 px-2.5 rounded-lg text-xs font-semibold hover:bg-background transition-all disabled:opacity-40"
                 >
                   Next <ChevronRight className="ml-1 h-3.5 w-3.5" />
                 </Button>
