@@ -373,19 +373,14 @@ export default function Admin() {
                 {/* Top Navigation Bar */}
                 <header className="sticky top-0 z-40 w-full border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shrink-0">
                         <div className="flex h-16 items-center justify-between px-4 sm:px-8">
-                            <div className="flex items-center gap-3 pl-12 lg:pl-0">
-                                <div className="size-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm shadow-primary/10">
-                                    <Shield className="w-5 h-5 text-primary" />
-                                </div>
-                                <div>
-                                    <h1 className="text-base sm:text-lg font-black tracking-tight text-foreground flex items-center gap-2">
-                                        Admin Management
-                                        <span className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                                            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                            Live Console
-                                        </span>
-                                    </h1>
-                                </div>
+                            <div className="flex items-center gap-2.5 pl-12 lg:pl-0">
+                                <h1 className="text-base sm:text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+                                    Admin Management
+                                    <span className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                        <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                        Live Console
+                                    </span>
+                                </h1>
                             </div>
                             <div className="flex items-center gap-2.5">
                                 <Button 
