@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo } from "react";
-import { Sidebar } from "@/components/Sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { Helmet } from "react-helmet-async";
 import { useToast } from "@/hooks/use-toast";
@@ -370,12 +369,9 @@ export default function Admin() {
     return (
         <>
             <Helmet><title>Admin Management Console | ScriptMind</title></Helmet>
-            <div className="flex h-screen bg-background overflow-hidden selection:bg-primary/20">
-                <Sidebar />
-                <main className="flex-1 flex flex-col min-w-0 lg:ml-[280px] overflow-y-auto">
-                    
-                    {/* Top Navigation Bar */}
-                    <header className="sticky top-0 z-40 w-full border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+            <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden selection:bg-primary/20">
+                {/* Top Navigation Bar */}
+                <header className="sticky top-0 z-40 w-full border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shrink-0">
                         <div className="flex h-16 items-center justify-between px-4 sm:px-8">
                             <div className="flex items-center gap-3 pl-12 lg:pl-0">
                                 <div className="size-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm shadow-primary/10">
@@ -416,7 +412,7 @@ export default function Admin() {
                         </div>
                     </header>
 
-                    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full pb-16">
+                    <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full pb-16">
                         
                         {/* KPI Stat Cards Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
@@ -1160,11 +1156,9 @@ export default function Admin() {
 
                                 </div>
                             </TabsContent>
-
                         </Tabs>
 
                     </div>
-                </main>
             </div>
 
             {/* Global Suspension Dialog */}

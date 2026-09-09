@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { FileText, Sparkles, Youtube, ExternalLink, PlayCircle, Loader2, Clock, RefreshCw, ArrowRight, ChevronUp, ChevronDown } from "lucide-react";
-import { Sidebar } from "@/components/Sidebar";
 import { UrlInput } from "@/components/UrlInput";
 import { VideoPreview } from "@/components/VideoPreview";
 import { NotesDisplay, type NotesDisplayHandle } from "@/components/NotesDisplay";
@@ -100,16 +99,7 @@ const Index = () => {
         />
       </Helmet>
 
-      <div className="min-h-screen bg-background font-sans selection:bg-primary/20 relative text-foreground overflow-hidden transition-colors duration-300">
-        <Sidebar
-          onHistorySelect={loadHistoryItem}
-          refreshTrigger={historyTrigger}
-          onNewNote={reset}
-        />
-
-
-
-        <main className="lg:pl-[280px] pt-14 lg:pt-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto font-sans selection:bg-primary/20 relative text-foreground transition-colors duration-300">
           {(!videoInfo && !notes && !isLoadingVideo && !isLoadingNotes) ? (
             <div className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-10 sm:px-6 sm:py-12 lg:px-12">
               {/* Aurora Background */}
@@ -470,8 +460,7 @@ const Index = () => {
               </div>
             </div>
           )}
-        </main >
-      </div >
+      </div>
     </>
   );
 };

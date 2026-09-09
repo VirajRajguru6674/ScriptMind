@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import API_BASE_URL from "@/lib/api";
 import { Helmet } from "react-helmet-async";
-import { Sidebar } from "@/components/Sidebar";
 import { NotificationPanel } from "@/components/NotificationPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
@@ -110,12 +109,9 @@ const Notifications = () => {
                 <title>Notifications - ScriptMind</title>
             </Helmet>
 
-            <div className="flex h-screen bg-background overflow-hidden">
-                <Sidebar />
-
-                <main className="flex-1 flex flex-col min-w-0 lg:ml-[280px]">
-                    {/* Header row — aligned with sidebar logo */}
-                    <header className="sticky top-0 z-50 w-full border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+            <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+                {/* Header row — aligned with sidebar logo */}
+                <header className="sticky top-0 z-50 w-full border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
                         <div className="flex h-16 items-center justify-between px-6">
                             {/* Left: page title */}
                             <div className="flex items-center gap-3 pl-12 lg:pl-0">
@@ -303,7 +299,6 @@ const Notifications = () => {
                             )}
                         </div>
                     </div>
-                </main>
             </div>
         </>
     );

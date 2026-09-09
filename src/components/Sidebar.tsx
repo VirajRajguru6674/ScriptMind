@@ -10,7 +10,7 @@ import {
     ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Video, Plus, CreditCard, Search, Star, Menu, ExternalLink, Trash2, Bell, Users } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useNotesHistory } from "@/hooks/useNotesHistory";
 import { useTheme } from "@/hooks/useTheme";
@@ -40,6 +40,8 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
     } = useNotesHistory();
     const { loadHistoryItem, reset } = useNotes();
     const { theme } = useTheme();
+    const location = useLocation();
+    const navigate = useNavigate();
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
@@ -48,11 +50,16 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
 
     const handleHistorySelect = (item: any) => {
         onHistorySelect ? onHistorySelect(item) : loadHistoryItem(item);
+        if (location.pathname !== '/') {
+            navigate('/');
+        }
         setOpen(false);
         onCloseMobile?.();
     };
 
-    const SidebarContent = () => (
+    const isPathActive = (path: string) => location.pathname === path;
+
+    const sidebarContent = (
         <div className="flex h-full flex-col bg-sidebar-background">
             <div className="flex h-16 items-center px-6 border-b border-sidebar-border/50">
                 <Link to="/" className="flex items-center gap-3 w-full group">
@@ -96,30 +103,77 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
             <div className="flex-1 py-4 flex flex-col gap-4 overflow-hidden min-h-0">
                 <div className="px-4 shrink-0">
                     <div className="space-y-1">
-                        <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5 transition-all" onClick={() => { (onNewNote || reset)(); setOpen(false); onCloseMobile?.(); }}>
-                            <Plus className="h-4 w-4" />
-                            New Note
+                        <Button 
+                            variant="ghost" 
+                            className={cn(
+                                "w-full justify-start gap-3 h-10 px-4 text-sm font-medium transition-all",
+                                isPathActive("/")
+                                    ? "bg-primary/10 text-primary font-bold shadow-sm"
+                                    : "text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5"
+                            )} 
+                            asChild
+                        >
+                            <Link to="/" onClick={() => { (onNewNote || reset)(); setOpen(false); onCloseMobile?.(); }}>
+                                <Plus className="h-4 w-4" />
+                                New Note
+                            </Link>
                         </Button>
 
-                        <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5 transition-all" asChild>
+                        <Button 
+                            variant="ghost" 
+                            className={cn(
+                                "w-full justify-start gap-3 h-10 px-4 text-sm font-medium transition-all",
+                                isPathActive("/playlist")
+                                    ? "bg-primary/10 text-primary font-bold shadow-sm"
+                                    : "text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5"
+                            )} 
+                            asChild
+                        >
                             <Link to="/playlist" onClick={() => { setOpen(false); onCloseMobile?.(); }}>
                                 <Video className="h-4 w-4" />
                                 Playlist Downloader
                             </Link>
                         </Button>
-                        <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5 transition-all" asChild>
+                        <Button 
+                            variant="ghost" 
+                            className={cn(
+                                "w-full justify-start gap-3 h-10 px-4 text-sm font-medium transition-all",
+                                isPathActive("/pricing")
+                                    ? "bg-primary/10 text-primary font-bold shadow-sm"
+                                    : "text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5"
+                            )} 
+                            asChild
+                        >
                             <Link to="/pricing" onClick={() => { setOpen(false); onCloseMobile?.(); }}>
                                 <CreditCard className="h-4 w-4" />
                                 Pricing
                             </Link>
                         </Button>
-                        <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5 transition-all" asChild>
+                        <Button 
+                            variant="ghost" 
+                            className={cn(
+                                "w-full justify-start gap-3 h-10 px-4 text-sm font-medium transition-all",
+                                isPathActive("/notifications")
+                                    ? "bg-primary/10 text-primary font-bold shadow-sm"
+                                    : "text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5"
+                            )} 
+                            asChild
+                        >
                             <Link to="/notifications" onClick={() => { setOpen(false); onCloseMobile?.(); }}>
                                 <Bell className="h-4 w-4" />
                                 Notifications
                             </Link>
                         </Button>
-                        <Button variant="ghost" className="w-full justify-start gap-3 h-10 px-4 text-sm font-medium text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5 transition-all" asChild>
+                        <Button 
+                            variant="ghost" 
+                            className={cn(
+                                "w-full justify-start gap-3 h-10 px-4 text-sm font-medium transition-all",
+                                isPathActive("/organization")
+                                    ? "bg-primary/10 text-primary font-bold shadow-sm"
+                                    : "text-sidebar-foreground/80 hover:text-primary hover:bg-primary/5"
+                            )} 
+                            asChild
+                        >
                             <Link to="/organization" onClick={() => { setOpen(false); onCloseMobile?.(); }}>
                                 <Users className="h-4 w-4" />
                                 Organization
@@ -274,13 +328,13 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
                 </SheetTrigger>
                 <SheetContent side="left" className="flex flex-col p-0 w-[280px]">
                     <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                    <SidebarContent />
+                    {sidebarContent}
                 </SheetContent>
             </Sheet>
 
             <div className={cn("hidden lg:block w-[280px] fixed inset-y-0 left-0 z-40", className)}>
                 <div className="h-full w-full bg-sidebar-background/80 backdrop-blur-xl border-r border-sidebar-border/50 shadow-2xl flex flex-col overflow-hidden">
-                    <SidebarContent />
+                    {sidebarContent}
                 </div>
             </div>
         </>

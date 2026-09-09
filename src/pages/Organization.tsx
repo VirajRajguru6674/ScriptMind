@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Sidebar } from "@/components/Sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -181,10 +180,8 @@ const Organization = () => {
                 <title>Organization - ScriptMind</title>
             </Helmet>
 
-            <div className="flex h-screen bg-background overflow-hidden selection:bg-primary/20 text-foreground">
-                <Sidebar />
-                <main className="flex-1 flex flex-col min-w-0 lg:ml-[280px]">
-                    <header className="sticky top-0 z-50 w-full border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+            <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden text-foreground">
+                <header className="sticky top-0 z-50 w-full border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
                         <div className="flex h-16 items-center justify-between px-6">
                             {/* Page title shown in header row on desktop, aligned with sidebar logo */}
                             <div className="flex items-center gap-3 pl-12 lg:pl-0">
@@ -425,7 +422,6 @@ const Organization = () => {
                             </div>
                         )}
                     </div>
-                </main>
             </div>
         </>
     );

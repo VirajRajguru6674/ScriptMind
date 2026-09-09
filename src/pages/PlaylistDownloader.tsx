@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Sidebar } from '@/components/Sidebar';
 import { NotificationPanel } from '@/components/NotificationPanel';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
@@ -336,11 +335,9 @@ export default function PlaylistDownloader() {
     };
 
     return (
-        <div className="flex h-screen bg-background overflow-hidden selection:bg-primary/20">
-            <Sidebar />
-            <main className="flex-1 flex flex-col min-w-0 lg:ml-[280px]">
-                {/* Header */}
-                <header className="sticky top-0 z-50 w-full border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+            {/* Header */}
+            <header className="sticky top-0 z-50 w-full border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
                     <div className="flex h-16 items-center justify-between px-4 sm:px-8">
                         <div className="flex items-center gap-3 pl-12 lg:pl-0">
                             <div className="size-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm shadow-primary/10">
@@ -760,7 +757,6 @@ export default function PlaylistDownloader() {
 
                     </div>
                 </div>
-            </main>
         </div>
     );
 }

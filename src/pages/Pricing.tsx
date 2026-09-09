@@ -1,7 +1,6 @@
 
 import { Helmet } from "react-helmet-async";
 import { useState, useEffect } from "react";
-import { Sidebar } from "@/components/Sidebar";
 import PricingTable, { Plan } from '@/components/ui/modern-pricing-table';
 import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -181,134 +180,135 @@ const Pricing = () => {
         }
     ];
 
-    if (loading) return null;
-
     return (
         <>
             <Helmet>
-                <title>Pricing - ScriptMind</title>
+                <title>Pricing Plans - ScriptMind</title>
             </Helmet>
 
-            <div className="flex h-screen bg-background overflow-hidden selection:bg-primary/20">
-                <Sidebar />
-                <main className="flex-1 flex flex-col min-w-0 lg:ml-[280px]">
-                    <header className="sticky top-0 z-50 w-full border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-                        <div className="flex h-16 items-center justify-between px-6">
-                            {/* Page title shown in header row on desktop, aligned with sidebar logo */}
-                            <div className="flex items-center gap-3 pl-12 lg:pl-0">
-                                <div className="size-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm shadow-primary/10">
-                                    <Sparkles className="w-5 h-5 text-primary" />
-                                </div>
-                                <h1 className="text-lg sm:text-xl font-black tracking-tight text-foreground">
-                                    Pricing Plans
-                                </h1>
+            <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+                <header className="sticky top-0 z-50 w-full border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+                    <div className="flex h-16 items-center justify-between px-6">
+                        {/* Page title shown in header row on desktop, aligned with sidebar logo */}
+                        <div className="flex items-center gap-3 pl-12 lg:pl-0">
+                            <div className="size-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm shadow-primary/10">
+                                <Sparkles className="w-5 h-5 text-primary" />
                             </div>
-                            {/* Right side controls */}
-                            <div className="flex items-center gap-2">
-                                <NotificationPanel />
-                                <ThemeToggle />
-                            </div>
+                            <h1 className="text-lg sm:text-xl font-black tracking-tight text-foreground">
+                                Pricing Plans
+                            </h1>
                         </div>
-                    </header>
-
-                    <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full pb-12 space-y-12">
-                        
-                        {/* Main Category Tabs */}
-                        <div className="flex flex-col items-center gap-8">
-                            <div className="text-center space-y-4">
-                                <h1 className="text-2xl sm:text-3xl md:text-5xl font-black text-foreground tracking-tight">Choose Your Plan</h1>
-                                <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl px-4 sm:px-0">Select the perfect subscription for your learning journey.</p>
-                            </div>
-
-                            <div className="flex bg-secondary/60 border border-border/40 p-1.5 rounded-2xl w-full max-w-[400px] shadow-sm">
-                                <button
-                                    onClick={() => setCategory("individuals")}
-                                    className={cn(
-                                        "flex-1 py-2.5 text-center rounded-xl font-bold text-sm sm:text-base transition-all duration-200",
-                                        category === "individuals"
-                                            ? "bg-background text-foreground shadow-md"
-                                            : "text-muted-foreground hover:text-foreground"
-                                    )}
-                                >
-                                    Individuals
-                                </button>
-                                <button
-                                    onClick={() => setCategory("organizations")}
-                                    className={cn(
-                                        "flex-1 py-2.5 text-center rounded-xl font-bold text-sm sm:text-base transition-all duration-200",
-                                        category === "organizations"
-                                            ? "bg-background text-foreground shadow-md"
-                                            : "text-muted-foreground hover:text-foreground"
-                                    )}
-                                >
-                                    Organizations
-                                </button>
-                            </div>
-
-                            {/* Sub Tabs based on category */}
-                            <div className="flex items-center gap-4">
-                                {category === "individuals" ? (
-                                    <div className="flex bg-secondary/50 border border-border/20 p-1 rounded-xl shadow-inner">
-                                        <button
-                                            onClick={() => setIndividualInterval("monthly")}
-                                            className={cn(
-                                                "px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all",
-                                                individualInterval === "monthly"
-                                                    ? "bg-background text-foreground shadow-sm"
-                                                    : "text-muted-foreground hover:text-foreground"
-                                            )}
-                                        >
-                                            Monthly
-                                        </button>
-                                        <button
-                                            onClick={() => setIndividualInterval("yearly")}
-                                            className={cn(
-                                                "px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-2 transition-all",
-                                                individualInterval === "yearly"
-                                                    ? "bg-background text-foreground shadow-sm"
-                                                    : "text-muted-foreground hover:text-foreground"
-                                            )}
-                                        >
-                                            Yearly
-                                            <Badge className="bg-green-500/10 text-green-500 border-0 text-[10px] h-4 px-1.5">Save 20%</Badge>
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="flex bg-secondary/50 border border-border/20 p-1 rounded-xl shadow-inner">
-                                        <button
-                                            onClick={() => setOrgInterval("quarterly")}
-                                            className={cn(
-                                                "px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all",
-                                                orgInterval === "quarterly"
-                                                    ? "bg-background text-foreground shadow-sm"
-                                                    : "text-muted-foreground hover:text-foreground"
-                                            )}
-                                        >
-                                            Quarterly
-                                        </button>
-                                        <button
-                                            onClick={() => setOrgInterval("yearly")}
-                                            className={cn(
-                                                "px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-2 transition-all",
-                                                orgInterval === "yearly"
-                                                    ? "bg-background text-foreground shadow-sm"
-                                                    : "text-muted-foreground hover:text-foreground"
-                                            )}
-                                        >
-                                            Yearly
-                                            <Badge className="bg-green-500/10 text-green-500 border-0 text-[10px] h-4 px-1.5">Best Value</Badge>
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
+                        {/* Right side controls */}
+                        <div className="flex items-center gap-2">
+                            <NotificationPanel />
+                            <ThemeToggle />
                         </div>
-
-                        <PricingTable 
-                            plans={plans} 
-                            interval={category === "individuals" ? individualInterval : orgInterval}
-                        />
                     </div>
-                </main>
+                </header>
+
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full pb-12 space-y-12">
+                    
+                    {/* Main Category Tabs */}
+                    <div className="flex flex-col items-center gap-8">
+                        <div className="text-center space-y-4">
+                            <h1 className="text-2xl sm:text-3xl md:text-5xl font-black text-foreground tracking-tight">Choose Your Plan</h1>
+                            <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl px-4 sm:px-0">Select the perfect subscription for your learning journey.</p>
+                        </div>
+
+                        <div className="flex bg-secondary/60 border border-border/40 p-1.5 rounded-2xl w-full max-w-[400px] shadow-sm">
+                            <button
+                                type="button"
+                                onClick={() => setCategory("individuals")}
+                                className={cn(
+                                    "flex-1 py-2.5 text-center rounded-xl font-bold text-sm sm:text-base transition-all duration-200",
+                                    category === "individuals"
+                                        ? "bg-background text-foreground shadow-md"
+                                        : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                Individuals
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setCategory("organizations")}
+                                className={cn(
+                                    "flex-1 py-2.5 text-center rounded-xl font-bold text-sm sm:text-base transition-all duration-200",
+                                    category === "organizations"
+                                        ? "bg-background text-foreground shadow-md"
+                                        : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                Organizations
+                            </button>
+                        </div>
+
+                        {/* Sub Tabs based on category */}
+                        <div className="flex items-center gap-4">
+                            {category === "individuals" ? (
+                                <div className="flex bg-secondary/50 border border-border/20 p-1 rounded-xl shadow-inner">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIndividualInterval("monthly")}
+                                        className={cn(
+                                            "px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all",
+                                            individualInterval === "monthly"
+                                                ? "bg-background text-foreground shadow-sm"
+                                                : "text-muted-foreground hover:text-foreground"
+                                        )}
+                                    >
+                                        Monthly
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIndividualInterval("yearly")}
+                                        className={cn(
+                                            "px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-2 transition-all",
+                                            individualInterval === "yearly"
+                                                ? "bg-background text-foreground shadow-sm"
+                                                : "text-muted-foreground hover:text-foreground"
+                                        )}
+                                    >
+                                        Yearly
+                                        <Badge className="bg-green-500/10 text-green-500 border-0 text-[10px] h-4 px-1.5">Save 20%</Badge>
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex bg-secondary/50 border border-border/20 p-1 rounded-xl shadow-inner">
+                                    <button
+                                        type="button"
+                                        onClick={() => setOrgInterval("quarterly")}
+                                        className={cn(
+                                            "px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all",
+                                            orgInterval === "quarterly"
+                                                ? "bg-background text-foreground shadow-sm"
+                                                : "text-muted-foreground hover:text-foreground"
+                                        )}
+                                    >
+                                        Quarterly
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setOrgInterval("yearly")}
+                                        className={cn(
+                                            "px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-2 transition-all",
+                                            orgInterval === "yearly"
+                                                ? "bg-background text-foreground shadow-sm"
+                                                : "text-muted-foreground hover:text-foreground"
+                                        )}
+                                    >
+                                        Yearly
+                                        <Badge className="bg-green-500/10 text-green-500 border-0 text-[10px] h-4 px-1.5">Best Value</Badge>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <PricingTable 
+                        plans={plans} 
+                        interval={category === "individuals" ? individualInterval : orgInterval}
+                    />
+                </div>
             </div>
         </>
     );

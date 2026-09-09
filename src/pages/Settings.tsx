@@ -1,5 +1,4 @@
 import { Helmet } from "react-helmet-async";
-import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { useNotesHistory } from "@/hooks/useNotesHistory";
 import {
@@ -388,10 +387,7 @@ const Settings = () => {
         <title>Settings - ScriptMind</title>
       </Helmet>
 
-      <div className="min-h-screen bg-background font-sans selection:bg-primary/20 relative">
-        <Sidebar />
-
-        <main className="lg:pl-[280px] h-screen flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden font-sans selection:bg-primary/20">
           {/* Top Navbar for Settings */}
           <header className="h-16 border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl flex items-center justify-between px-8 shrink-0 z-20">
             <div className="flex items-center gap-4">
@@ -1099,7 +1095,6 @@ const Settings = () => {
               </div>
             </div>
           </div>
-        </main>
 
         <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
           <AlertDialogContent>

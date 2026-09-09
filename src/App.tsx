@@ -21,6 +21,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 
 import Admin from "@/pages/Admin";
 import Organization from "@/pages/Organization";
+import { AppLayout } from "@/components/AppLayout";
 
 const queryClient = new QueryClient();
 
@@ -39,17 +40,22 @@ const App = () => (
               <AuthProvider>
                 <NotesProvider>
                   <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/playlist" element={<PlaylistDownloader />} />
+                    {/* Persistent App Layout with permanent Sidebar */}
+                    <Route element={<AppLayout />}>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/playlist" element={<PlaylistDownloader />} />
+                      <Route path="/pricing" element={<Pricing />} />
+                      <Route path="/notifications" element={<Notifications />} />
+                      <Route path="/organization" element={<Organization />} />
+                      <Route path="/admin" element={<Admin />} />
+                    </Route>
+
+                    {/* Standalone full-page routes without Sidebar */}
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
-                    <Route path="/pricing" element={<Pricing />} />
                     <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/admin" element={<Admin />} />
-                    <Route path="/notifications" element={<Notifications />} />
-                    <Route path="/organization" element={<Organization />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
