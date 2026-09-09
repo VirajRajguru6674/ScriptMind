@@ -32,19 +32,21 @@ type ToolType = 'flashcards' | 'quiz' | 'summary' | 'key_terms' | 'eli5' | 'mind
 
 const markdownComponents = {
   h1: ({ node, ...props }: any) => (
-    <h1 className="text-lg sm:text-xl font-black text-foreground tracking-tight mt-6 first:mt-0 mb-3 leading-snug" {...props} />
+    <div className="mb-5 pb-3 border-b border-border/50 first:mt-0 mt-8">
+      <h1 className="text-xl sm:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-foreground via-foreground to-primary leading-tight" {...props} />
+    </div>
   ),
   h2: ({ node, ...props }: any) => (
-    <h2 className="text-base sm:text-lg font-bold text-foreground tracking-tight mt-5 mb-2.5 leading-snug" {...props} />
+    <h2 className="text-base sm:text-lg font-extrabold text-foreground tracking-tight mt-6 mb-2.5 leading-snug" {...props} />
   ),
   h3: ({ node, ...props }: any) => (
-    <h3 className="text-sm sm:text-base font-bold text-foreground tracking-tight mt-4 mb-2 leading-snug" {...props} />
+    <h3 className="text-sm sm:text-base font-bold text-foreground/90 tracking-tight mt-4 mb-2 leading-snug" {...props} />
   ),
   h4: ({ node, ...props }: any) => (
-    <h4 className="text-xs sm:text-sm font-bold text-foreground mt-3 mb-1.5" {...props} />
+    <h4 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mt-3 mb-1.5" {...props} />
   ),
   p: ({ node, ...props }: any) => (
-    <p className="text-sm leading-relaxed text-foreground/90 mb-3.5" {...props} />
+    <p className="text-sm leading-relaxed text-foreground/90 mb-3.5 font-normal" {...props} />
   ),
   ul: ({ node, ...props }: any) => (
     <ul className="list-disc list-outside space-y-1.5 my-3 text-sm text-foreground/90 pl-5" {...props} />
@@ -498,10 +500,32 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
             <ReactMarkdown components={markdownComponents}>{currentContent}</ReactMarkdown>
           </article>
           {totalPages > 1 && (
-            <div className="mt-8 flex items-center justify-between border-t border-border/40 pt-4">
-              <Button variant="ghost" onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); contentRef.current?.scrollTo(0, 0); }} disabled={currentPage === 1}><ChevronLeft className="mr-2 h-4 w-4" /> Previous</Button>
-              <span className="text-sm font-medium">Page {currentPage} of {totalPages}</span>
-              <Button variant="ghost" onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); contentRef.current?.scrollTo(0, 0); }} disabled={currentPage === totalPages}>Next <ChevronRight className="ml-2 h-4 w-4" /></Button>
+            <div className="mt-8 pt-4 border-t border-border/40 flex items-center justify-end">
+              <div className="flex items-center gap-1.5 bg-secondary/50 border border-border/40 p-1 rounded-xl shadow-sm">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); contentRef.current?.scrollTo(0, 0); }} 
+                  disabled={currentPage === 1}
+                  className="h-8 px-2.5 rounded-lg text-xs font-semibold hover:bg-background transition-all disabled:opacity-40"
+                >
+                  <ChevronLeft className="mr-1 h-3.5 w-3.5" /> Previous
+                </Button>
+                
+                <span className="text-xs font-bold text-muted-foreground px-2 tabular-nums">
+                  Page {currentPage} of {totalPages}
+                </span>
+
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); contentRef.current?.scrollTo(0, 0); }} 
+                  disabled={currentPage === totalPages}
+                  className="h-8 px-2.5 rounded-lg text-xs font-semibold hover:bg-background transition-all disabled:opacity-40"
+                >
+                  Next <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                </Button>
+              </div>
             </div>
           )}
         </div>
