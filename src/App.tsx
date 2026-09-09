@@ -7,6 +7,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { NotesProvider } from "@/context/NotesContext";
+import { SidebarProvider } from "@/context/SidebarContext";
 import Index from "@/pages/Index";
 import Settings from "@/pages/Settings";
 import PlaylistDownloader from "@/pages/PlaylistDownloader";
@@ -39,26 +40,28 @@ const App = () => (
             <BrowserRouter>
               <AuthProvider>
                 <NotesProvider>
-                  <Routes>
-                    {/* Persistent App Layout with permanent Sidebar */}
-                    <Route element={<AppLayout />}>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/playlist" element={<PlaylistDownloader />} />
-                      <Route path="/pricing" element={<Pricing />} />
-                      <Route path="/notifications" element={<Notifications />} />
-                      <Route path="/organization" element={<Organization />} />
-                      <Route path="/admin" element={<Admin />} />
-                    </Route>
+                  <SidebarProvider>
+                    <Routes>
+                      {/* Persistent App Layout with permanent Sidebar */}
+                      <Route element={<AppLayout />}>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/settings" element={<Settings />} />
+                        <Route path="/playlist" element={<PlaylistDownloader />} />
+                        <Route path="/pricing" element={<Pricing />} />
+                        <Route path="/notifications" element={<Notifications />} />
+                        <Route path="/organization" element={<Organization />} />
+                        <Route path="/admin" element={<Admin />} />
+                      </Route>
 
-                    {/* Standalone full-page routes without Sidebar */}
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/checkout" element={<Checkout />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
+                      {/* Standalone full-page routes without Sidebar */}
+                      <Route path="/forgot-password" element={<ForgotPassword />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/register" element={<Register />} />
+                      <Route path="/checkout" element={<Checkout />} />
+                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </SidebarProvider>
                 </NotesProvider>
               </AuthProvider>
             </BrowserRouter>

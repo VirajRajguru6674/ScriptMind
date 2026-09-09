@@ -9,7 +9,7 @@ import {
     ContextMenuItem,
     ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Video, Plus, CreditCard, Search, Star, Menu, ExternalLink, Trash2, Bell, Users } from "lucide-react";
+import { Video, Plus, CreditCard, Search, Star, Menu, ExternalLink, Trash2, Bell, Users, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useNotesHistory } from "@/hooks/useNotesHistory";
@@ -17,6 +17,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { UserMenu } from "@/components/UserMenu";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useNotes } from "@/context/NotesContext";
+import { useSidebarContext } from "@/context/SidebarContext";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
     onHistorySelect?: (item: any) => void;
@@ -43,6 +44,7 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
     const location = useLocation();
     const navigate = useNavigate();
     const [open, setOpen] = useState(false);
+    const { isCollapsed, toggleSidebar } = useSidebarContext();
 
     useEffect(() => {
         fetchHistory();
@@ -312,6 +314,7 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
 
     return (
         <>
+            {/* Mobile Sidebar Sheet */}
             <Sheet open={open} onOpenChange={setOpen}>
                 <SheetTrigger asChild>
                     <Button 
@@ -332,10 +335,44 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
                 </SheetContent>
             </Sheet>
 
-            <div className={cn("hidden lg:block w-[280px] fixed inset-y-0 left-0 z-40", className)}>
+            {/* Desktop Collapsed Floating Expand Trigger */}
+            {isCollapsed && (
+                <button
+                    onClick={toggleSidebar}
+                    aria-label="Expand sidebar"
+                    title="Expand sidebar (Ctrl+B)"
+                    className="hidden lg:flex fixed left-4 top-4 z-50 items-center gap-2 px-3 py-2 rounded-xl bg-card/90 backdrop-blur-xl border border-border/80 shadow-xl shadow-black/20 hover:border-primary/50 text-foreground hover:text-primary transition-all duration-200 group hover:scale-105 active:scale-95 animate-in fade-in zoom-in-95 cursor-pointer"
+                >
+                    <div className="w-5 h-5 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                        <ChevronRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+                    </div>
+                    <span className="text-xs font-bold tracking-tight text-foreground/90 group-hover:text-primary transition-colors">
+                        Expand
+                    </span>
+                </button>
+            )}
+
+            {/* Desktop Sidebar Container */}
+            <div 
+                className={cn(
+                    "hidden lg:block w-[280px] fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out",
+                    isCollapsed ? "-translate-x-full" : "translate-x-0",
+                    className
+                )}
+            >
                 <div className="h-full w-full bg-sidebar-background/80 backdrop-blur-xl border-r border-sidebar-border/50 shadow-2xl flex flex-col overflow-hidden">
                     {sidebarContent}
                 </div>
+
+                {/* Stylish Collapse Button on Right Border (Marked Area) */}
+                <button
+                    onClick={toggleSidebar}
+                    aria-label="Collapse sidebar"
+                    title="Collapse sidebar (Ctrl+B)"
+                    className="absolute -right-3.5 top-20 z-50 w-7 h-7 rounded-full bg-card/95 backdrop-blur-md border border-border/80 shadow-lg shadow-black/30 hover:bg-secondary hover:border-primary/50 text-muted-foreground hover:text-primary transition-all duration-200 flex items-center justify-center cursor-pointer group hover:scale-110 active:scale-95"
+                >
+                    <ChevronLeft className="w-3.5 h-3.5 transition-transform duration-200 group-hover:-translate-x-0.5" />
+                </button>
             </div>
         </>
     );
