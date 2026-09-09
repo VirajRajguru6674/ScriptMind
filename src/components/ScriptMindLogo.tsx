@@ -44,7 +44,7 @@ const themePalette: Record<string, { from: string; to: string; accent: string; g
 
 export const ScriptMindLogo: React.FC<ScriptMindLogoProps> = ({
   className,
-  size = 28,
+  size = 30,
   showText = false,
 }) => {
   const { variant = "default" } = useTheme();
@@ -57,20 +57,19 @@ export const ScriptMindLogo: React.FC<ScriptMindLogoProps> = ({
 
   return (
     <div className={cn("inline-flex items-center gap-3 select-none", className)}>
-      {/* Stylish, Theme-Reactive "SM" Badge */}
+      {/* Sleek Neutral Squircle Container - No Theme-Colored Highlight Border */}
       <div 
-        className="relative flex items-center justify-center shrink-0 rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 border border-primary/30 p-1.5 shadow-sm transition-colors duration-300"
+        className="relative flex items-center justify-center shrink-0 rounded-xl bg-zinc-900/90 dark:bg-zinc-900/90 border border-zinc-800/80 dark:border-white/10 p-1.5 shadow-sm transition-all duration-300"
         style={{ 
-          width: typeof size === "number" ? `${size + 10}px` : size, 
-          height: typeof size === "number" ? `${size + 10}px` : size,
-          boxShadow: `0 2px 10px ${palette.glow}`,
+          width: typeof size === "number" ? `${size + 8}px` : size, 
+          height: typeof size === "number" ? `${size + 8}px` : size,
         }}
       >
         <svg
           viewBox="0 0 100 100"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-full"
+          className="w-full h-full overflow-visible"
         >
           <defs>
             {/* Dynamic S Gradient */}
@@ -82,37 +81,40 @@ export const ScriptMindLogo: React.FC<ScriptMindLogoProps> = ({
             {/* Dynamic M Gradient */}
             <linearGradient id={mGradientId} x1="0%" y1="100%" x2="100%" y2="0%">
               <stop offset="0%" stopColor={palette.to} />
-              <stop offset="60%" stopColor={palette.from} />
+              <stop offset="50%" stopColor={palette.from} />
               <stop offset="100%" stopColor={palette.accent} />
             </linearGradient>
 
-            {/* Subtle Drop Shadow Glow */}
+            {/* Subtle Drop Shadow Glow strictly on glyph strokes */}
             <filter id={glowFilterId} x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="1.5" stdDeviation="2" floodColor={palette.from} floodOpacity="0.5" />
+              <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor={palette.from} floodOpacity="0.4" />
             </filter>
           </defs>
 
           <g filter={`url(#${glowFilterId})`}>
-            {/* 'S' Letterform (Script) - Bold, flowing, modern curve */}
+            {/* 'S' Letterform (Script) - Sleek, futuristic, high-tech curve */}
             <path
-              d="M38 25 C38 19 32 17 25 17 L21 17 C13 17 8 22 8 30 C8 38 14 42 22 45 L26 47 C34 50 39 54 39 62 C39 70 32 75 24 75 L11 75"
+              d="M 40 24 C 27 24 17 28 17 38 C 17 47 43 49 43 60 C 43 71 31 76 17 76"
               stroke={`url(#${sGradientId})`}
-              strokeWidth="9.5"
+              strokeWidth="8.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
 
-            {/* 'M' Letterform (Mind) - High-tech, sharp, architectural */}
+            {/* 'M' Letterform (Mind) - Sharp, architectural, futuristic */}
             <path
-              d="M48 75 V23 L65 47 L82 23 V75"
+              d="M 52 76 V 24 L 67 49 L 82 24 V 76"
               stroke={`url(#${mGradientId})`}
-              strokeWidth="9.5"
+              strokeWidth="8.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
 
-            {/* AI Spark Accent Node above 'M' */}
-            <circle cx="82" cy="12" r="3.5" fill={palette.accent} />
+            {/* AI 4-Point Spark Accent above 'M' */}
+            <path
+              d="M 82 7 Q 82 13 86 13 Q 82 13 82 19 Q 82 13 78 13 Q 82 13 82 7 Z"
+              fill={palette.accent}
+            />
           </g>
         </svg>
       </div>
