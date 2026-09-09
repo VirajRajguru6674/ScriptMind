@@ -30,6 +30,49 @@ export type NotesDisplayHandle = {
 
 type ToolType = 'flashcards' | 'quiz' | 'summary' | 'key_terms' | 'eli5' | 'mind_map' | null;
 
+const markdownComponents = {
+  h1: ({ node, ...props }: any) => (
+    <h1 className="text-lg sm:text-xl font-black text-foreground tracking-tight mt-6 first:mt-0 mb-3 leading-snug" {...props} />
+  ),
+  h2: ({ node, ...props }: any) => (
+    <h2 className="text-base sm:text-lg font-bold text-foreground tracking-tight mt-5 mb-2.5 leading-snug" {...props} />
+  ),
+  h3: ({ node, ...props }: any) => (
+    <h3 className="text-sm sm:text-base font-bold text-foreground tracking-tight mt-4 mb-2 leading-snug" {...props} />
+  ),
+  h4: ({ node, ...props }: any) => (
+    <h4 className="text-xs sm:text-sm font-bold text-foreground mt-3 mb-1.5" {...props} />
+  ),
+  p: ({ node, ...props }: any) => (
+    <p className="text-sm leading-relaxed text-foreground/90 mb-3.5" {...props} />
+  ),
+  ul: ({ node, ...props }: any) => (
+    <ul className="list-disc list-outside space-y-1.5 my-3 text-sm text-foreground/90 pl-5" {...props} />
+  ),
+  ol: ({ node, ...props }: any) => (
+    <ol className="list-decimal list-outside space-y-1.5 my-3 text-sm text-foreground/90 pl-5" {...props} />
+  ),
+  li: ({ node, ...props }: any) => (
+    <li className="leading-relaxed pl-0.5" {...props} />
+  ),
+  blockquote: ({ node, ...props }: any) => (
+    <blockquote className="border-l-4 border-primary/50 pl-4 py-2 my-4 italic text-muted-foreground bg-secondary/20 rounded-r-xl text-sm" {...props} />
+  ),
+  strong: ({ node, ...props }: any) => (
+    <strong className="font-bold text-foreground" {...props} />
+  ),
+  code: ({ node, inline, ...props }: any) => (
+    inline ? (
+      <code className="bg-secondary/60 text-primary font-mono text-xs px-1.5 py-0.5 rounded border border-border/50" {...props} />
+    ) : (
+      <code className="block bg-secondary/30 text-foreground font-mono text-xs p-4 rounded-xl border border-border/50 overflow-x-auto my-3" {...props} />
+    )
+  ),
+  hr: ({ node, ...props }: any) => (
+    <hr className="my-6 border-border/60" {...props} />
+  ),
+};
+
 export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(function NotesDisplay({ notes, isLoading, videoTitle }, ref) {
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
@@ -194,8 +237,8 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
       case 'summary':
       case 'eli5':
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none p-6 animate-fade-in">
-            <ReactMarkdown>{toolContent}</ReactMarkdown>
+          <div className="max-w-none p-6 animate-fade-in">
+            <ReactMarkdown components={markdownComponents}>{toolContent}</ReactMarkdown>
           </div>
         );
 
@@ -450,9 +493,9 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
       </div>
 
       {activeTab === 'notes' ? (
-        <div className="flex-1 overflow-y-auto p-8" ref={contentRef}>
-          <article className="markdown-content prose prose-sm md:prose-base dark:prose-invert max-w-none">
-            <ReactMarkdown>{currentContent}</ReactMarkdown>
+        <div className="flex-1 overflow-y-auto p-6 sm:p-8" ref={contentRef}>
+          <article className="markdown-content max-w-none">
+            <ReactMarkdown components={markdownComponents}>{currentContent}</ReactMarkdown>
           </article>
           {totalPages > 1 && (
             <div className="mt-8 flex items-center justify-between border-t border-border/40 pt-4">
