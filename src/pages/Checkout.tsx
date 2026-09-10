@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { cities } from 'indian-cities-json';
 import { motion, AnimatePresence } from "framer-motion";
+import { Sidebar } from "@/components/Sidebar";
 
 interface City {
     id: string;
@@ -300,7 +300,7 @@ const Checkout = () => {
                                                         <CardDescription>Enter your complete billing details to proceed</CardDescription>
                                                     </CardHeader>
                                                     <CardContent className="pt-8 space-y-6">
-                                                        <div className="grid grid-cols-2 gap-6">
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                                                             <div className="space-y-2">
                                                                 <Label className={errors.firstName ? "text-destructive" : ""}>First Name <span className="text-red-500">*</span></Label>
                                                                 <Input
@@ -347,7 +347,7 @@ const Checkout = () => {
                                                             />
                                                             {errors.address && <p className="text-xs text-destructive">{errors.address}</p>}
                                                         </div>
-                                                        <div className="grid grid-cols-2 gap-6">
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                                                             <div className="space-y-2">
                                                                 <Label className={errors.state ? "text-destructive" : ""}>State / Province <span className="text-red-500">*</span></Label>
                                                                 <Popover open={openState} onOpenChange={setOpenState}>
@@ -453,7 +453,7 @@ const Checkout = () => {
                                                                 {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
                                                             </div>
                                                         </div>
-                                                        <div className="grid grid-cols-2 gap-6">
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                                                             <div className="space-y-2">
                                                                 <Label className={errors.postalCode ? "text-destructive" : ""}>Postal / Zip Code <span className="text-red-500">*</span></Label>
                                                                 <Input

@@ -1,4 +1,5 @@
 import { ThemeToggle } from "./ThemeToggle";
+import { PaletteCustomizer } from "./PaletteCustomizer";
 import { NotificationPanel } from "./NotificationPanel";
 import { ScriptMindLogo } from "./ScriptMindLogo";
 import { Link } from "react-router-dom";
@@ -14,6 +15,7 @@ export function Header() {
         </div>
         <div className="flex items-center gap-2 lg:hidden">
           <NotificationPanel />
+          <PaletteCustomizer />
           <ThemeToggle />
         </div>
       </div>

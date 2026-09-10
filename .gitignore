@@ -33,4 +33,5 @@ server/base64_cookies.txt
 
 # Scratch folders
 scratch/
+*.timestamp-*.mjs
 

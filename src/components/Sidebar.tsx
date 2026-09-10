@@ -25,6 +25,7 @@ import { useNotesHistory } from "@/hooks/useNotesHistory";
 import { useTheme } from "@/hooks/useTheme";
 import { UserMenu } from "@/components/UserMenu";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { PaletteCustomizer } from "@/components/PaletteCustomizer";
 import { useNotes } from "@/context/NotesContext";
 import { useSidebarContext } from "@/context/SidebarContext";
 
@@ -54,8 +55,7 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
     const { theme } = useTheme();
     const location = useLocation();
     const navigate = useNavigate();
-    const [open, setOpen] = useState(false);
-    const { isCollapsed, toggleSidebar } = useSidebarContext();
+    const { isCollapsed, toggleSidebar, mobileOpen, setMobileOpen } = useSidebarContext();
 
     useEffect(() => {
         fetchHistory();
@@ -66,7 +66,7 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
         if (location.pathname !== '/') {
             navigate('/');
         }
-        setOpen(false);
+        setMobileOpen(false);
         onCloseMobile?.();
     };
 
@@ -94,7 +94,7 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
                             )} 
                             asChild
                         >
-                            <Link to="/" onClick={() => { (onNewNote || reset)(); setOpen(false); onCloseMobile?.(); }}>
+                            <Link to="/" onClick={() => { (onNewNote || reset)(); setMobileOpen(false); onCloseMobile?.(); }}>
                                 <Plus className="h-4 w-4" />
                                 New Note
                             </Link>
@@ -110,7 +110,7 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
                             )} 
                             asChild
                         >
-                            <Link to="/playlist" onClick={() => { setOpen(false); onCloseMobile?.(); }}>
+                            <Link to="/playlist" onClick={() => { setMobileOpen(false); onCloseMobile?.(); }}>
                                 <Video className="h-4 w-4" />
                                 Playlist Downloader
                             </Link>
@@ -125,7 +125,7 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
                             )} 
                             asChild
                         >
-                            <Link to="/pricing" onClick={() => { setOpen(false); onCloseMobile?.(); }}>
+                            <Link to="/pricing" onClick={() => { setMobileOpen(false); onCloseMobile?.(); }}>
                                 <CreditCard className="h-4 w-4" />
                                 Pricing
                             </Link>
@@ -140,7 +140,7 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
                             )} 
                             asChild
                         >
-                            <Link to="/notifications" onClick={() => { setOpen(false); onCloseMobile?.(); }}>
+                            <Link to="/notifications" onClick={() => { setMobileOpen(false); onCloseMobile?.(); }}>
                                 <Bell className="h-4 w-4" />
                                 Notifications
                             </Link>
@@ -155,7 +155,7 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
                             )} 
                             asChild
                         >
-                            <Link to="/organization" onClick={() => { setOpen(false); onCloseMobile?.(); }}>
+                            <Link to="/organization" onClick={() => { setMobileOpen(false); onCloseMobile?.(); }}>
                                 <Users className="h-4 w-4" />
                                 Organization
                             </Link>
@@ -284,7 +284,10 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
                 <div className="mt-auto px-4 pt-4 border-t border-sidebar-border/50 shrink-0">
                     <div className="flex items-center justify-between gap-2">
                         <UserMenu />
-                        <ThemeToggle />
+                        <div className="flex items-center gap-1">
+                            <PaletteCustomizer align="start" />
+                            <ThemeToggle />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -432,9 +435,9 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
                 </Tooltip>
             </div>
 
-            {/* Footer */}
             <div className="mt-auto flex flex-col items-center gap-2 pt-2 border-t border-sidebar-border/50 w-full shrink-0">
                 <UserMenu compact={true} />
+                <PaletteCustomizer align="start" />
                 <ThemeToggle />
             </div>
         </div>
@@ -443,21 +446,22 @@ export function Sidebar({ className, onHistorySelect, refreshTrigger, onNewNote,
     return (
         <>
             {/* Mobile Sidebar Sheet */}
-            <Sheet open={open} onOpenChange={setOpen}>
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                 <SheetTrigger asChild>
                     <Button 
                         variant="ghost" 
                         size="icon" 
+                        aria-label="Open navigation menu"
                         className={cn(
-                            "shrink-0 lg:hidden fixed left-4 top-4 z-[60] bg-background/80 backdrop-blur-md border border-border transition-all duration-200",
-                            open ? "opacity-0 scale-95 pointer-events-none" : "opacity-100 scale-100"
+                            "shrink-0 lg:hidden fixed left-3.5 top-3.5 z-[60] size-9 rounded-xl bg-background/90 backdrop-blur-md border border-border shadow-sm hover:bg-secondary transition-all duration-200",
+                            mobileOpen ? "opacity-0 scale-95 pointer-events-none" : "opacity-100 scale-100"
                         )}
                     >
-                        <Menu className="h-5 w-5" />
+                        <Menu className="h-5 w-5 text-foreground" />
                         <span className="sr-only">Toggle navigation menu</span>
                     </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="flex flex-col p-0 w-[280px]">
+                <SheetContent side="left" className="flex flex-col p-0 w-[280px] max-w-[85vw]">
                     <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                     {sidebarContent}
                 </SheetContent>

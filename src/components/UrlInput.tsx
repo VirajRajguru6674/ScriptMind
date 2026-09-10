@@ -15,9 +15,20 @@ import {
 interface UrlInputProps {
   onSubmit: (url: string, manualTranscript?: string) => void;
   isLoading: boolean;
+  placeholder?: string;
+  buttonText?: string;
+  helperText?: string;
+  manualLinkText?: string;
 }
 
-export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
+export function UrlInput({
+  onSubmit,
+  isLoading,
+  placeholder = "Paste YouTube link here...",
+  buttonText = "Generate",
+  helperText = "Auto-fetch not working?",
+  manualLinkText = "Paste transcript manually",
+}: UrlInputProps) {
   const [url, setUrl] = useState("");
   const [manualTranscript, setManualTranscript] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -49,7 +60,7 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
           <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
           <input
             type="url"
-            placeholder="Paste YouTube link here..."
+            placeholder={placeholder}
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             className="flex-1 h-11 bg-transparent border-0 text-sm text-foreground placeholder:text-muted-foreground/75 focus:outline-none pl-3 pr-2 w-full min-w-0"
@@ -65,7 +76,7 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
             ) : (
               <>
                 <Zap className="h-4 w-4 fill-current shrink-0" />
-                <span className="hidden sm:inline">Generate</span>
+                <span className="hidden sm:inline">{buttonText}</span>
               </>
             )}
           </Button>
@@ -78,12 +89,12 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
 
 
       <div className="flex items-center justify-center gap-2">
-        <span className="text-sm text-muted-foreground">Auto-fetch not working?</span>
+        <span className="text-sm text-muted-foreground">{helperText}</span>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="link" size="sm" className="h-auto p-0 text-primary">
               <ClipboardPaste className="mr-1 h-4 w-4" />
-              Paste transcript manually
+              {manualLinkText}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-2xl">

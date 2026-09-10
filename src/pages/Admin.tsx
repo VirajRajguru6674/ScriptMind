@@ -49,8 +49,13 @@ import {
     Clock,
     Globe,
     Crown,
-    X
+    X,
+    LayoutTemplate,
+    Sparkles,
+    ExternalLink,
+    ArrowRight
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
     Card,
     CardContent,
@@ -69,6 +74,7 @@ import { format, addDays, addMonths, addYears, isWithinInterval, startOfDay, end
 import API_BASE_URL from "@/lib/api";
 import { NotificationPanel } from "@/components/NotificationPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { PaletteCustomizer } from "@/components/PaletteCustomizer";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
 
@@ -97,6 +103,94 @@ interface LogData {
     action: string;
     details: any;
     created_at: string;
+}
+
+const AVATAR_PALETTES = [
+    { bg: "bg-gradient-to-tr from-blue-600 to-indigo-600", border: "border-blue-300/40", glow: "shadow-blue-500/25" },
+    { bg: "bg-gradient-to-tr from-purple-600 to-pink-600", border: "border-purple-300/40", glow: "shadow-purple-500/25" },
+    { bg: "bg-gradient-to-tr from-emerald-500 to-teal-600", border: "border-emerald-300/40", glow: "shadow-emerald-500/25" },
+    { bg: "bg-gradient-to-tr from-amber-500 to-orange-600", border: "border-amber-300/40", glow: "shadow-amber-500/25" },
+    { bg: "bg-gradient-to-tr from-rose-500 to-red-600", border: "border-rose-300/40", glow: "shadow-rose-500/25" },
+    { bg: "bg-gradient-to-tr from-cyan-500 to-blue-600", border: "border-cyan-300/40", glow: "shadow-cyan-500/25" },
+    { bg: "bg-gradient-to-tr from-violet-600 to-fuchsia-600", border: "border-violet-300/40", glow: "shadow-violet-500/25" },
+    { bg: "bg-gradient-to-tr from-teal-500 to-emerald-700", border: "border-teal-300/40", glow: "shadow-teal-500/25" },
+    { bg: "bg-gradient-to-tr from-indigo-600 to-sky-500", border: "border-indigo-300/40", glow: "shadow-indigo-500/25" },
+    { bg: "bg-gradient-to-tr from-pink-600 to-rose-600", border: "border-pink-300/40", glow: "shadow-pink-500/25" },
+];
+
+function getAvatarPalette(identifier: string | number) {
+    const str = String(identifier || '');
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+    }
+    return AVATAR_PALETTES[Math.abs(hash) % AVATAR_PALETTES.length];
+}
+
+function getInitials(name?: string, email?: string) {
+    const raw = (name || email || 'User').trim();
+    const parts = raw.split(/[\s_.-]+/).filter(Boolean);
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return raw.slice(0, 2).toUpperCase();
+}
+
+function UserAvatar({
+    user,
+    size = "md",
+    showStatus = true,
+}: {
+    user?: UserData | null;
+    size?: "sm" | "md" | "lg";
+    showStatus?: boolean;
+}) {
+    const [imgError, setImgError] = useState(false);
+    const identifier = user?.id ? `${user.id}-${user.username}` : (user?.username || user?.email || 'user');
+    const palette = getAvatarPalette(identifier);
+    const initials = getInitials(user?.username, user?.email);
+    const isSuspended = Boolean(user?.suspended_until && new Date(user.suspended_until) > new Date());
+
+    const sizeClasses = {
+        sm: "size-8 text-[11px] rounded-lg",
+        md: "size-9 sm:size-10 text-xs rounded-xl",
+        lg: "size-14 text-base rounded-2xl",
+    }[size];
+
+    return (
+        <div className="relative shrink-0">
+            <div
+                className={cn(
+                    sizeClasses,
+                    "flex items-center justify-center font-black text-white border shadow-md transition-transform duration-200 group-hover:scale-105 select-none overflow-hidden tracking-wider",
+                    palette.bg,
+                    palette.border,
+                    palette.glow
+                )}
+            >
+                {user?.avatar_url && !imgError ? (
+                    <img
+                        src={user.avatar_url}
+                        alt={user.username || 'User avatar'}
+                        onError={() => setImgError(true)}
+                        className="size-full object-cover"
+                    />
+                ) : (
+                    <span>{initials}</span>
+                )}
+            </div>
+            {showStatus && (
+                <span
+                    className={cn(
+                        "absolute -bottom-0.5 -right-0.5 rounded-full ring-2 ring-background size-2.5",
+                        isSuspended ? "bg-rose-500 animate-pulse" : "bg-emerald-500"
+                    )}
+                    title={isSuspended ? "Suspended" : "Active"}
+                />
+            )}
+        </div>
+    );
 }
 
 export default function Admin() {
@@ -372,42 +466,43 @@ export default function Admin() {
             <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden selection:bg-primary/20">
                 {/* Top Navigation Bar */}
                 <header className="sticky top-0 z-40 w-full border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shrink-0">
-                        <div className="flex h-16 items-center justify-between px-4 sm:px-8">
-                            <div className="flex items-center gap-2.5 pl-12 lg:pl-0">
-                                <h1 className="text-base sm:text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
-                                    Admin Management
-                                    <span className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                                        <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                        Live Console
-                                    </span>
+                        <div className="flex h-16 items-center justify-between px-3 sm:px-8">
+                            <div className="flex items-center gap-2 pl-12 lg:pl-0">
+                                <h1 className="text-sm sm:text-base md:text-xl font-black tracking-tight flex items-center gap-1.5">
+                                    <span className="text-foreground">Admin</span>
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/60">Management</span>
                                 </h1>
                             </div>
-                            <div className="flex items-center gap-2.5">
+                            <div className="flex items-center gap-1.5 sm:gap-2.5">
                                 <Button 
                                     variant="outline" 
                                     size="sm" 
                                     onClick={fetchData} 
-                                    className="rounded-xl h-9 px-3.5 border-border/80 hover:bg-secondary/60 text-xs font-bold gap-2"
+                                    className="rounded-xl h-8 sm:h-9 px-2.5 sm:px-3.5 border-border/80 hover:bg-secondary/60 text-xs font-bold gap-1.5"
+                                    title="Sync Data"
                                 >
                                     <RefreshCcw className={cn("w-3.5 h-3.5", loading && "animate-spin text-primary")} />
-                                    <span>Sync Data</span>
+                                    <span className="hidden sm:inline">Sync Data</span>
                                 </Button>
                                 <Button 
                                     size="sm" 
                                     onClick={handleExportReport}
-                                    className="rounded-xl h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-sm gap-2 transition-all"
+                                    className="rounded-xl h-8 sm:h-9 px-2.5 sm:px-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-sm gap-1.5 transition-all"
+                                    title="Export CSV"
                                 >
                                     <Download className="w-3.5 h-3.5" />
-                                    <span>Export CSV</span>
+                                    <span className="hidden sm:inline">Export CSV</span>
                                 </Button>
-                                <div className="h-4 w-px bg-border/60 mx-1" />
+                                <div className="h-4 w-px bg-border/60 mx-0.5 sm:mx-1" />
                                 <NotificationPanel />
+                                <PaletteCustomizer />
                                 <ThemeToggle />
                             </div>
                         </div>
                     </header>
 
-                    <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full pb-16">
+                    <div className="flex-1 overflow-y-auto w-full">
+                        <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full pb-16">
                         
                         {/* KPI Stat Cards Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
@@ -481,6 +576,7 @@ export default function Admin() {
                                         { value: "logs", label: "Activity Logs", icon: ClipboardList, count: logs.length },
                                         { value: "pricing", label: "Pricing Config", icon: DollarSign },
                                         { value: "announcements", label: "Broadcast Alerts", icon: BellRing },
+                                        { value: "homepage", label: "Home Page CMS", icon: LayoutTemplate },
                                     ].map(tab => (
                                         <TabsTrigger
                                             key={tab.value}
@@ -650,9 +746,7 @@ export default function Admin() {
                                                             <TableRow key={u.id} className="border-border/50 hover:bg-secondary/30 transition-colors group">
                                                                 <TableCell className="py-3.5 pl-6">
                                                                     <div className="flex items-center gap-3.5">
-                                                                        <div className="size-9 rounded-xl bg-gradient-to-tr from-primary/20 to-purple-500/20 border border-primary/30 flex items-center justify-center text-primary font-black text-sm shadow-sm">
-                                                                            {u.username ? u.username.charAt(0).toUpperCase() : 'U'}
-                                                                        </div>
+                                                                        <UserAvatar user={u} size="md" />
                                                                         <div>
                                                                             <div className="font-bold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
                                                                                 {u.username}
@@ -1151,9 +1245,89 @@ export default function Admin() {
 
                                 </div>
                             </TabsContent>
+
+                            {/* TAB 5: HOME PAGE CMS */}
+                            <TabsContent value="homepage" className="space-y-6 outline-none animate-in fade-in duration-300">
+                                <Card className="rounded-3xl border border-border/80 bg-gradient-to-br from-card/90 via-card/70 to-primary/5 p-6 sm:p-8 space-y-6 shadow-xl backdrop-blur-xl">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border/40">
+                                        <div className="flex items-center gap-4">
+                                            <div className="size-14 rounded-2xl bg-primary/10 border border-primary/25 flex items-center justify-center text-primary shadow-inner shrink-0">
+                                                <LayoutTemplate className="size-7" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg sm:text-xl font-black text-foreground flex items-center gap-2">
+                                                    <span>Home Page Content CMS</span>
+                                                    <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20">
+                                                        Admin Controlled
+                                                    </span>
+                                                </h3>
+                                                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                                                    Configure headlines, lead copy, action placeholders, 3-step guides, and 3D visual cards in real-time.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2.5 shrink-0">
+                                            <Button
+                                                asChild
+                                                className="h-10 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-md shadow-primary/20 gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                            >
+                                                <Link to="/admin/homepage">
+                                                    <span>Launch CMS Studio</span>
+                                                    <ArrowRight className="size-4" />
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {/* Features Grid */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div className="p-4 rounded-2xl border border-border/60 bg-background/50 space-y-2">
+                                            <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                                <Sparkles className="size-4" />
+                                            </div>
+                                            <h4 className="font-bold text-sm text-foreground">Hero Headline & Badge</h4>
+                                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                                Customize the main gradient title, secondary subtitle, and floating pill badge with custom wording.
+                                            </p>
+                                        </div>
+
+                                        <div className="p-4 rounded-2xl border border-border/60 bg-background/50 space-y-2">
+                                            <div className="size-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                                                <FileText className="size-4" />
+                                            </div>
+                                            <h4 className="font-bold text-sm text-foreground">Input & 3-Step Guide</h4>
+                                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                                Set custom input placeholders, CTA button labels, and configure each numbered instruction.
+                                            </p>
+                                        </div>
+
+                                        <div className="p-4 rounded-2xl border border-border/60 bg-background/50 space-y-2">
+                                            <div className="size-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500">
+                                                <Eye className="size-4" />
+                                            </div>
+                                            <h4 className="font-bold text-sm text-foreground">Live Split Preview</h4>
+                                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                                Test changes in a real-time responsive canvas with desktop and mobile viewport toggles before saving.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground border-t border-border/40">
+                                        <span>Direct URL: <code className="text-primary font-mono font-bold">/admin/homepage</code></span>
+                                        <Button variant="ghost" size="sm" asChild className="h-7 text-xs font-bold text-primary gap-1">
+                                            <Link to="/admin/homepage">
+                                                Open Dedicated Editor Page
+                                                <ExternalLink className="size-3" />
+                                            </Link>
+                                        </Button>
+                                    </div>
+                                </Card>
+                            </TabsContent>
                         </Tabs>
 
                     </div>
+                </div>
             </div>
 
             {/* Global Suspension Dialog */}
@@ -1239,9 +1413,7 @@ export default function Admin() {
                 <DialogContent className="max-w-2xl rounded-3xl border border-border/80 bg-card p-6 shadow-2xl text-foreground">
                     <DialogHeader>
                         <div className="flex items-center gap-3">
-                            <div className="size-12 rounded-2xl bg-gradient-to-tr from-primary/20 to-purple-500/20 border border-primary/30 flex items-center justify-center text-primary font-black text-lg">
-                                {selectedUser?.username ? selectedUser.username.charAt(0).toUpperCase() : 'U'}
-                            </div>
+                            <UserAvatar user={selectedUser} size="lg" showStatus={false} />
                             <div>
                                 <DialogTitle className="text-lg font-black text-foreground">{selectedUser?.username}</DialogTitle>
                                 <DialogDescription className="text-xs text-muted-foreground">{selectedUser?.email}</DialogDescription>

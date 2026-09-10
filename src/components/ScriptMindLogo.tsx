@@ -11,10 +11,10 @@ interface ScriptMindLogoProps {
 // Curated theme gradients matching the project design system
 const themePalette: Record<string, { from: string; to: string; accent: string; glow: string }> = {
   default: {
-    from: "#8b5cf6",
-    to: "#6366f1",
+    from: "#a855f7",
+    to: "#7e22ce",
     accent: "#c084fc",
-    glow: "rgba(139, 92, 246, 0.45)",
+    glow: "rgba(168, 85, 247, 0.45)",
   },
   forest: {
     from: "#10b981",
@@ -42,13 +42,52 @@ const themePalette: Record<string, { from: string; to: string; accent: string; g
   },
 };
 
+function getCustomPalette(hex: string) {
+  let r = 0, g = 0, b = 0;
+  const cleanHex = hex.replace(/^#/, '');
+  if (cleanHex.length === 3) {
+    r = parseInt(cleanHex[0] + cleanHex[0], 16);
+    g = parseInt(cleanHex[1] + cleanHex[1], 16);
+    b = parseInt(cleanHex[2] + cleanHex[2], 16);
+  } else if (cleanHex.length === 6) {
+    r = parseInt(cleanHex.substring(0, 2), 16);
+    g = parseInt(cleanHex.substring(2, 4), 16);
+    b = parseInt(cleanHex.substring(4, 6), 16);
+  }
+  const nr = r / 255, ng = g / 255, nb = b / 255;
+  const max = Math.max(nr, ng, nb), min = Math.min(nr, ng, nb);
+  let h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case nr: h = (ng - nb) / d + (ng < nb ? 6 : 0); break;
+      case ng: h = (nb - nr) / d + 2; break;
+      case nb: h = (nr - ng) / d + 4; break;
+    }
+    h /= 6;
+  }
+  const hue = Math.round(h * 360);
+  const sat = Math.round(s * 100);
+  const lit = Math.round(l * 100);
+
+  return {
+    from: `hsl(${hue}, ${sat}%, ${lit}%)`,
+    to: `hsl(${hue}, ${Math.min(100, sat + 5)}%, ${Math.max(15, lit - 14)}%)`,
+    accent: `hsl(${hue}, ${Math.min(100, sat + 10)}%, ${Math.min(85, lit + 14)}%)`,
+    glow: `hsla(${hue}, ${sat}%, ${lit}%, 0.45)`,
+  };
+}
+
 export const ScriptMindLogo: React.FC<ScriptMindLogoProps> = ({
   className,
   size = 30,
   showText = false,
 }) => {
-  const { variant = "default" } = useTheme();
-  const palette = themePalette[variant] || themePalette.default;
+  const { variant = "default", customColor = "#ec4899" } = useTheme();
+  const palette = variant === "custom"
+    ? getCustomPalette(customColor)
+    : (themePalette[variant] || themePalette.default);
   const uniqueId = useId().replace(/:/g, "");
 
   const sGradientId = `sm-s-grad-${uniqueId}`;

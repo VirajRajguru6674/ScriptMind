@@ -21,6 +21,7 @@ import Notifications from "@/pages/Notifications";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 import Admin from "@/pages/Admin";
+import AdminHomePage from "@/pages/AdminHomePage";
 import Organization from "@/pages/Organization";
 import { AppLayout } from "@/components/AppLayout";
 
@@ -51,6 +52,7 @@ const App = () => (
                         <Route path="/notifications" element={<Notifications />} />
                         <Route path="/organization" element={<Organization />} />
                         <Route path="/admin" element={<Admin />} />
+                        <Route path="/admin/homepage" element={<AdminHomePage />} />
                       </Route>
 
                       {/* Standalone full-page routes without Sidebar */}

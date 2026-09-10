@@ -15,6 +15,7 @@ import { Sparkles, Zap, Edit2, MoreVertical } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { NotificationPanel } from "@/components/NotificationPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { PaletteCustomizer } from "@/components/PaletteCustomizer";
 import API_BASE_URL from "@/lib/api";
 
 interface OrganizationData {
@@ -182,22 +183,25 @@ const Organization = () => {
 
             <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden text-foreground">
                 <header className="sticky top-0 z-50 w-full border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-                        <div className="flex h-16 items-center justify-between px-6">
+                        <div className="flex h-16 items-center justify-between px-3 sm:px-6">
                             {/* Page title shown in header row on desktop */}
-                            <div className="flex items-center gap-2.5 pl-12 lg:pl-0">
-                                <h1 className="text-base sm:text-lg font-bold tracking-tight text-foreground">
-                                    Organization
+                            <div className="flex items-center gap-2 pl-11 sm:pl-12 lg:pl-0 min-w-0">
+                                <h1 className="text-base sm:text-lg md:text-xl font-black tracking-tight flex items-center gap-1.5">
+                                    <span className="text-foreground">Organization</span>
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/60">Workspace</span>
                                 </h1>
                             </div>
                             {/* Right side controls */}
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 shrink-0">
                                 <NotificationPanel />
+                                <PaletteCustomizer />
                                 <ThemeToggle />
                             </div>
                         </div>
                     </header>
 
-                    <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-5xl mx-auto w-full pb-12 space-y-6">
+                    <div className="flex-1 overflow-y-auto w-full">
+                        <div className="p-4 md:p-8 max-w-5xl mx-auto w-full pb-12 space-y-6">
                         {loading ? (
                             <div className="flex flex-col items-center justify-center min-h-[350px] space-y-4">
                                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -257,28 +261,28 @@ const Organization = () => {
                                             </CardTitle>
                                             <CardDescription className="text-muted-foreground font-medium">Owned by {org.owner_name}</CardDescription>
                                         </CardHeader>
-                                        <CardContent className="p-8 pt-4 space-y-6">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="p-6 rounded-2xl bg-secondary/30 border border-border/50 space-y-2">
+                                        <CardContent className="p-4 sm:p-6 md:p-8 pt-4 space-y-6">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div className="p-5 sm:p-6 rounded-2xl bg-secondary/30 border border-border/50 space-y-2">
                                                     <div className="flex items-center gap-2 text-primary">
                                                         <Users className="size-4" />
                                                         <span className="text-[10px] font-black uppercase tracking-widest">Active Members</span>
                                                     </div>
-                                                    <div className="text-3xl font-black text-foreground">{members.length} / {org.max_members}</div>
+                                                    <div className="text-2xl sm:text-3xl font-black text-foreground">{members.length} / {org.max_members}</div>
                                                 </div>
-                                                <div className="p-6 rounded-2xl bg-secondary/30 border border-border/50 space-y-2">
+                                                <div className="p-5 sm:p-6 rounded-2xl bg-secondary/30 border border-border/50 space-y-2">
                                                     <div className="flex items-center gap-2 text-green-500">
                                                         <CheckCircle2 className="size-4" />
                                                         <span className="text-[10px] font-black uppercase tracking-widest">Subscription</span>
                                                     </div>
-                                                    <div className="text-xl font-black text-foreground">Active (Expert)</div>
+                                                    <div className="text-lg sm:text-xl font-black text-foreground">Active (Expert)</div>
                                                 </div>
                                             </div>
                                         </CardContent>
                                     </Card>
 
                                     {isOwner && (
-                                        <Card className="border-border bg-card rounded-3xl border flex flex-col justify-center p-8 space-y-6">
+                                        <Card className="border-border bg-card rounded-3xl border flex flex-col justify-center p-5 sm:p-8 space-y-6">
                                             <div className="space-y-2">
                                                 <h3 className="text-xl font-black text-foreground">Add Member</h3>
                                                 <p className="text-xs text-muted-foreground leading-relaxed">
@@ -318,7 +322,7 @@ const Organization = () => {
                                                     </Select>
                                                 </div>
                                                 <Button 
-                                                    onClick={handleAddMember}
+                                                    onClick={handleAddMember} 
                                                     disabled={actionLoading || !newMemberEmail.trim()}
                                                     className="w-full h-12 rounded-xl font-bold flex gap-2"
                                                 >
@@ -331,18 +335,19 @@ const Organization = () => {
 
                                 {/* Members Table */}
                                 <Card className="border-border bg-card rounded-3xl overflow-hidden border shadow-sm">
-                                    <CardHeader className="p-8 border-b border-border/50">
+                                    <CardHeader className="p-5 sm:p-8 border-b border-border/50">
                                         <CardTitle className="text-xl font-black text-foreground">Team Members</CardTitle>
                                     </CardHeader>
-                                    <Table>
-                                        <TableHeader className="bg-muted/10">
-                                            <TableRow className="border-border/50 hover:bg-transparent">
-                                                <TableHead className="py-5 pl-8 text-[10px] font-black uppercase tracking-widest text-muted-foreground">User</TableHead>
-                                                <TableHead className="py-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Plan</TableHead>
-                                                <TableHead className="py-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Role</TableHead>
-                                                <TableHead className="py-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-right pr-8">Actions</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
+                                    <div className="overflow-x-auto w-full">
+                                        <Table className="min-w-[550px]">
+                                            <TableHeader className="bg-muted/10">
+                                                <TableRow className="border-border/50 hover:bg-transparent">
+                                                    <TableHead className="py-5 pl-8 text-[10px] font-black uppercase tracking-widest text-muted-foreground">User</TableHead>
+                                                    <TableHead className="py-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Plan</TableHead>
+                                                    <TableHead className="py-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Role</TableHead>
+                                                    <TableHead className="py-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-right pr-8">Actions</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
                                         <TableBody>
                                             {members.map((member) => (
                                                 <TableRow key={member.id} className="border-border/30 hover:bg-muted/30 transition-colors">
@@ -415,9 +420,11 @@ const Organization = () => {
                                             ))}
                                         </TableBody>
                                     </Table>
+                                    </div>
                                 </Card>
                             </div>
                         )}
+                        </div>
                     </div>
             </div>
         </>

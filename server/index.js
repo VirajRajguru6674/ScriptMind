@@ -2388,14 +2388,19 @@ app.all('/api/download', authenticateToken, async (req, res) => {
                 dlpOptions.cookies = cookieData.path;
             }
 
+            dlpOptions.concurrentFragments = 8; // 🚀 Download 8 fragments in parallel for max bandwidth
+            dlpOptions.bufferSize = '16M';
+
             if (quality === 'mp3') {
                 dlpOptions.format = 'bestaudio/best';
                 dlpOptions.extractAudio = true;
                 dlpOptions.audioFormat = 'mp3';
+                dlpOptions.audioQuality = '0';
             } else {
                 const h = quality.replace('p', '');
-                dlpOptions.format = `bestvideo[height<=${h}]+bestaudio/best[height<=${h}]/best`;
+                dlpOptions.format = `bestvideo[height<=${h}][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=${h}]+bestaudio/best[height<=${h}]/best`;
                 dlpOptions.mergeOutputFormat = 'mp4';
+                dlpOptions.postprocessorArgs = 'ffmpeg:-c copy'; // ⚡ Zero CPU transcode: instantaneous stream copy
             }
 
             console.log(`🎬 [${playerClient || 'default'}] Downloading ${videoId} (${quality}) [Cookies: ${!!(useCookies && cookieData && (!playerClient || playerClient.includes('web') || playerClient.includes('ios') || playerClient.includes('mweb')))}]...`);
@@ -2412,12 +2417,19 @@ app.all('/api/download', authenticateToken, async (req, res) => {
         let finalFilePath = fullPath;
         
         try {
-            const downloadStrategies = [
-                { name: 'iOS client (no cookies)', client: 'ios', cookies: false },
-                { name: 'TV client (no cookies)', client: 'tv_embedded', cookies: false },
+            const downloadStrategies = cookieData ? [
                 { name: 'Mobile Web (with cookies)', client: 'mweb', cookies: true },
                 { name: 'Web (with cookies & Node JS runtime)', client: 'web', cookies: true },
+                { name: 'Default client (with cookies)', client: null, cookies: true },
+                { name: 'iOS client (no cookies)', client: 'ios', cookies: false },
+                { name: 'TV client (no cookies)', client: 'tv_embedded', cookies: false },
+                { name: 'Android client (no cookies)', client: 'android', cookies: false }
+            ] : [
+                { name: 'iOS client (no cookies)', client: 'ios', cookies: false },
+                { name: 'TV client (no cookies)', client: 'tv_embedded', cookies: false },
                 { name: 'Android client (no cookies)', client: 'android', cookies: false },
+                { name: 'Mobile Web (with cookies)', client: 'mweb', cookies: true },
+                { name: 'Web (with cookies & Node JS runtime)', client: 'web', cookies: true },
                 { name: 'Default client (with cookies)', client: null, cookies: true }
             ];
 
@@ -2640,6 +2652,38 @@ app.post('/api/download-zip', authenticateToken, async (req, res) => {
             return null;
         };
 
+        // Cache the strategy that succeeded first so subsequent videos don't waste 30s testing failing strategies
+        let preferredStrategy = null;
+
+        const getStrategies = () => {
+            const hasCookies = !!cookieData;
+            let list;
+            if (hasCookies) {
+                // When cookies are present, try cookie-enabled clients first (mweb, web) which succeed immediately on Render
+                list = [
+                    { name: 'Mobile Web (with cookies)', client: 'mweb', cookies: true },
+                    { name: 'Web (with cookies & Node JS runtime)', client: 'web', cookies: true },
+                    { name: 'Default client (with cookies)', client: null, cookies: true },
+                    { name: 'iOS client (no cookies)', client: 'ios', cookies: false },
+                    { name: 'TV client (no cookies)', client: 'tv_embedded', cookies: false },
+                    { name: 'Android client (no cookies)', client: 'android', cookies: false }
+                ];
+            } else {
+                list = [
+                    { name: 'iOS client (no cookies)', client: 'ios', cookies: false },
+                    { name: 'TV client (no cookies)', client: 'tv_embedded', cookies: false },
+                    { name: 'Android client (no cookies)', client: 'android', cookies: false },
+                    { name: 'Mobile Web (with cookies)', client: 'mweb', cookies: true },
+                    { name: 'Web (with cookies & Node JS runtime)', client: 'web', cookies: true }
+                ];
+            }
+
+            if (preferredStrategy) {
+                list = [preferredStrategy, ...list.filter(s => s.name !== preferredStrategy.name)];
+            }
+            return list;
+        };
+
         const downloadSingleVideo = async (item, index) => {
             const videoId = item.videoId;
             const rawTitle = item.title || `Video_${index + 1}`;
@@ -2648,21 +2692,16 @@ app.post('/api/download-zip', authenticateToken, async (req, res) => {
             const fileName = `${String(index + 1).padStart(2, '0')} - ${cleanTitle}_${quality}.${fileExt}`;
             const fullPath = path.join(jobDir, fileName);
 
-            const downloadStrategies = [
-                { name: 'iOS client (no cookies)', client: 'ios', cookies: false },
-                { name: 'TV client (no cookies)', client: 'tv_embedded', cookies: false },
-                { name: 'Mobile Web (with cookies)', client: 'mweb', cookies: true },
-                { name: 'Web (with cookies & Node JS runtime)', client: 'web', cookies: true },
-                { name: 'Android client (no cookies)', client: 'android', cookies: false },
-                { name: 'Default client (with cookies)', client: null, cookies: true }
-            ];
+            const strategies = getStrategies();
 
-            for (const strat of downloadStrategies) {
+            for (const strat of strategies) {
                 try {
                     const dlpOptions = {
                         output: fullPath,
                         noCheckCertificates: true,
                         preferFreeFormats: true,
+                        concurrentFragments: 8, // 🚀 Multi-threaded fragment downloading (8 parallel streams)
+                        bufferSize: '16M',
                         jsRuntimes: 'node',
                         userAgent: getYoutubeUserAgent(),
                         addHeader: [
@@ -2701,16 +2740,21 @@ app.post('/api/download-zip', authenticateToken, async (req, res) => {
                         dlpOptions.format = 'bestaudio/best';
                         dlpOptions.extractAudio = true;
                         dlpOptions.audioFormat = 'mp3';
+                        dlpOptions.audioQuality = '0';
                     } else {
                         const h = quality.replace('p', '');
-                        dlpOptions.format = `bestvideo[height<=${h}]+bestaudio/best[height<=${h}]/best`;
+                        dlpOptions.format = `bestvideo[height<=${h}][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=${h}]+bestaudio/best[height<=${h}]/best`;
                         dlpOptions.mergeOutputFormat = 'mp4';
+                        dlpOptions.postprocessorArgs = 'ffmpeg:-c copy'; // ⚡ Zero CPU transcode: instantaneous stream copy
                     }
 
                     await ytDlp(`https://www.youtube.com/watch?v=${videoId}`, dlpOptions);
                     const resolvedFile = findActualOutputFile(fullPath);
                     if (resolvedFile) {
                         console.log(`✅ [ZIP-Job] Downloaded (${index + 1}/${items.length}): ${fileName} via ${strat.name}`);
+                        if (!preferredStrategy) {
+                            preferredStrategy = strat;
+                        }
                         return { success: true, filePath: resolvedFile, fileName };
                     }
                 } catch (e) {
@@ -2722,50 +2766,101 @@ app.post('/api/download-zip', authenticateToken, async (req, res) => {
             return { success: false, videoId, title: rawTitle };
         };
 
-        // Download items
-        const successfulFiles = [];
-        for (let i = 0; i < items.length; i++) {
-            const resItem = await downloadSingleVideo(items[i], i);
-            if (resItem.success) {
-                successfulFiles.push(resItem);
+        // Track client abort/cancel to stop downloads immediately
+        let isAborted = false;
+        const handleAbort = () => {
+            if (!res.writableEnded && !res.writableFinished) {
+                isAborted = true;
+                console.log(`🛑 [ZIP-Job] Client disconnected / cancelled. Stopping active downloads...`);
+                if (jobDir && fs.existsSync(jobDir)) {
+                    try { fs.rmSync(jobDir, { recursive: true, force: true }); } catch (e) {}
+                }
             }
+        };
+        req.on('aborted', handleAbort);
+        res.on('close', handleAbort);
+
+        // 🚀 Download items concurrently in parallel (up to 5 concurrent workers)
+        const successfulFiles = [];
+        const CONCURRENCY_LIMIT = Math.min(5, items.length);
+        let currentItemIndex = 0;
+
+        console.log(`⚡ [ZIP-Job] Launching ${CONCURRENCY_LIMIT} parallel workers for ${items.length} videos...`);
+
+        const workers = Array(CONCURRENCY_LIMIT).fill(0).map(async () => {
+            while (currentItemIndex < items.length && !isAborted) {
+                const idx = currentItemIndex++;
+                const resItem = await downloadSingleVideo(items[idx], idx);
+                if (isAborted) break;
+                if (resItem && resItem.success) {
+                    successfulFiles.push(resItem);
+                }
+            }
+        });
+
+        await Promise.all(workers);
+
+        if (isAborted) {
+            console.log(`🛑 [ZIP-Job] Download job cancelled by user.`);
+            return;
         }
 
         if (successfulFiles.length === 0) {
             throw new Error("Could not download any of the selected videos due to YouTube rate limits. Please try a different resolution or verify cookies/proxy.");
         }
 
-        console.log(`📦 [ZIP-Job] Compressing ${successfulFiles.length} videos into ${cleanZipName}.zip...`);
+        // Sort files in order 01, 02, 03...
+        successfulFiles.sort((a, b) => a.fileName.localeCompare(b.fileName));
 
-        // 3. Create ZIP Archive and Stream to Client
+        console.log(`📦 [ZIP-Job] Creating ${cleanZipName}.zip from ${successfulFiles.length} videos (Fast Store Mode)...`);
+
+        // 3. Create ZIP Archive on Disk (Fast Store Mode level 0 takes <1s)
+        const zipFileName = `${cleanZipName}.zip`;
+        const zipFilePath = path.join(jobDir, zipFileName);
+        const zipOutputStream = fs.createWriteStream(zipFilePath);
+
         const archiverMod = require('archiver');
-        res.setHeader('Content-Type', 'application/zip');
-        const safeZipName = cleanZipName.replace(/["\r\n]/g, '_');
-        res.setHeader('Content-Disposition', `attachment; filename="${safeZipName}.zip"; filename*=UTF-8''${encodeURIComponent(safeZipName)}.zip`);
-        res.setHeader('Transfer-Encoding', 'chunked');
-
-        // Compatible with both Archiver v8 (ZipArchive class) and older v7 (function)
         const archive = typeof archiverMod === 'function'
-            ? archiverMod('zip', { zlib: { level: 1 } })
+            ? archiverMod('zip', { zlib: { level: 0 } })
             : (archiverMod.ZipArchive
-                ? new archiverMod.ZipArchive({ zlib: { level: 1 } })
+                ? new archiverMod.ZipArchive({ zlib: { level: 0 } })
                 : (typeof archiverMod.default === 'function'
-                    ? archiverMod.default('zip', { zlib: { level: 1 } })
-                    : new (archiverMod.Archiver || archiverMod)({ zlib: { level: 1 } })));
+                    ? archiverMod.default('zip', { zlib: { level: 0 } })
+                    : new (archiverMod.Archiver || archiverMod)({ zlib: { level: 0 } })));
 
         archive.on('warning', (err) => {
             console.warn("Archive warning:", err);
         });
 
-        archive.on('error', (err) => {
-            console.error("Archive error:", err);
-            if (!res.headersSent) {
-                res.status(500).json({ error: "Failed to create ZIP archive", details: err.message });
-            }
+        archive.pipe(zipOutputStream);
+
+        for (const file of successfulFiles) {
+            archive.file(file.filePath, { name: path.join(folderName, file.fileName) });
+        }
+
+        await new Promise((resolve, reject) => {
+            zipOutputStream.on('close', resolve);
+            archive.on('error', reject);
+            archive.finalize();
         });
 
-        // Cleanup on response completion
-        const cleanupJob = () => {
+        // Delete raw uncompressed video files immediately to free disk space
+        for (const file of successfulFiles) {
+            try { if (fs.existsSync(file.filePath)) fs.unlinkSync(file.filePath); } catch (e) {}
+        }
+
+        const zipStat = fs.statSync(zipFilePath);
+        console.log(`🚀 [ZIP-Job] ZIP ready on disk (${(zipStat.size / 1024 / 1024).toFixed(2)} MB). Streaming to client...`);
+
+        // 4. Update download count in database
+        await pool.execute('UPDATE users SET downloads_count = downloads_count + ? WHERE id = ?', [successfulFiles.length, userId]);
+        logAction(userId, 'DOWNLOAD_PLAYLIST_ZIP', { count: successfulFiles.length, quality, zipName: cleanZipName });
+
+        // 5. Send ZIP file with Content-Length and attachment headers via res.download
+        res.download(zipFilePath, zipFileName, (err) => {
+            if (err) {
+                console.warn("Client download ended or was cancelled:", err.message);
+            }
             try {
                 if (jobDir && fs.existsSync(jobDir)) {
                     fs.rmSync(jobDir, { recursive: true, force: true });
@@ -2774,22 +2869,7 @@ app.post('/api/download-zip', authenticateToken, async (req, res) => {
             } catch (e) {
                 console.error("Failed to clean up zip job directory:", e.message);
             }
-        };
-
-        res.on('finish', cleanupJob);
-        res.on('close', cleanupJob);
-
-        archive.pipe(res);
-
-        for (const file of successfulFiles) {
-            archive.file(file.filePath, { name: path.join(folderName, file.fileName) });
-        }
-
-        await archive.finalize();
-
-        // 4. Update download count in database
-        await pool.execute('UPDATE users SET downloads_count = downloads_count + ? WHERE id = ?', [successfulFiles.length, userId]);
-        logAction(userId, 'DOWNLOAD_PLAYLIST_ZIP', { count: successfulFiles.length, quality, zipName: cleanZipName });
+        });
 
     } catch (error) {
         console.error("🏁 Bulk ZIP Download Error:", error.message);

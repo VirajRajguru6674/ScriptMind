@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { NotificationPanel } from "@/components/NotificationPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { PaletteCustomizer } from "@/components/PaletteCustomizer";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import API_BASE_URL from "@/lib/api";
@@ -188,22 +189,25 @@ const Pricing = () => {
 
             <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
                 <header className="sticky top-0 z-50 w-full border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-                    <div className="flex h-16 items-center justify-between px-6">
+                    <div className="flex h-16 items-center justify-between px-3 sm:px-6">
                         {/* Page title shown in header row on desktop */}
-                        <div className="flex items-center gap-2.5 pl-12 lg:pl-0">
-                            <h1 className="text-base sm:text-lg font-bold tracking-tight text-foreground">
-                                Pricing Plans
+                        <div className="flex items-center gap-2 pl-11 sm:pl-12 lg:pl-0 min-w-0">
+                            <h1 className="text-base sm:text-lg md:text-xl font-black tracking-tight flex items-center gap-1.5">
+                                <span className="text-foreground">Pricing</span>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/60">& Plans</span>
                             </h1>
                         </div>
                         {/* Right side controls */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 shrink-0">
                             <NotificationPanel />
+                            <PaletteCustomizer />
                             <ThemeToggle />
                         </div>
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-5 max-w-6xl mx-auto w-full pb-10 space-y-6">
+                <div className="flex-1 overflow-y-auto w-full">
+                    <div className="px-4 sm:px-6 lg:px-8 py-5 max-w-6xl mx-auto w-full pb-10 space-y-6">
                     
                     {/* Compact Category & Interval Header */}
                     <div className="flex flex-col items-center gap-3.5 text-center">
@@ -307,6 +311,7 @@ const Pricing = () => {
                         plans={plans} 
                         interval={category === "individuals" ? individualInterval : orgInterval}
                     />
+                    </div>
                 </div>
             </div>
         </>

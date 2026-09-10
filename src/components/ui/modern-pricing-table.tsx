@@ -107,7 +107,7 @@ const PricingTable: React.FC<PricingTableProps> = ({ plans, interval }) => {
     return (
         <div className="w-full max-w-5xl mx-auto">
             <motion.div
-                className={`grid grid-cols-1 gap-5 items-stretch ${plans.length === 1 ? 'max-w-md mx-auto' : plans.length === 2 ? 'md:grid-cols-2 max-w-2xl mx-auto' : plans.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2 xl:grid-cols-4'}`}
+                className={`grid grid-cols-1 gap-5 items-stretch ${plans.length === 1 ? 'max-w-md mx-auto' : plans.length === 2 ? 'sm:grid-cols-2 max-w-2xl mx-auto' : plans.length === 3 ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2 xl:grid-cols-4'}`}
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"

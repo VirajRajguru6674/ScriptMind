@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { NotificationPanel } from '@/components/NotificationPanel';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { PaletteCustomizer } from '@/components/PaletteCustomizer';
@@ -23,7 +23,8 @@ import {
     PlaySquare, 
     Layers, 
     CheckCircle,
-    SlidersHorizontal
+    SlidersHorizontal,
+    XCircle
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -72,6 +73,48 @@ export default function PlaylistDownloader() {
     const [downloadedVideos, setDownloadedVideos] = useState<Set<string>>(new Set());
     const [allowedQualities, setAllowedQualities] = useState<{ value: string; label: string }[]>(FALLBACK_RESOLUTIONS);
     const { toast } = useToast();
+
+    // Cancellation References
+    const zipXhrRef = useRef<XMLHttpRequest | null>(null);
+    const singleXhrRef = useRef<XMLHttpRequest | null>(null);
+    const progressTickerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Cancel Bulk ZIP Download
+    const handleCancelZipDownload = () => {
+        if (progressTickerRef.current) {
+            clearInterval(progressTickerRef.current);
+            progressTickerRef.current = null;
+        }
+        if (zipXhrRef.current) {
+            zipXhrRef.current.abort();
+            zipXhrRef.current = null;
+        }
+        setIsZipDownloading(false);
+        setZipProgress(0);
+        setZipStatusMessage('');
+        toast({
+            title: "Download Cancelled",
+            description: "Bulk ZIP download process was stopped."
+        });
+    };
+
+    // Cancel Single Video Download
+    const handleCancelSingleDownload = (videoId: string) => {
+        if (singleXhrRef.current) {
+            singleXhrRef.current.abort();
+            singleXhrRef.current = null;
+        }
+        setIsDownloading(null);
+        setDownloadProgress((p) => {
+            const next = { ...p };
+            delete next[videoId];
+            return next;
+        });
+        toast({
+            title: "Download Cancelled",
+            description: "Video download was stopped."
+        });
+    };
 
     useEffect(() => {
         const fetchAllowedQualities = async () => {
@@ -133,11 +176,13 @@ export default function PlaylistDownloader() {
             const token = localStorage.getItem('token');
             const blob = await new Promise<Blob>((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
+                singleXhrRef.current = xhr;
                 xhr.open('POST', `${API_BASE_URL}/download`);
                 xhr.setRequestHeader('Content-Type', 'application/json');
                 xhr.setRequestHeader('x-action-type', 'download');
                 if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
                 xhr.responseType = 'blob';
+                xhr.onabort = () => reject(new Error("CANCELLED_BY_USER"));
                 xhr.onprogress = (e) => {
                     if (e.lengthComputable) {
                         const pct = Math.round((e.loaded / e.total) * 100);
@@ -173,12 +218,14 @@ export default function PlaylistDownloader() {
             toast({ title: "Download complete", description: title });
             setDownloadedVideos(prev => new Set(prev).add(videoId));
         } catch (error: any) {
+            if (error.message === "CANCELLED_BY_USER") return;
             toast({ 
                 variant: "destructive", 
                 title: "Download Error", 
                 description: error.message || `Failed to download ${title}` 
             });
         } finally {
+            singleXhrRef.current = null;
             setIsDownloading(null);
             setDownloadProgress((p) => {
                 const next = { ...p };
@@ -206,43 +253,57 @@ export default function PlaylistDownloader() {
         setZipProgress(5);
         setZipStatusMessage(`Packaging ${selectedItems.length} videos into ZIP on server...`);
 
-        // Dynamic ticker while server processes and downloads videos before streaming zip
-        let tickerProgress = 5;
+        // Dynamic fast ticker while server downloads videos in parallel
+        let tickerProgress = 12;
         const progressTicker = setInterval(() => {
             if (tickerProgress < 85) {
+                tickerProgress += Math.floor(Math.random() * 6) + 5;
+                if (tickerProgress > 85) tickerProgress = 85;
+                setZipProgress(tickerProgress);
+                if (tickerProgress < 35) {
+                    setZipStatusMessage(`Parallel downloading streams on server (${tickerProgress}%)...`);
+                } else if (tickerProgress < 65) {
+                    setZipStatusMessage(`Fast-muxing 1080p video & audio tracks (${tickerProgress}%)...`);
+                } else {
+                    setZipStatusMessage(`Packaging files into high-speed ZIP archive (${tickerProgress}%)...`);
+                }
+            } else if (tickerProgress < 92) {
+                // Advance smoothly so user knows server is completing the ZIP file
                 tickerProgress += 1;
                 setZipProgress(tickerProgress);
-                if (tickerProgress < 25) {
-                    setZipStatusMessage(`Downloading video streams on server (${tickerProgress}%)...`);
-                } else if (tickerProgress < 55) {
-                    setZipStatusMessage(`Merging high-quality 1080p video & audio tracks (${tickerProgress}%)...`);
-                } else if (tickerProgress < 75) {
-                    setZipStatusMessage(`Packaging selected playlist videos (${tickerProgress}%)...`);
-                } else {
-                    setZipStatusMessage(`Compressing files into final ZIP archive (${tickerProgress}%)...`);
-                }
+                setZipStatusMessage(`Compressing & preparing ZIP archive on server (${tickerProgress}%)...`);
             }
-        }, 3000);
+        }, 800);
+        progressTickerRef.current = progressTicker;
 
         try {
             const token = localStorage.getItem('token');
             const blob = await new Promise<Blob>((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
+                zipXhrRef.current = xhr;
                 xhr.open('POST', `${API_BASE_URL}/download-zip`);
                 xhr.setRequestHeader('Content-Type', 'application/json');
                 xhr.setRequestHeader('x-action-type', 'download');
                 if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
                 xhr.responseType = 'blob';
 
+                xhr.onabort = () => {
+                    clearInterval(progressTicker);
+                    reject(new Error("CANCELLED_BY_USER"));
+                };
+
                 xhr.onprogress = (e) => {
                     clearInterval(progressTicker);
                     if (e.lengthComputable && e.total > 0) {
-                        const pct = Math.max(85, Math.round((e.loaded / e.total) * 100));
+                        const pct = Math.max(88, Math.min(99, Math.round(88 + ((e.loaded / e.total) * 11))));
                         setZipProgress(pct);
-                        setZipStatusMessage(`Downloading ZIP archive to your computer (${pct}%)...`);
+                        const loadedMb = (e.loaded / (1024 * 1024)).toFixed(1);
+                        const totalMb = (e.total / (1024 * 1024)).toFixed(1);
+                        setZipStatusMessage(`Saving ZIP to computer: ${loadedMb} MB / ${totalMb} MB (${pct}%)...`);
                     } else {
-                        setZipProgress((prev) => Math.min(prev + 5, 98));
-                        setZipStatusMessage(`Receiving ${selectedItems.length} videos in single ZIP package...`);
+                        const loadedMb = (e.loaded / (1024 * 1024)).toFixed(1);
+                        setZipProgress((prev) => Math.min(prev + 1, 98));
+                        setZipStatusMessage(`Receiving ZIP: ${loadedMb} MB received...`);
                     }
                 };
 
@@ -298,6 +359,7 @@ export default function PlaylistDownloader() {
 
         } catch (error: any) {
             clearInterval(progressTicker);
+            if (error.message === "CANCELLED_BY_USER") return;
             toast({
                 variant: "destructive",
                 title: "Bulk ZIP Error",
@@ -305,6 +367,8 @@ export default function PlaylistDownloader() {
             });
         } finally {
             clearInterval(progressTicker);
+            progressTickerRef.current = null;
+            zipXhrRef.current = null;
             setIsZipDownloading(false);
             setZipProgress(0);
             setZipStatusMessage('');
@@ -443,9 +507,20 @@ export default function PlaylistDownloader() {
                                             </p>
                                         </div>
                                     </div>
-                                    <span className="text-xs font-black text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-lg shrink-0">
-                                        {zipProgress > 0 ? `${zipProgress}%` : "Packaging..."}
-                                    </span>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <span className="text-xs font-black text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-lg shrink-0">
+                                            {zipProgress > 0 ? `${zipProgress}%` : "Packaging..."}
+                                        </span>
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={handleCancelZipDownload}
+                                            className="h-7 px-2.5 rounded-lg text-xs font-bold gap-1.5 shadow-sm hover:scale-105 active:scale-95 transition-all"
+                                        >
+                                            <XCircle className="w-3.5 h-3.5" />
+                                            Cancel
+                                        </Button>
+                                    </div>
                                 </div>
                                 <Progress value={zipProgress > 0 ? zipProgress : undefined} className="h-2 bg-primary/20 rounded-full" />
                                 <div className="flex items-center justify-between text-[11px] text-muted-foreground">
@@ -571,22 +646,38 @@ export default function PlaylistDownloader() {
                                             </Select>
 
                                             {/* Download ZIP Button */}
-                                            <Button
-                                                disabled={selectedVideos.length === 0 || !!isDownloading || isZipDownloading}
-                                                onClick={handleBulkZipDownload}
-                                                className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-sm hover:shadow transition-all duration-200 gap-1.5 shrink-0 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
-                                            >
-                                                {isZipDownloading ? (
-                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                ) : (
+                                            {isZipDownloading ? (
+                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                    <Button
+                                                        disabled
+                                                        className="h-9 px-3.5 rounded-xl bg-primary/80 text-primary-foreground font-bold text-xs gap-1.5 shrink-0"
+                                                    >
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                        Packaging ({selectedVideos.length})...
+                                                    </Button>
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        onClick={handleCancelZipDownload}
+                                                        className="h-9 px-3 rounded-xl font-bold text-xs gap-1.5 shadow-sm hover:scale-105 active:scale-95 transition-all shrink-0"
+                                                        title="Stop and cancel ZIP download"
+                                                    >
+                                                        <XCircle className="w-3.5 h-3.5" />
+                                                        Cancel
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <Button
+                                                    disabled={selectedVideos.length === 0 || !!isDownloading}
+                                                    onClick={handleBulkZipDownload}
+                                                    className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-sm hover:shadow transition-all duration-200 gap-1.5 shrink-0 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+                                                >
                                                     <Archive className="w-3.5 h-3.5" />
-                                                )}
-                                                {isZipDownloading
-                                                    ? `Packaging (${selectedVideos.length})...`
-                                                    : selectedVideos.length > 0
+                                                    {selectedVideos.length > 0
                                                         ? `Download ZIP (${selectedVideos.length})`
                                                         : "Select Videos for ZIP"}
-                                            </Button>
+                                                </Button>
+                                            )}
                                         </div>
 
                                     </div>
@@ -669,14 +760,26 @@ export default function PlaylistDownloader() {
 
                                                         {/* Progress Overlay when single downloading */}
                                                         {isCurrentDownloading && (
-                                                            <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2.5 p-4">
-                                                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                                                                <div className="w-full max-w-[130px] space-y-1 text-center">
+                                                            <div className="absolute inset-0 z-30 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center gap-2 p-3">
+                                                                <Loader2 className="w-7 h-7 animate-spin text-primary" />
+                                                                <div className="w-full max-w-[120px] space-y-1 text-center">
                                                                     <Progress value={downloadProgress[v.id] ?? 0} className="h-1.5 bg-white/20" />
                                                                     <p className="text-[11px] font-extrabold text-white tracking-wider">
                                                                         {downloadProgress[v.id] ?? 0}%
                                                                     </p>
                                                                 </div>
+                                                                <Button
+                                                                    variant="destructive"
+                                                                    size="sm"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleCancelSingleDownload(v.id);
+                                                                    }}
+                                                                    className="h-6 px-2.5 rounded-md text-[10px] font-bold gap-1 mt-0.5 bg-rose-600 hover:bg-rose-700 text-white shadow-md hover:scale-105 active:scale-95 transition-all"
+                                                                >
+                                                                    <XCircle className="w-3 h-3" />
+                                                                    Cancel
+                                                                </Button>
                                                             </div>
                                                         )}
 

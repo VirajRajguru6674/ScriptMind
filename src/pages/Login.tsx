@@ -335,7 +335,7 @@ const Login = () => {
             </Helmet>
 
             {/* Characters Illustration - Left Side */}
-            <div className="relative hidden lg:flex flex-[1.2] flex-col justify-between bg-gradient-to-br from-[#1E2028] via-[#16181D] to-[#0F1115] p-16 overflow-hidden border-r border-white/5">
+            <div className="relative hidden lg:flex flex-1 xl:flex-[1.2] flex-col justify-between bg-gradient-to-br from-[#1E2028] via-[#16181D] to-[#0F1115] p-8 xl:p-16 overflow-hidden border-r border-white/5">
 
                 {/* Animated Background Icons */}
                 <div className="absolute inset-0 opacity-20 pointer-events-none">
@@ -348,7 +348,7 @@ const Login = () => {
                 {/* Brand Header */}
                 <div className="relative z-20 space-y-8">
                     <div className="flex items-center gap-4 group">
-                        <div className="size-12 rounded-2xl overflow-hidden border border-primary/30 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
+                        <div className="size-12 rounded-2xl overflow-hidden border border-primary/30 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_20px_rgba(var(--primary),0.3)]">
                             <img src="/logo.png" alt="ScriptMind Logo" className="w-full h-full object-cover" />
                         </div>
                         <div>
@@ -358,17 +358,16 @@ const Login = () => {
                     </div>
 
                     <div className="space-y-4 max-w-xs animate-in fade-in slide-in-from-left-4 duration-1000 delay-300">
-                        <h3 className="text-xl font-bold text-white/90">Summarize any YouTube video instantly.</h3>
+                        <h3 className="text-xl font-bold text-white/90">Transform raw video knowledge into actionable insights.</h3>
                         <p className="text-sm text-muted-foreground leading-relaxed">
-                            Turn long lectures and tutorials into concise, actionable notes using our advanced AI engine.
-                            Master content faster than ever.
+                            A companion that listens, reasons, and generates intelligent summaries while you focus on deep learning.
                         </p>
                     </div>
                 </div>
 
-                {/* Character Stage */}
-                <div className="relative z-20 flex items-end justify-center h-[550px] translate-y-8">
-                    <div className="relative" style={{ width: '550px', height: '450px' }}>
+                {/* Characters Scene */}
+                <div className="relative z-20 flex items-end justify-center h-[500px] xl:h-[550px] translate-y-8">
+                    <div className="relative scale-75 xl:scale-100 origin-bottom" style={{ width: '550px', height: '450px' }}>
 
                         {/* Main Character */}
                         <div ref={purpleRef} className="absolute bottom-0 transition-all duration-700 ease-in-out shadow-2xl" style={{

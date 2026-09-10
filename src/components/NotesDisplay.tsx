@@ -32,46 +32,46 @@ type ToolType = 'flashcards' | 'quiz' | 'summary' | 'key_terms' | 'eli5' | 'mind
 
 const markdownComponents = {
   h1: ({ node, ...props }: any) => (
-    <div className="mb-5 pb-3 border-b border-border/50 first:mt-0 mt-8">
-      <h1 className="text-xl sm:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-foreground via-foreground to-primary leading-tight" {...props} />
+    <div className="mb-4 pb-2 sm:mb-5 sm:pb-3 border-b border-border/50 first:mt-0 mt-6 sm:mt-8">
+      <h1 className="text-lg sm:text-xl md:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-foreground via-foreground to-primary leading-tight" {...props} />
     </div>
   ),
   h2: ({ node, ...props }: any) => (
-    <h2 className="text-base sm:text-lg font-extrabold text-foreground tracking-tight mt-6 mb-2.5 leading-snug" {...props} />
+    <h2 className="text-sm sm:text-base md:text-lg font-extrabold text-foreground tracking-tight mt-5 mb-2 leading-snug" {...props} />
   ),
   h3: ({ node, ...props }: any) => (
-    <h3 className="text-sm sm:text-base font-bold text-foreground/90 tracking-tight mt-4 mb-2 leading-snug" {...props} />
+    <h3 className="text-xs sm:text-sm md:text-base font-bold text-foreground/90 tracking-tight mt-3.5 mb-1.5 leading-snug" {...props} />
   ),
   h4: ({ node, ...props }: any) => (
-    <h4 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mt-3 mb-1.5" {...props} />
+    <h4 className="text-[11px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mt-3 mb-1" {...props} />
   ),
   p: ({ node, ...props }: any) => (
-    <p className="text-sm leading-relaxed text-foreground/90 mb-3.5 font-normal" {...props} />
+    <p className="text-xs sm:text-sm leading-relaxed text-foreground/90 mb-3 font-normal" {...props} />
   ),
   ul: ({ node, ...props }: any) => (
-    <ul className="list-disc list-outside space-y-1.5 my-3 text-sm text-foreground/90 pl-5" {...props} />
+    <ul className="list-disc list-outside space-y-1.5 my-2.5 text-xs sm:text-sm text-foreground/90 pl-4 sm:pl-5" {...props} />
   ),
   ol: ({ node, ...props }: any) => (
-    <ol className="list-decimal list-outside space-y-1.5 my-3 text-sm text-foreground/90 pl-5" {...props} />
+    <ol className="list-decimal list-outside space-y-1.5 my-2.5 text-xs sm:text-sm text-foreground/90 pl-4 sm:pl-5" {...props} />
   ),
   li: ({ node, ...props }: any) => (
     <li className="leading-relaxed pl-0.5" {...props} />
   ),
   blockquote: ({ node, ...props }: any) => (
-    <blockquote className="border-l-4 border-primary/50 pl-4 py-2 my-4 italic text-muted-foreground bg-secondary/20 rounded-r-xl text-sm" {...props} />
+    <blockquote className="border-l-4 border-primary/50 pl-3.5 py-1.5 my-3 italic text-muted-foreground bg-secondary/20 rounded-r-xl text-xs sm:text-sm" {...props} />
   ),
   strong: ({ node, ...props }: any) => (
     <strong className="font-bold text-foreground" {...props} />
   ),
   code: ({ node, inline, ...props }: any) => (
     inline ? (
-      <code className="bg-secondary/60 text-primary font-mono text-xs px-1.5 py-0.5 rounded border border-border/50" {...props} />
+      <code className="bg-secondary/60 text-primary font-mono text-[11px] sm:text-xs px-1.5 py-0.5 rounded border border-border/50" {...props} />
     ) : (
-      <code className="block bg-secondary/30 text-foreground font-mono text-xs p-4 rounded-xl border border-border/50 overflow-x-auto my-3" {...props} />
+      <code className="block bg-secondary/30 text-foreground font-mono text-[11px] sm:text-xs p-3 sm:p-4 rounded-xl border border-border/50 overflow-x-auto my-3" {...props} />
     )
   ),
   hr: ({ node, ...props }: any) => (
-    <hr className="my-6 border-border/60" {...props} />
+    <hr className="my-5 border-border/60" {...props} />
   ),
 };
 
@@ -447,12 +447,12 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-card text-card-foreground">
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-border/40 px-4 sm:px-6 py-3 bg-card/80 backdrop-blur-md sticky top-0 z-10 gap-3">
+      <div className="flex items-center justify-between border-b border-border/40 px-3 sm:px-6 py-2.5 bg-card/80 backdrop-blur-md sticky top-0 z-10 gap-2">
         <div className="flex items-center gap-1 bg-secondary/50 p-1 rounded-xl overflow-x-auto scrollbar-none shrink-0">
           <button
             onClick={() => setActiveTab('notes')}
             className={cn(
-              "text-xs font-semibold px-3 sm:px-4 py-1.5 rounded-lg transition-all duration-150 flex items-center gap-1.5",
+              "text-xs font-semibold px-2.5 sm:px-4 py-1.5 rounded-lg transition-all duration-150 flex items-center gap-1.5",
               activeTab === 'notes'
                 ? "bg-background shadow-sm text-foreground"
                 : "text-muted-foreground hover:bg-background/40 hover:text-foreground"
@@ -463,7 +463,7 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
           <button
             onClick={() => setActiveTab('chat')}
             className={cn(
-              "text-xs font-semibold px-3 sm:px-4 py-1.5 rounded-lg transition-all duration-150 flex items-center gap-1.5",
+              "text-xs font-semibold px-2.5 sm:px-4 py-1.5 rounded-lg transition-all duration-150 flex items-center gap-1.5",
               activeTab === 'chat'
                 ? "bg-background shadow-sm text-foreground"
                 : "text-muted-foreground hover:bg-background/40 hover:text-foreground"
@@ -474,7 +474,7 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
           <button
             onClick={() => setActiveTab('tools')}
             className={cn(
-              "text-xs font-semibold px-3 sm:px-4 py-1.5 rounded-lg transition-all duration-150 flex items-center gap-1.5",
+              "text-xs font-semibold px-2.5 sm:px-4 py-1.5 rounded-lg transition-all duration-150 flex items-center gap-1.5",
               activeTab === 'tools'
                 ? "bg-background shadow-sm text-foreground"
                 : "text-muted-foreground hover:bg-background/40 hover:text-foreground"
@@ -483,12 +483,12 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
             <Sparkles className="h-3.5 w-3.5" /> Tools
           </button>
         </div>
-        <div className="flex items-center justify-end gap-2 shrink-0">
+        <div className="flex items-center justify-end gap-1 sm:gap-2 shrink-0">
           {activeTab === 'notes' && (
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={copyToClipboard} className="h-8 w-8"><Copy className="h-4 w-4" /></Button>
-              <Button variant="ghost" size="icon" onClick={downloadAsTxt} className="h-8 w-8"><Download className="h-4 w-4" /></Button>
-              <Button variant="ghost" size="icon" onClick={printNotes} className="h-8 w-8"><Printer className="h-4 w-4" /></Button>
+            <div className="flex items-center gap-0.5 sm:gap-1">
+              <Button variant="ghost" size="icon" onClick={copyToClipboard} className="h-7 w-7 sm:h-8 sm:w-8" title="Copy"><Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={downloadAsTxt} className="h-7 w-7 sm:h-8 sm:w-8" title="Download"><Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={printNotes} className="h-7 w-7 sm:h-8 sm:w-8" title="Print"><Printer className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></Button>
             </div>
           )}
         </div>
@@ -496,26 +496,26 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
 
       {activeTab === 'notes' ? (
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <div className="flex-1 min-h-0 overflow-y-auto p-6 sm:p-8" ref={contentRef}>
+          <div className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-6 lg:p-8" ref={contentRef}>
             <article className="markdown-content max-w-none">
               <ReactMarkdown components={markdownComponents}>{currentContent}</ReactMarkdown>
             </article>
           </div>
           {totalPages > 1 && (
-            <div className="shrink-0 border-t border-border/40 px-4 sm:px-6 py-2 bg-card/90 backdrop-blur-md flex items-center justify-end">
+            <div className="shrink-0 border-t border-border/40 px-3 sm:px-6 py-2 bg-card/90 backdrop-blur-md flex items-center justify-end">
               <div className="flex items-center gap-1 bg-secondary/50 border border-border/40 p-1 rounded-xl shadow-sm">
                 <Button 
                   variant="ghost" 
                   size="sm"
                   onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); contentRef.current?.scrollTo(0, 0); }} 
                   disabled={currentPage === 1}
-                  className="h-7 px-2.5 rounded-lg text-xs font-semibold hover:bg-background transition-all disabled:opacity-40"
+                  className="h-7 px-2 sm:px-2.5 rounded-lg text-xs font-semibold hover:bg-background transition-all disabled:opacity-40"
                 >
-                  <ChevronLeft className="mr-1 h-3.5 w-3.5" /> Previous
+                  <ChevronLeft className="mr-0.5 sm:mr-1 h-3.5 w-3.5" /> Prev
                 </Button>
                 
-                <span className="text-xs font-bold text-muted-foreground px-2 tabular-nums">
-                  Page {currentPage} of {totalPages}
+                <span className="text-xs font-bold text-muted-foreground px-1.5 sm:px-2 tabular-nums">
+                  {currentPage}/{totalPages}
                 </span>
 
                 <Button 
@@ -523,9 +523,9 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
                   size="sm"
                   onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); contentRef.current?.scrollTo(0, 0); }} 
                   disabled={currentPage === totalPages}
-                  className="h-7 px-2.5 rounded-lg text-xs font-semibold hover:bg-background transition-all disabled:opacity-40"
+                  className="h-7 px-2 sm:px-2.5 rounded-lg text-xs font-semibold hover:bg-background transition-all disabled:opacity-40"
                 >
-                  Next <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                  Next <ChevronRight className="ml-0.5 sm:ml-1 h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
@@ -542,7 +542,7 @@ export const NotesDisplay = forwardRef<NotesDisplayHandle, NotesDisplayProps>(fu
           />
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           {activeTool ? (
             <div className="max-w-4xl mx-auto">
               <div className="bg-card border border-border/50 rounded-2xl shadow-sm overflow-hidden">

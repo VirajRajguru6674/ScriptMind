@@ -329,7 +329,7 @@ const ForgotPassword = () => {
             </Helmet>
 
             {/* Characters Illustration - Left Side */}
-            <div className="relative hidden lg:flex flex-[1.2] flex-col justify-between bg-gradient-to-br from-[#1E2028] via-[#16181D] to-[#0F1115] p-16 overflow-hidden border-r border-white/5">
+            <div className="relative hidden lg:flex flex-1 xl:flex-[1.2] flex-col justify-between bg-gradient-to-br from-[#1E2028] via-[#16181D] to-[#0F1115] p-8 xl:p-16 overflow-hidden border-r border-white/5">
                 <div className="absolute inset-0 opacity-20 pointer-events-none">
                     <Brain className="absolute top-[10%] left-[10%] w-12 h-12 text-blue-500/20 animate-pulse" />
                     <Zap className="absolute top-[30%] right-[15%] w-8 h-8 text-yellow-500/20 animate-bounce" style={{ animationDuration: '3s' }} />
@@ -357,8 +357,8 @@ const ForgotPassword = () => {
                     </div>
                 </div>
 
-                <div className="relative z-20 flex items-end justify-center h-[550px] translate-y-8">
-                    <div className="relative" style={{ width: '550px', height: '450px' }}>
+                <div className="relative z-20 flex items-end justify-center h-[500px] xl:h-[550px] translate-y-8">
+                    <div className="relative scale-75 xl:scale-100 origin-bottom" style={{ width: '550px', height: '450px' }}>
                         {/* Main Character */}
                         <div ref={purpleRef} className="absolute bottom-0 transition-all duration-700 ease-in-out shadow-2xl" style={{
                             left: '70px', width: '180px', zIndex: 1, backgroundColor: 'hsl(var(--primary))', borderRadius: '15px 15px 0 0',
