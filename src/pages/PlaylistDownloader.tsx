@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { NotificationPanel } from '@/components/NotificationPanel';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { PaletteCustomizer } from '@/components/PaletteCustomizer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -203,7 +204,25 @@ export default function PlaylistDownloader() {
 
         setIsZipDownloading(true);
         setZipProgress(5);
-        setZipStatusMessage(`Packaging ${selectedItems.length} videos into ZIP...`);
+        setZipStatusMessage(`Packaging ${selectedItems.length} videos into ZIP on server...`);
+
+        // Dynamic ticker while server processes and downloads videos before streaming zip
+        let tickerProgress = 5;
+        const progressTicker = setInterval(() => {
+            if (tickerProgress < 85) {
+                tickerProgress += 1;
+                setZipProgress(tickerProgress);
+                if (tickerProgress < 25) {
+                    setZipStatusMessage(`Downloading video streams on server (${tickerProgress}%)...`);
+                } else if (tickerProgress < 55) {
+                    setZipStatusMessage(`Merging high-quality 1080p video & audio tracks (${tickerProgress}%)...`);
+                } else if (tickerProgress < 75) {
+                    setZipStatusMessage(`Packaging selected playlist videos (${tickerProgress}%)...`);
+                } else {
+                    setZipStatusMessage(`Compressing files into final ZIP archive (${tickerProgress}%)...`);
+                }
+            }
+        }, 3000);
 
         try {
             const token = localStorage.getItem('token');
@@ -216,17 +235,19 @@ export default function PlaylistDownloader() {
                 xhr.responseType = 'blob';
 
                 xhr.onprogress = (e) => {
+                    clearInterval(progressTicker);
                     if (e.lengthComputable && e.total > 0) {
-                        const pct = Math.round((e.loaded / e.total) * 100);
+                        const pct = Math.max(85, Math.round((e.loaded / e.total) * 100));
                         setZipProgress(pct);
-                        setZipStatusMessage(`Downloading ZIP archive (${pct}%)...`);
+                        setZipStatusMessage(`Downloading ZIP archive to your computer (${pct}%)...`);
                     } else {
-                        setZipProgress((prev) => Math.min(prev + 8, 85));
-                        setZipStatusMessage(`Streaming ${selectedItems.length} videos into single ZIP folder...`);
+                        setZipProgress((prev) => Math.min(prev + 5, 98));
+                        setZipStatusMessage(`Receiving ${selectedItems.length} videos in single ZIP package...`);
                     }
                 };
 
                 xhr.onload = async () => {
+                    clearInterval(progressTicker);
                     if (xhr.status >= 200 && xhr.status < 300) {
                         setZipProgress(100);
                         setZipStatusMessage('ZIP ready! Saving file to your computer...');
@@ -235,14 +256,18 @@ export default function PlaylistDownloader() {
                         try {
                             const text = await xhr.response.text();
                             const errorData = JSON.parse(text);
-                            reject(new Error(errorData.error || "ZIP download failed"));
+                            reject(new Error(errorData.details || errorData.error || "ZIP download failed on server"));
                         } catch (e) {
-                            reject(new Error("ZIP download failed"));
+                            reject(new Error(`Server returned error ${xhr.status} while creating ZIP`));
                         }
                     }
                 };
 
-                xhr.onerror = () => reject(new Error("Network error during ZIP download"));
+                xhr.onerror = () => {
+                    clearInterval(progressTicker);
+                    reject(new Error("Network error during ZIP download"));
+                };
+
                 xhr.send(JSON.stringify({
                     items: selectedItems,
                     quality,
@@ -272,12 +297,14 @@ export default function PlaylistDownloader() {
             });
 
         } catch (error: any) {
+            clearInterval(progressTicker);
             toast({
                 variant: "destructive",
                 title: "Bulk ZIP Error",
                 description: error.message || "Failed to create bulk ZIP download."
             });
         } finally {
+            clearInterval(progressTicker);
             setIsZipDownloading(false);
             setZipProgress(0);
             setZipStatusMessage('');
@@ -338,19 +365,17 @@ export default function PlaylistDownloader() {
         <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
             {/* Header */}
             <header className="sticky top-0 z-50 w-full border-b border-sidebar-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-                    <div className="flex h-16 items-center justify-between px-4 sm:px-8">
-                        <div className="flex items-center gap-2.5 pl-12 lg:pl-0">
-                            <h1 className="text-base sm:text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
-                                Playlist Downloader
-                                <span className="text-[10px] font-black uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-md border border-primary/20 flex items-center gap-1">
-                                    <Archive className="w-3 h-3" />
-                                    Bulk ZIP
-                                </span>
+                    <div className="flex h-16 items-center justify-between px-3 sm:px-8">
+                        <div className="flex items-center gap-2 pl-11 sm:pl-12 lg:pl-0 min-w-0">
+                            <h1 className="text-sm sm:text-base md:text-xl font-black tracking-tight whitespace-nowrap flex items-center gap-1.5">
+                                <span className="text-foreground">Playlist</span>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/60">Downloader</span>
                             </h1>
                         </div>
                         {/* Right side controls */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 shrink-0">
                             <NotificationPanel />
+                            <PaletteCustomizer />
                             <ThemeToggle />
                         </div>
                     </div>
@@ -400,7 +425,7 @@ export default function PlaylistDownloader() {
 
                         {/* ZIP Packaging Active Banner */}
                         {isZipDownloading && (
-                            <div className="bg-gradient-to-r from-primary/15 via-purple-500/10 to-primary/15 border border-primary/40 p-4 sm:p-5 rounded-2xl shadow-xl backdrop-blur-xl space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
+                            <div className="bg-gradient-to-r from-primary/15 via-primary/10 to-primary/15 border border-primary/40 p-4 sm:p-5 rounded-2xl shadow-xl backdrop-blur-xl space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="flex items-center gap-3">
                                         <div className="size-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary animate-pulse shadow-sm">
@@ -587,7 +612,7 @@ export default function PlaylistDownloader() {
                                 )}
 
                                 {/* Card Grid */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3.5 sm:gap-4 lg:gap-5">
                                     {filteredVideos.map((v) => {
                                         const isSelected = selectedVideos.includes(v.id);
                                         const isDone = downloadedVideos.has(v.id);

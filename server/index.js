@@ -2738,14 +2738,20 @@ app.post('/api/download-zip', authenticateToken, async (req, res) => {
         console.log(`📦 [ZIP-Job] Compressing ${successfulFiles.length} videos into ${cleanZipName}.zip...`);
 
         // 3. Create ZIP Archive and Stream to Client
-        const archiver = require('archiver');
+        const archiverMod = require('archiver');
         res.setHeader('Content-Type', 'application/zip');
-        res.setHeader('Content-Disposition', `attachment; filename="${cleanZipName}.zip"`);
+        const safeZipName = cleanZipName.replace(/["\r\n]/g, '_');
+        res.setHeader('Content-Disposition', `attachment; filename="${safeZipName}.zip"; filename*=UTF-8''${encodeURIComponent(safeZipName)}.zip`);
         res.setHeader('Transfer-Encoding', 'chunked');
 
-        const archive = archiver('zip', {
-            zlib: { level: 1 } // Fast compression for media containers
-        });
+        // Compatible with both Archiver v8 (ZipArchive class) and older v7 (function)
+        const archive = typeof archiverMod === 'function'
+            ? archiverMod('zip', { zlib: { level: 1 } })
+            : (archiverMod.ZipArchive
+                ? new archiverMod.ZipArchive({ zlib: { level: 1 } })
+                : (typeof archiverMod.default === 'function'
+                    ? archiverMod.default('zip', { zlib: { level: 1 } })
+                    : new (archiverMod.Archiver || archiverMod)({ zlib: { level: 1 } })));
 
         archive.on('warning', (err) => {
             console.warn("Archive warning:", err);
